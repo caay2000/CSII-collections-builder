@@ -108,6 +108,11 @@ namespace BuildingCollections.Systems
         bool definitionsDirty;
         bool buildRequested;
         int freeFrontCells;
+        // Limpieza automática: unos fotogramas después de crear las definiciones (el juego ya ha marcado los
+        // errores), se quita de la vista previa lo que sale en rojo, para que Build funcione a la primera.
+        const int SettleFrames = 10, WatchFrames = 60, MaxAutoCleanPasses = 3;
+        int settleFrames = -1;
+        int autoCleanPasses;
 
         public override string toolID => "BuildingCollections.BlockBuilder";
 
@@ -251,6 +256,7 @@ namespace BuildingCollections.Systems
             {
                 preview.Clear();
                 FrontFilled = FrontTotal = 0;
+                autoCleanPasses = 0;
                 definitionsDirty = true;
                 var cfg = DevConfig.Load();
                 var usable = candidates.Where(c => c.Info.Corner != CornerKind.None && c.Info.LotWidth > 0 && c.Info.LotDepth > 0).ToList();
@@ -512,9 +518,12 @@ namespace BuildingCollections.Systems
                 if (definitionsDirty)
                 {
                     definitionsDirty = false;
+                    settleFrames = preview.Count > 0 ? 0 : -1;
                     applyMode = ApplyMode.Clear;
                     return CreatePreviewDefinitions(inputDeps);
                 }
+
+                AutoClean();
             }
             catch (Exception e)
             {
@@ -565,6 +574,50 @@ namespace BuildingCollections.Systems
             definitionsDirty = true; // el siguiente fotograma borra las definiciones ya aplicadas
             applyMode = ApplyMode.Apply;
             return inputDeps;
+        }
+
+        /// <summary>
+        /// Con la vista previa ya asentada, quita lo que el juego marca en rojo (sobre todo árboles que tocan un
+        /// edificio) sin esperar al Build. Como mucho unas pocas pasadas por vista previa, para no entrar en bucle.
+        /// </summary>
+        void AutoClean()
+        {
+            if (settleFrames < 0 || ++settleFrames < SettleFrames)
+            {
+                return;
+            }
+
+            if (preview.Count == 0 || autoCleanPasses >= MaxAutoCleanPasses)
+            {
+                settleFrames = -1;
+                return;
+            }
+
+            // Si aún no hay errores se sigue mirando un rato: el juego puede tardar más en marcarlos con FPS bajos.
+            if (GetAllowApply())
+            {
+                if (settleFrames >= WatchFrames)
+                {
+                    settleFrames = -1;
+                }
+
+                return;
+            }
+
+            settleFrames = -1;
+            if (!DevConfig.Load().RequireNoErrors)
+            {
+                return;
+            }
+
+            autoCleanPasses++;
+            int removed = RemoveErrored();
+            if (removed > 0)
+            {
+                FrontFilled = CountFront();
+                Mod.Log.Info($"[vista previa] Limpieza automática (pasada {autoCleanPasses}): quitados {removed} elementos en rojo.");
+                definitionsDirty = true;
+            }
         }
 
         /// <summary>Quita de la vista previa lo que está junto a una entidad con error. Devuelve cuántos.</summary>
