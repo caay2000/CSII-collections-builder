@@ -47,6 +47,23 @@ namespace BuildingCollections.Core
             return !(pos && neg);
         }
 
+        /// <summary>Distancia de un punto al cuadrilátero (0 si está dentro).</summary>
+        public double DistanceTo(Pt q)
+        {
+            if (Contains(q))
+            {
+                return 0;
+            }
+
+            double best = double.MaxValue;
+            for (int i = 0; i < 4; i++)
+            {
+                best = Math.Min(best, PointSegment(q, P[i], P[(i + 1) % 4]));
+            }
+
+            return best;
+        }
+
         /// <summary>Distancia mínima entre dos cuadriláteros (0 si se tocan o se solapan).</summary>
         public static double Distance(Quad a, Quad b)
         {

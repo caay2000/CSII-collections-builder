@@ -137,6 +137,40 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public int Density { get; set; } = 100;
 
+        /// <summary>Dejar huecos: relleno al azar sin intentar cubrir toda la fachada.</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public bool LeaveGaps { get; set; }
+
+        /// <summary>
+        /// Con Anarchy encendido: cuánto (m) pueden pisarse dos edificios nuevos de calles distintas. Es un tope: el
+        /// solape real es el que dé la geometría, entre 0 y este valor. Se ajusta en el panel (solo con Anarchy);
+        /// lo ya construido no se pisa nunca.
+        /// </summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public float AnarchyOverlap { get; set; } = 0.5f;
+
+        /// <summary>Árboles del juego base en el espacio sobrante (patios, huecos).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public bool Trees { get; set; }
+
+        /// <summary>Set de Tree Controller para la decoración ("" = todos los árboles del juego base).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public string TreeSet { get; set; } = string.Empty;
+
+        /// <summary>Edades de los árboles (bits de Game.Tools.AgeMask: 1 joven, 2 adolescente, 4 adulto, 8 viejo).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public int TreeAges { get; set; } = 4;
+
+        /// <summary>Densidad de la decoración (10 a 100).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public int DecorDensity { get; set; } = 50;
+
         /// <summary>Modo de selección del constructor: "block" o "polygon".</summary>
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
@@ -170,6 +204,12 @@ namespace BuildingCollections
             WidthOp = DepthOp = LevelOp = CompareOp.Equal;
             WidthValue = DepthValue = LevelValue = 0;
             Density = 100;
+            LeaveGaps = false;
+            Trees = false;
+            AnarchyOverlap = 0.5f;
+            DecorDensity = 50;
+            TreeSet = string.Empty;
+            TreeAges = 4;
             Mode = "block";
         }
     }

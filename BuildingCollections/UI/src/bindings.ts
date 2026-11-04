@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { bindValue, trigger, useValue } from "cs2/api";
 
 const G = "BuildingCollections";
@@ -13,11 +14,27 @@ export interface BuilderDto {
     depthOp: number; depthValue: number;
     levelOp: number; levelValue: number;
     density: number;
+    leaveGaps: boolean;
+    /** Árboles del juego base en el espacio sobrante. */
+    trees: boolean;
+    decorDensity: number;
+    /** Solape máximo (m) entre edificios nuevos con Anarchy, de 0 a 3,5. */
+    overlap: number;
+    /** Set de Tree Controller ("" = todos los árboles del juego base). */
+    treeSet: string;
+    /** Edades de los árboles: bits 1 joven, 2 adolescente, 4 adulto, 8 viejo. */
+    treeAges: number;
 }
-export interface PlanDto { areaSelected: boolean; previewing: boolean; lots: number }
+export interface PlanDto {
+    areaSelected: boolean; previewing: boolean; lots: number; blocks: number; anarchy: boolean; anarchyAvailable: boolean;
+    /** Vista previa: celdas a la calle ocupadas / libres. */
+    filled: number; front: number;
+    /** Sets de Tree Controller con árboles (vacío si el mod no está). */
+    treeSets: string[];
+}
 
 export const DEFAULT_BUILDER: BuilderDto = {
-    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100,
+    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, trees: false, decorDensity: 50, overlap: 0.5, treeSet: "", treeAges: 4,
 };
 
 const panelOpen$ = bindValue<boolean>(G, "panelOpen", false);
@@ -29,20 +46,27 @@ const selected$ = bindValue<string>(G, "selected", "");
 const status$ = bindValue<string>(G, "status", "");
 const builder$ = bindValue<string>(G, "builder", "{}");
 const plan$ = bindValue<string>(G, "plan", "{}");
+const escapes$ = bindValue<number>(G, "escapes", 0);
 
 function parse<T>(raw: string, fallback: T): T {
     try { return JSON.parse(raw) as T; } catch { return fallback; }
 }
 
 export const usePanelOpen = () => useValue(panelOpen$);
+export const useEscapes = () => useValue(escapes$);
 export const useToolActive = () => useValue(toolActive$);
 export const useFindIt = () => useValue(findIt$);
 export const useSelected = () => useValue(selected$);
 export const useStatus = () => useValue(status$);
-export const useCollections = (): CollectionDto[] => parse(useValue(collections$), []);
-export const useBuildings = (): BuildingDto[] => parse(useValue(buildings$), []);
+/** JSON de un binding, parseado solo cuando cambia el texto (no en cada render): así la lista conserva su identidad. */
+function useJson<T>(raw: string, fallback: T): T {
+    return useMemo(() => parse(raw, fallback), [raw]);
+}
+
+export const useCollections = (): CollectionDto[] => useJson(useValue(collections$), []);
+export const useBuildings = (): BuildingDto[] => useJson(useValue(buildings$), []);
 export const useBuilder = (): BuilderDto => ({ ...DEFAULT_BUILDER, ...parse<Partial<BuilderDto>>(useValue(builder$), {}) });
-export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
+export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, anarchy: false, anarchyAvailable: false, filled: 0, front: 0, treeSets: [], ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
 
 export const actions = {
     setPanelOpen: (v: boolean) => trigger(G, "setPanelOpen", v),
@@ -51,6 +75,7 @@ export const actions = {
     clear: () => trigger(G, "clear"),
     remove: () => trigger(G, "delete"),
     clone: () => trigger(G, "clone"),
+    rename: (name: string) => trigger(G, "rename", name),
     removeBuildings: (ids: string[]) => trigger(G, "removeBuildings", JSON.stringify(ids)),
     addAllFromFindIt: () => trigger(G, "addAll"),
     setBuilder: (b: BuilderDto) => trigger(G, "setBuilder", JSON.stringify(b)),
@@ -58,4 +83,6 @@ export const actions = {
     generatePreview: () => trigger(G, "generatePreview"),
     clearSelection: () => trigger(G, "clearSelection"),
     build: () => trigger(G, "build"),
+    /** Interruptor del propio Anarchy (su TriggerBinding "Anarchy.AnarchyToggled"): el mismo que su botón. */
+    toggleAnarchy: () => trigger("Anarchy", "AnarchyToggled"),
 };

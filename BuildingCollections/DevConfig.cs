@@ -24,6 +24,18 @@ namespace BuildingCollections
         /// <summary>Radio (m) alrededor del clic en el que se buscan bloques. Una manzana más grande queda cortada.</summary>
         public double SearchRadius = 400.0;
 
+        /// <summary>Modo bloque: seleccionar todo lo que queda dentro de las calles que rodean el clic (como Street Builder).</summary>
+        public bool UseRoadFace = true;
+
+        /// <summary>
+        /// Modo bloque: parcelas propias a lo largo de la acera (como Street Builder), sin depender de las celdas de
+        /// zona; llena también diagonales y esquinas. false = solo celdas de zona del juego.
+        /// </summary>
+        public bool UseVirtualLots = true;
+
+        /// <summary>Radio (m) alrededor del clic en el que se leen las calles para cerrar la manzana.</summary>
+        public double RoadSearchRadius = 1500.0;
+
         /// <summary>Intercambia izquierda y derecha al leer m_AccessType, por si el criterio del juego es el contrario.</summary>
         public bool SwapCornerSides = false;
 

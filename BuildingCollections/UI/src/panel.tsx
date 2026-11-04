@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Tooltip } from "cs2/ui";
+import { InputActionConsumer } from "cs2/input";
 import styles from "./panel.module.scss";
-import { actions, usePanelOpen } from "./bindings";
+import { actions, useEscapes, usePanelOpen } from "./bindings";
 import { CollectionsTab } from "./collectionsTab";
 import { BuilderTab } from "./builderTab";
+import { icon, onEscape } from "./widgets";
 
 // Servido desde la carpeta del mod (Mod.cs registra coui://buildingcollections/). El motor no admite data: URIs.
 const ICON = "coui://buildingcollections/icon.svg";
@@ -50,17 +52,31 @@ const Panel = () => {
     const [tab, setTabState] = useState<Tab>(lastTab);
     const setTab = (t: Tab) => { lastTab = t; setTabState(t); };
     const drag = useDrag();
+    // Esc ("Back") cierra el panel, como los paneles del juego; con el panel cerrado, Esc vuelve a abrir el menú.
+    // Si hay un campo en línea abierto (crear, renombrar), Esc solo lo cancela.
+    const back = useMemo(() => ({ Back: () => onEscape(() => actions.setPanelOpen(false)) }), []);
+    // Esc leído desde C# (el contador sube con cada pulsación): mismo criterio que "Back".
+    const escapes = useEscapes();
+    const seenEscapes = useRef(escapes);
+    useEffect(() => {
+        if (escapes !== seenEscapes.current) {
+            seenEscapes.current = escapes;
+            onEscape(() => actions.setPanelOpen(false));
+        }
+    }, [escapes]);
     return (
-        <div className={tab === "collections" ? styles.panelWide : styles.panel} style={drag.style}>
-            <div className={styles.header} onMouseDown={drag.start}>
-                <span className={styles.title}>Building Collections</span>
-                <button className={styles.close} onClick={() => actions.setPanelOpen(false)}>×</button>
+        <InputActionConsumer actions={back} ignoreFocusState>
+            <div className={tab === "collections" ? styles.panelWide : styles.panel} style={drag.style}>
+                <div className={styles.header} onMouseDown={drag.start}>
+                    <span className={styles.title}>Building Collections</span>
+                    <button className={styles.close} title="Close" onClick={() => actions.setPanelOpen(false)}><img src={icon("close")} /></button>
+                </div>
+                <div className={styles.tabs}>
+                    <button className={tab === "collections" ? styles.tabOn : styles.tab} onClick={() => setTab("collections")}>Collections</button>
+                    <button className={tab === "builder" ? styles.tabOn : styles.tab} onClick={() => setTab("builder")}>Builder</button>
+                </div>
+                <div className={styles.body}>{tab === "collections" ? <CollectionsTab /> : <BuilderTab />}</div>
             </div>
-            <div className={styles.tabs}>
-                <button className={tab === "collections" ? styles.tabOn : styles.tab} onClick={() => setTab("collections")}>Collections</button>
-                <button className={tab === "builder" ? styles.tabOn : styles.tab} onClick={() => setTab("builder")}>Builder</button>
-            </div>
-            <div className={styles.body}>{tab === "collections" ? <CollectionsTab /> : <BuilderTab />}</div>
-        </div>
+        </InputActionConsumer>
     );
 };

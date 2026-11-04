@@ -34,7 +34,11 @@
 
   <!-- Copia el resultado a la carpeta de mods locales de Windows -->
   <Target Name="DeployLocal" AfterTargets="Build" Condition="'$(Deploy)' == 'true'">
-    <ItemGroup><Out Include="$(OutDir)BuildingCollections.dll;$(OutDir)BuildingCollections.pdb;$(MSBuildProjectDirectory)/UI/icon.svg" /></ItemGroup>
+    <ItemGroup>
+      <Out Include="$(OutDir)BuildingCollections.dll;$(OutDir)BuildingCollections.pdb;$(MSBuildProjectDirectory)/UI/icon.svg" />
+      <Icons Include="$(MSBuildProjectDirectory)/UI/icons/*.svg" />
+    </ItemGroup>
     <Copy SourceFiles="@(Out)" DestinationFolder="$(LocalModsPath)" />
+    <Copy SourceFiles="@(Icons)" DestinationFolder="$(LocalModsPath)/icons" />
   </Target>
 </Project>

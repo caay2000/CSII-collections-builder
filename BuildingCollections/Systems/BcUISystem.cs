@@ -32,23 +32,41 @@ namespace BuildingCollections.Systems
         ValueBinding<string> status;
         ValueBinding<string> builderBinding;
         ValueBinding<string> plan;
+        ValueBinding<int> escapes;   // se incrementa con cada Esc con el panel abierto: la UI decide qué cerrar
 
         bool collectionsDirty = true;
         bool buildingsDirty = true;
         int catalogVersion = -1;
         int messageSerial;
         int frame;
+        int anarchyTick;
         int seedCounter;
         int saveCountdown = -1;
         bool wantTool;   // la pestaña Builder está abierta y quiere la herramienta
         ToolBaseSystem lastTool;
+        ToolBaseSystem lastNonDefault;   // última herramienta activa que no era la normal
+        int defaultFrames;               // fotogramas seguidos con la herramienta normal activa
+        const int ExitFrames = 30;
+        const int ReactivateFrames = 3;
 
         sealed class BuilderDto
         {
             public string mode = "block";
             public int widthOp, widthValue, depthOp, depthValue, levelOp, levelValue;
             public int density = 100;
+            public bool leaveGaps;
+            public bool trees;
+            public int decorDensity = 50;
+
+            /// <summary>Solape máximo (m) entre edificios nuevos con Anarchy.</summary>
+            public float overlap = 0.5f;
+
+            /// <summary>Set de Tree Controller ("" = todos los árboles del juego base) y edades (bits de AgeMask).</summary>
+            public string treeSet = string.Empty;
+            public int treeAges = 4;
         }
+
+        string treeSetsJson = "[]";
 
         protected override void OnCreate()
         {
@@ -66,6 +84,7 @@ namespace BuildingCollections.Systems
             AddBinding(status = new ValueBinding<string>(Group, "status", string.Empty));
             AddBinding(builderBinding = new ValueBinding<string>(Group, "builder", "{}"));
             AddBinding(plan = new ValueBinding<string>(Group, "plan", "{}"));
+            AddBinding(escapes = new ValueBinding<int>(Group, "escapes", 0));
 
             AddBinding(new TriggerBinding<bool>(Group, "setPanelOpen", v => Safe(() => SetPanelOpen(v))));
             AddBinding(new TriggerBinding<string>(Group, "select", name => Safe(() => SetSelected(name))));
@@ -84,7 +103,18 @@ namespace BuildingCollections.Systems
             AddBinding(new TriggerBinding(Group, "delete", () => Safe(() =>
             {
                 Report(CollectionService.Delete(selected.value));
+
                 SetSelected(CollectionStore.Collections.FirstOrDefault()?.Name ?? string.Empty);
+            })));
+            AddBinding(new TriggerBinding<string>(Group, "rename", name => Safe(() =>
+            {
+                var error = CollectionService.Rename(selected.value, name, out var newName);
+                Report(error);
+                if (error == null)
+                {
+
+                    SetSelected(newName);
+                }
             })));
             AddBinding(new TriggerBinding(Group, "clone", () => Safe(() =>
             {
@@ -131,25 +161,59 @@ namespace BuildingCollections.Systems
             base.OnUpdate();
             try
             {
-                // Si el usuario usó otra herramienta (p. ej. una carretera) y volvió a la normal con la pestaña Builder
-                // abierta, se reactiva la nuestra: si no, la pestaña se quedaba sin responder hasta cerrarla.
-                // Solo al volver de otra herramienta: si el usuario sale de la nuestra a la normal (Esc), se respeta.
-                var active = toolSystem.activeTool;
-                if (wantTool && panelOpen.value && active == defaultTool && lastTool != null && lastTool != defaultTool && lastTool != builder)
+                // Esc con el panel abierto: la acción "Back" de la UI no le llega al panel, así que se lee aquí la
+                // tecla y se avisa a la UI (que cancela un campo abierto o cierra el panel).
+                var keyboard = Keyboard.current;
+                if (panelOpen.value && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
                 {
-                    toolSystem.activeTool = builder;
-                    active = builder;
+                    escapes.Update(escapes.value + 1);
                 }
 
-                if (lastTool == builder && active == defaultTool)
+                // Si el usuario usó otra herramienta (p. ej. una carretera) y volvió a la normal con la pestaña Builder
+                // abierta, se reactiva la nuestra. Al elegir otra herramienta desde la barra el juego pasa a veces por
+                // la normal un fotograma (nuestra -> normal -> carretera): por eso salir de la nuestra a la normal
+                // solo cuenta como salida a propósito (Esc) si la normal sigue activa unos fotogramas.
+                var active = toolSystem.activeTool;
+                if (active != lastTool)
                 {
-                    wantTool = false; // salió de la nuestra a propósito (Esc): no se reactiva hasta volver a la pestaña
+                    Mod.Log.Info($"[herramienta] {lastTool?.toolID ?? "-"} -> {active?.toolID ?? "-"}");
+                }
+
+                if (active == defaultTool)
+                {
+                    defaultFrames++;
+                }
+                else
+                {
+                    defaultFrames = 0;
+                    if (active != null)
+                    {
+                        lastNonDefault = active;
+                    }
+                }
+
+                if (wantTool && panelOpen.value && active == defaultTool)
+                {
+                    // Se espera unos fotogramas: al cambiar de una herramienta a otra (carretera -> zonas) el juego
+                    // también puede pasar un instante por la normal, y no hay que quitarle la herramienta nueva.
+                    if (lastNonDefault != null && lastNonDefault != builder && defaultFrames >= ReactivateFrames)
+                    {
+                        toolSystem.activeTool = builder;
+                        active = builder;
+                        lastNonDefault = builder;
+                        defaultFrames = 0;
+                    }
+                    else if (lastNonDefault == builder && defaultFrames > ExitFrames)
+                    {
+                        wantTool = false; // salió de la nuestra a propósito (Esc): no se reactiva hasta volver a la pestaña
+                    }
                 }
 
                 lastTool = active;
 
                 toolActive.Update(toolSystem.activeTool == builder);
-                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots}}}");
+
+                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)},\"anarchyAvailable\":{Js(AnarchyBridge.Available)},\"filled\":{builder.FrontFilled},\"front\":{builder.FrontTotal},\"treeSets\":{treeSetsJson}}}");
 
                 if (builder.MessageSerial != messageSerial)
                 {
@@ -158,6 +222,14 @@ namespace BuildingCollections.Systems
                 }
 
                 // Cada ~2 s (o al abrir el panel) se comprueba si han llegado prefabs nuevos.
+                // Anarchy puede crear su sistema después que nosotros: se reintenta cada ~2 s hasta registrarse.
+                if (anarchyTick++ % 120 == 0)
+                {
+                    AnarchyBridge.TryRegister(World, builder.toolID);
+                    var sets = TreeControllerBridge.Sets(World);
+                    treeSetsJson = JsonConvert.SerializeObject(TreeControllerBridge.SetIds.Where(sets.ContainsKey).ToArray());
+                }
+
                 if (panelOpen.value && (++frame % 120 == 0 || catalogVersion < 0))
                 {
                     findItAvailable.Update(FindItBridge.IsAvailable);
@@ -295,7 +367,7 @@ namespace BuildingCollections.Systems
             if (Mod.Settings != null)
             {
                 Mod.Settings.SelectedCollection = name;
-                Mod.Settings.ApplyAndSave();
+                saveCountdown = 60; // se guarda en diferido: escribir el fichero en el mismo clic frena el cambio
             }
         }
 
@@ -369,6 +441,12 @@ namespace BuildingCollections.Systems
                 depthOp = (int)s.DepthOp, depthValue = s.DepthValue,
                 levelOp = (int)s.LevelOp, levelValue = s.LevelValue,
                 density = s.Density,
+                leaveGaps = s.LeaveGaps,
+                trees = s.Trees,
+                decorDensity = s.DecorDensity,
+                overlap = s.AnarchyOverlap,
+                treeSet = s.TreeSet ?? string.Empty,
+                treeAges = s.TreeAges,
             }));
         }
 
@@ -386,6 +464,12 @@ namespace BuildingCollections.Systems
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
+            s.LeaveGaps = f.leaveGaps;
+            s.Trees = f.trees;
+            s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
+            s.AnarchyOverlap = (float)Math.Round(Math.Max(0f, Math.Min(BlockBuilderToolSystem.MaxOverlap, f.overlap)) * 2, MidpointRounding.AwayFromZero) / 2f;
+            s.TreeSet = TreeControllerBridge.SetIds.Contains(f.treeSet) ? f.treeSet : string.Empty;
+            s.TreeAges = (f.treeAges & 15) == 0 ? 4 : f.treeAges & 15;
             builder.SetMode(s.Mode);
             saveCountdown = 60;
             PushBuilder();
@@ -409,7 +493,30 @@ namespace BuildingCollections.Systems
                 .OrderBy(e => e.Info.PrefabName, StringComparer.Ordinal)
                 .ToList();
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
-            builder.GeneratePreview(candidates, s.Density, seed);
+            // Decoración: árboles del juego base en el espacio sobrante, o los de un set de Tree Controller.
+            var decor = s.Trees ? TreeDecor(s.TreeSet) : new List<CatalogEntry>();
+            builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps, decor, s.DecorDensity, s.TreeAges);
+        }
+
+        List<CatalogEntry> TreeDecor(string set)
+        {
+            if (string.IsNullOrEmpty(set) || !TreeControllerBridge.Sets(World).TryGetValue(set, out var names))
+            {
+                return PrefabCatalog.Trees.ToList();
+            }
+
+            var prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            var result = new List<CatalogEntry>();
+            foreach (var name in names.Distinct())
+            {
+                if (prefabSystem.TryGetPrefab(new PrefabID("StaticObjectPrefab", name), out PrefabBase prefab) && prefab != null)
+                {
+                    result.Add(new CatalogEntry { Prefab = prefabSystem.GetEntity(prefab), IsDecor = true, Info = new BuildingInfo { PrefabName = name } });
+                }
+            }
+
+            Mod.Log.Info($"[árboles] set {set} de Tree Controller: {result.Count} de {names.Length} prefabs encontrados.");
+            return result.Count > 0 ? result : PrefabCatalog.Trees.ToList();
         }
 
         static CompareOp ToOp(int v) => v >= 0 && v <= 3 ? (CompareOp)v : CompareOp.Equal;
