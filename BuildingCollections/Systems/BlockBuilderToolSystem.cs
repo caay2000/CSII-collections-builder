@@ -170,6 +170,8 @@ namespace BuildingCollections.Systems
                         continue;
                     }
 
+                    s.Corners = ZoneUtils.CalculateCorners(s.Block, new ValidArea { m_Area = s.Area });
+
                     var cells = EntityManager.GetBuffer<Cell>(s.Entity, true);
                     if (cells.Length < s.Block.m_Size.x * s.Block.m_Size.y)
                     {
@@ -275,6 +277,7 @@ namespace BuildingCollections.Systems
             Mod.Log.Info($"[build] Aplicando: {preview.Count} planificados, {temps.Count} edificios temporales.");
             Say($"Built {temps.Count} buildings.");
             preview.Clear();
+            definitionsDirty = true; // el siguiente fotograma borra las definiciones ya aplicadas
             applyMode = ApplyMode.Apply;
             return inputDeps;
         }

@@ -102,6 +102,11 @@ namespace BuildingCollections.Systems
 
         protected override void OnDestroy()
         {
+            if (saveCountdown >= 0)
+            {
+                Mod.Settings?.ApplyAndSave();
+            }
+
             if (toolSystem != null)
             {
                 toolSystem.EventPrefabChanged -= OnPrefabChanged;
