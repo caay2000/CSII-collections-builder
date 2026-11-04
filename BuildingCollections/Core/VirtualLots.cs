@@ -35,8 +35,10 @@ namespace BuildingCollections.Core
     {
         public const double Cell = 8.0;
 
+        /// <param name="frontage">Por lado: si da a una calle (lleva parcelas). null = todos. Un lado sin calle
+        /// (un polígono que corta la manzana) solo cierra el contorno, y no hace esquina con sus vecinos.</param>
         public static List<LotStrip> Build(IReadOnlyList<List<Pt>> sides, IReadOnlyList<Quad> obstacles, int maxDepth = 6,
-            double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 0.75)
+            double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 0.75, IReadOnlyList<bool> frontage = null)
         {
             var strips = new List<LotStrip>();
             var outline = Outline(sides);
@@ -45,8 +47,13 @@ namespace BuildingCollections.Core
                 return strips;
             }
 
-            foreach (var side in Merge(sides, mergeAngleDeg, cornerAngleDeg))
+            foreach (var side in Merge(sides, frontage, mergeAngleDeg, cornerAngleDeg))
             {
+                if (!side.Frontage)
+                {
+                    continue;
+                }
+
                 // Tramos de al menos una celda: un tramo corto al principio no debe quitarle la esquina al siguiente.
                 var chunks = Chunks(side.Points, straightTolerance)
                     .Where(c => (int)Math.Floor((Dist(side.Points[c.from], side.Points[c.to]) + 0.5) / Cell) >= 1)
@@ -151,6 +158,7 @@ namespace BuildingCollections.Core
             public List<Pt> Points = new List<Pt>();
             public bool StartCorner;
             public bool EndCorner;
+            public bool Frontage = true;
         }
 
         /// <summary>
@@ -158,14 +166,17 @@ namespace BuildingCollections.Core
         /// giro de más de <paramref name="cornerAngleDeg"/> grados. Una vuelta en U (fin de una calle sin salida) no
         /// es esquina.
         /// </summary>
-        static List<Side> Merge(IReadOnlyList<List<Pt>> sides, double mergeAngleDeg, double cornerAngleDeg)
+        static List<Side> Merge(IReadOnlyList<List<Pt>> sides, IReadOnlyList<bool> frontage, double mergeAngleDeg, double cornerAngleDeg)
         {
             var valid = new List<List<Pt>>();
-            foreach (var s in sides)
+            var front = new List<bool>();
+            for (int i = 0; i < sides.Count; i++)
             {
+                var s = sides[i];
                 if (s.Count >= 2 && Length(s) > 0.5)
                 {
                     valid.Add(s);
+                    front.Add(frontage == null || (i < frontage.Count && frontage[i]));
                 }
             }
 
@@ -176,20 +187,24 @@ namespace BuildingCollections.Core
                 return result;
             }
 
-            // Giro (grados, con signo) al pasar del lado i al siguiente.
+            // Giro (grados, con signo) al pasar del lado i al siguiente, y si ahí se corta (no se une).
             var turn = new double[n];
+            var cut = new bool[n];
             for (int i = 0; i < n; i++)
             {
-                var a = valid[i];
-                var b = valid[(i + 1) % n];
-                turn[i] = Angle(EndDir(a), StartDir(b));
+                int j = (i + 1) % n;
+                turn[i] = Angle(EndDir(valid[i]), StartDir(valid[j]));
+                cut[i] = Math.Abs(turn[i]) >= mergeAngleDeg || front[i] != front[j];
             }
 
-            // Se empieza justo después de un giro que no se une, para no partir un lado por el principio de la lista.
+            // Esquina: giro convexo entre dos lados con calle.
+            bool Corner(int i) => front[i] && front[(i + 1) % n] && IsCorner(turn[i], cornerAngleDeg);
+
+            // Se empieza justo después de un corte, para no partir un lado por el principio de la lista.
             int start = 0;
             for (int i = 0; i < n; i++)
             {
-                if (Math.Abs(turn[i]) >= mergeAngleDeg)
+                if (cut[i])
                 {
                     start = (i + 1) % n;
                     break;
@@ -203,7 +218,7 @@ namespace BuildingCollections.Core
                 int prev = (i - 1 + n) % n;
                 if (cur == null)
                 {
-                    cur = new Side { StartCorner = IsCorner(turn[prev], cornerAngleDeg) };
+                    cur = new Side { StartCorner = Corner(prev), Frontage = front[i] };
                 }
 
                 foreach (var p in valid[i])
@@ -214,9 +229,9 @@ namespace BuildingCollections.Core
                     }
                 }
 
-                if (Math.Abs(turn[i]) >= mergeAngleDeg || k == n - 1)
+                if (cut[i] || k == n - 1)
                 {
-                    cur.EndCorner = IsCorner(turn[i], cornerAngleDeg);
+                    cur.EndCorner = Corner(i);
                     if (cur.Points.Count >= 2)
                     {
                         result.Add(cur);

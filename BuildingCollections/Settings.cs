@@ -142,6 +142,16 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public bool LeaveGaps { get; set; }
 
+        /// <summary>Colección cuyas plantas decoran el espacio sobrante ("" = sin decoración).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public string DecorCollection { get; set; } = string.Empty;
+
+        /// <summary>Densidad de la decoración (10 a 100).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public int DecorDensity { get; set; } = 50;
+
         /// <summary>Modo de selección del constructor: "block" o "polygon".</summary>
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
@@ -176,6 +186,8 @@ namespace BuildingCollections
             WidthValue = DepthValue = LevelValue = 0;
             Density = 100;
             LeaveGaps = false;
+            DecorCollection = string.Empty;
+            DecorDensity = 50;
             Mode = "block";
         }
     }

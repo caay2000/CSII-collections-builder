@@ -81,18 +81,23 @@ export const CheckRow = (p: { label: string; checked: boolean; title?: string; o
 );
 
 /** Desplegable propio con el estilo del panel (el nativo del juego salía blanco y fuera de tono). */
-export const CollectionPicker = (p: { items: CollectionDto[]; selected: string; onSelect: (n: string) => void }) => {
+export const CollectionPicker = (p: { items: CollectionDto[]; selected: string; onSelect: (n: string) => void; noneLabel?: string }) => {
     const [open, setOpen] = useState(false);
     const cur = p.items.find((c) => c.name === p.selected);
     return (
         <div className={styles.dd}>
             <button className={styles.ddToggle} onClick={() => setOpen(!open)}>
-                <span className={styles.ddLabel}>{cur ? cur.name : "Choose a collection"}</span>
+                <span className={styles.ddLabel}>{cur ? cur.name : p.noneLabel ?? "Choose a collection"}</span>
                 {cur && <span className={styles.ddCount}>{`${cur.count}`}</span>}
                 <img src={icon(open ? "chevron-up" : "dropdown")} />
             </button>
             {open && (
                 <div className={styles.ddList}>
+                    {p.noneLabel && (
+                        <div className={!cur ? styles.itemOn : styles.item} onClick={() => { p.onSelect(""); setOpen(false); }}>
+                            <span className={styles.itemName}>{p.noneLabel}</span>
+                        </div>
+                    )}
                     {p.items.length === 0 && <div className={styles.empty}>No collections yet.</div>}
                     {p.items.map((c) => (
                         <div key={c.name} className={c.name === p.selected ? styles.itemOn : styles.item}

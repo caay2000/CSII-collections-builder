@@ -15,6 +15,9 @@ namespace BuildingCollections
         public BuildingInfo Info;
         public int AccessType;
         public string Icon;
+
+        /// <summary>Árbol, arbusto u otra planta: va en la decoración, no en las parcelas.</summary>
+        public bool IsDecor;
     }
 
     /// <summary>
@@ -26,6 +29,7 @@ namespace BuildingCollections
     {
         static readonly Dictionary<string, CatalogEntry> byName = new Dictionary<string, CatalogEntry>(StringComparer.OrdinalIgnoreCase);
         static EntityQuery query;
+        static EntityQuery plantQuery;
         static World queryWorld;
         static int lastCount = -1;
         static bool lastSwap;
@@ -43,11 +47,12 @@ namespace BuildingCollections
                 if (queryWorld != world)
                 {
                     query = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<BuildingData>(), ComponentType.ReadOnly<PrefabData>());
+                    plantQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlantData>(), ComponentType.ReadOnly<PrefabData>(), ComponentType.Exclude<BuildingData>());
                     queryWorld = world;
                     lastCount = -1;
                 }
 
-                int count = query.CalculateEntityCount();
+                int count = query.CalculateEntityCount() + plantQuery.CalculateEntityCount();
                 if (count == lastCount && swapCornerSides == lastSwap)
                 {
                     return;
@@ -107,8 +112,31 @@ namespace BuildingCollections
                 }
             }
 
+            int plants = 0;
+            using (var entities = plantQuery.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var e in entities)
+                {
+                    if (!prefabSystem.TryGetPrefab(e, out PrefabBase prefab) || prefab == null || byName.ContainsKey(prefab.name))
+                    {
+                        continue;
+                    }
+
+                    string icon = null;
+                    try { icon = ImageSystem.GetThumbnail(prefab); } catch { }
+                    byName[prefab.name] = new CatalogEntry
+                    {
+                        Prefab = e,
+                        IsDecor = true,
+                        Icon = icon ?? string.Empty,
+                        Info = new BuildingInfo { PrefabName = prefab.name, Corner = CornerKind.None },
+                    };
+                    plants++;
+                }
+            }
+
             Version++;
-            Mod.Log.Info($"Catálogo de edificios: {byName.Count} prefabs ({duplicates} nombres repetidos ignorados).");
+            Mod.Log.Info($"Catálogo: {byName.Count - plants} edificios y {plants} plantas ({duplicates} nombres repetidos ignorados).");
         }
     }
 }

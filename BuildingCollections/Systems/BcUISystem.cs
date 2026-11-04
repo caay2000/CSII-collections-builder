@@ -53,6 +53,8 @@ namespace BuildingCollections.Systems
             public int widthOp, widthValue, depthOp, depthValue, levelOp, levelValue;
             public int density = 100;
             public bool leaveGaps;
+            public string decor = string.Empty;
+            public int decorDensity = 50;
         }
 
         protected override void OnCreate()
@@ -264,13 +266,13 @@ namespace BuildingCollections.Systems
             {
                 if (PrefabCatalog.TryGet(name, out var e))
                 {
-                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, icon = e.Icon });
+                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, icon = e.Icon, decor = e.IsDecor });
                 }
                 else
                 {
                     // Aún sin cargar (assets que llegan tarde) o ya no instalado: se muestra pero no se borra.
                     missing++;
-                    list.Add(new { id = name, name = name + " (not loaded)", w = 0, d = 0, level = 0, icon = string.Empty });
+                    list.Add(new { id = name, name = name + " (not loaded)", w = 0, d = 0, level = 0, icon = string.Empty, decor = false });
                 }
             }
 
@@ -369,7 +371,14 @@ namespace BuildingCollections.Systems
         {
             try
             {
-                if (!panelOpen.value || string.IsNullOrEmpty(selected.value) || !(prefab is BuildingPrefab))
+                if (!panelOpen.value || string.IsNullOrEmpty(selected.value) || prefab == null)
+                {
+                    return;
+                }
+
+                // Edificios, y también árboles y plantas (para la decoración del espacio sobrante).
+                if (!(prefab is BuildingPrefab) &&
+                    !(World.GetOrCreateSystemManaged<PrefabSystem>().TryGetEntity(prefab, out Unity.Entities.Entity pe) && EntityManager.HasComponent<PlantData>(pe)))
                 {
                     return;
                 }
@@ -409,6 +418,8 @@ namespace BuildingCollections.Systems
                 levelOp = (int)s.LevelOp, levelValue = s.LevelValue,
                 density = s.Density,
                 leaveGaps = s.LeaveGaps,
+                decor = s.DecorCollection ?? string.Empty,
+                decorDensity = s.DecorDensity,
             }));
         }
 
@@ -427,6 +438,8 @@ namespace BuildingCollections.Systems
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.LeaveGaps = f.leaveGaps;
+            s.DecorCollection = f.decor ?? string.Empty;
+            s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             builder.SetMode(s.Mode);
             saveCountdown = 60;
             PushBuilder();
@@ -450,7 +463,14 @@ namespace BuildingCollections.Systems
                 .OrderBy(e => e.Info.PrefabName, StringComparer.Ordinal)
                 .ToList();
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
-            builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps);
+            // Decoración: las plantas de la colección elegida (puede ser la misma que la de los edificios).
+            var decorCollection = CollectionStore.Find(s.DecorCollection);
+            var decor = decorCollection == null ? new List<CatalogEntry>() : decorCollection.Prefabs
+                .Select(n => PrefabCatalog.TryGet(n, out var e) ? e : null)
+                .Where(e => e != null && e.IsDecor)
+                .OrderBy(e => e.Info.PrefabName, StringComparer.Ordinal)
+                .ToList();
+            builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps, decor, s.DecorDensity);
         }
 
         static CompareOp ToOp(int v) => v >= 0 && v <= 3 ? (CompareOp)v : CompareOp.Equal;

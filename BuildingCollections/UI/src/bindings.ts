@@ -6,6 +6,8 @@ export interface CollectionDto { name: string; tag: string; count: number }
 /** Un edificio de la colección seleccionada. Los datos salen del propio juego; pack solo si Find It está. */
 export interface BuildingDto {
     id: string; name: string; w: number; d: number; level: number; icon: string;
+    /** Árbol o planta: va en la decoración, no en las parcelas. */
+    decor?: boolean;
 }
 export interface BuilderDto {
     mode: "block" | "polygon";
@@ -14,11 +16,14 @@ export interface BuilderDto {
     levelOp: number; levelValue: number;
     density: number;
     leaveGaps: boolean;
+    /** Colección cuyas plantas decoran el espacio sobrante ("" = sin decoración). */
+    decor: string;
+    decorDensity: number;
 }
 export interface PlanDto { areaSelected: boolean; previewing: boolean; lots: number; blocks: number }
 
 export const DEFAULT_BUILDER: BuilderDto = {
-    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false,
+    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, decor: "", decorDensity: 50,
 };
 
 const panelOpen$ = bindValue<boolean>(G, "panelOpen", false);

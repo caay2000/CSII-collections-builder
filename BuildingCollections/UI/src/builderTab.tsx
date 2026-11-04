@@ -18,7 +18,7 @@ export const BuilderTab = () => {
         return () => actions.setToolActive(false);
     }, []);
 
-    const candidates = buildings.filter((x) =>
+    const candidates = buildings.filter((x) => !x.decor &&
         matches(b.widthOp, b.widthValue, x.w) && matches(b.depthOp, b.depthValue, x.d) && matches(b.levelOp, b.levelValue, x.level));
     const canGenerate = plan.areaSelected && !!selected && candidates.length > 0;
     const density = Math.max(10, Math.min(100, Math.round(b.density / 10) * 10));
@@ -43,7 +43,7 @@ export const BuilderTab = () => {
                 <span className={styles.hint}>
                     {b.mode === "block"
                         ? "Click inside a block enclosed by roads: everything inside is selected. Right-click clears."
-                        : "Click to place corners, click the first one to close. Right-click undoes the last corner."}
+                        : "Click to place corners (they snap to the sidewalk), click the first one to close. Right-click undoes the last corner."}
                 </span>
             </div>
 
@@ -63,6 +63,23 @@ export const BuilderTab = () => {
                 </div>
             </div>
 
+            <div className={styles.sec}>
+                <span className={styles.lbl}>Decor</span>
+                <CollectionPicker items={collections} selected={b.decor} noneLabel="No decor" onSelect={(n) => set({ decor: n })} />
+            </div>
+            {b.decor && (
+                <div className={styles.builderFilters}>
+                    <div className={styles.filterBox}>
+                        <div className={styles.filter} title="Trees and plants from this collection fill the leftover space (courtyards, gaps). Add them with Shift+click in Find It.">
+                            <span className={styles.filterLabel}>Decor density</span>
+                            <Stepper value={`${b.decorDensity}%`}
+                                onDown={() => set({ decorDensity: Math.max(10, b.decorDensity - 10) })}
+                                onUp={() => set({ decorDensity: Math.min(100, b.decorDensity + 10) })} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className={styles.summary}>
                 {!selected ? (
                     <span className={styles.summaryEmpty}>Choose a collection.</span>
@@ -79,7 +96,7 @@ export const BuilderTab = () => {
                             )}
                         </div>
                         <div className={styles.summaryCol}>
-                            <span className={styles.big}>{`${candidates.length}`}<span className={styles.bigOf}>{` / ${buildings.length}`}</span></span>
+                            <span className={styles.big}>{`${candidates.length}`}<span className={styles.bigOf}>{` / ${buildings.filter((x) => !x.decor).length}`}</span></span>
                             <span className={styles.small}>buildings match</span>
                         </div>
                     </>

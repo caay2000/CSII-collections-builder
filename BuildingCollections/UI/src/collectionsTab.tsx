@@ -104,9 +104,12 @@ export const CollectionsTab = () => {
                                 <div key={b.id} className={styles.card} title={`${b.name} · level ${b.level}`}>
                                     <img className={styles.thumb} src={b.icon} />
                                     {b.w > 0 && <span className={styles.sizeTag}>{`${b.w}×${b.d}`}</span>}
-                                    <div className={styles.pips}>
-                                        {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= b.level ? styles.pipOn : styles.pip} />)}
-                                    </div>
+                                    {b.decor && <span className={styles.sizeTag}>Plant</span>}
+                                    {!b.decor && (
+                                        <div className={styles.pips}>
+                                            {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= b.level ? styles.pipOn : styles.pip} />)}
+                                        </div>
+                                    )}
                                     <div className={styles.cardName}>{name}</div>
                                     <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])}>
                                         <img src={icon("remove")} />

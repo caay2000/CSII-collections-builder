@@ -51,6 +51,11 @@ namespace BuildingCollections.Systems
             public int2 Min;
             public int2 Max;
             public bool Corner;
+
+            /// <summary>Planta de la decoración: se coloca en Pos / Rot, no en una parcela.</summary>
+            public bool IsDecor;
+            public float3 Pos;
+            public quaternion Rot;
         }
 
         readonly List<SelectedBlock> selection = new List<SelectedBlock>();
@@ -69,6 +74,22 @@ namespace BuildingCollections.Systems
         CityConfigurationSystem city;
         BuiltGuardSystem guard;
         readonly List<float3> polygon = new List<float3>();
+
+        // Polígono que se adapta a las calles: bordillo (índice en curbs) y posición de cada vértice enganchado.
+        readonly List<int> polyCurb = new List<int>();
+        readonly List<double> polyArc = new List<double>();
+        List<List<Pt>> curbs = new List<List<Pt>>();
+        float2 curbCenter;
+        int curbAge = int.MaxValue;
+        bool hoverSnapped;
+        CurbHit hoverHit;
+        const float SnapDistance = 6f;
+        const float CurbRadius = 800f;
+        const double HugTolerance = 1.5;
+
+        // Contorno del área seleccionada (para la decoración) y árboles que ya hay en ella.
+        List<Pt> areaOutline;
+        EntityQuery treeQuery;
         string mode = "block";
         float3 hoverPos;
         bool hasHover;
@@ -83,7 +104,7 @@ namespace BuildingCollections.Systems
         public bool Previewing => preview.Count > 0;
 
         /// <summary>Parcelas: edificios de la vista previa, o celdas frontales libres si aún no hay vista previa.</summary>
-        public int Lots => Previewing ? preview.Count : freeFrontCells;
+        public int Lots => Previewing ? preview.Count(p => !p.IsDecor) : freeFrontCells;
 
         /// <summary>Bloques de zona seleccionados.</summary>
         public int Blocks => selection.Count;
@@ -111,6 +132,11 @@ namespace BuildingCollections.Systems
                 ComponentType.ReadOnly<Edge>(),
                 ComponentType.ReadOnly<Curve>(),
                 ComponentType.ReadOnly<Road>(),
+                ComponentType.Exclude<Deleted>(),
+                ComponentType.Exclude<Temp>());
+            treeQuery = GetEntityQuery(
+                ComponentType.ReadOnly<Game.Objects.Tree>(),
+                ComponentType.ReadOnly<Transform>(),
                 ComponentType.Exclude<Deleted>(),
                 ComponentType.Exclude<Temp>());
             buildingQuery = GetEntityQuery(
@@ -178,17 +204,21 @@ namespace BuildingCollections.Systems
         public void ClearSelection()
         {
             polygon.Clear();
+            polyCurb.Clear();
+            polyArc.Clear();
             selection.Clear();
             preview.Clear();
             areaFill.Clear();
             areaEdge.Clear();
+            areaOutline = null;
             freeFrontCells = 0;
             definitionsDirty = true;
             Say("Selection cleared.");
         }
 
         /// <summary>Calcula una combinación nueva con la semilla dada y pide al juego la vista previa.</summary>
-        public void GeneratePreview(IReadOnlyList<CatalogEntry> candidates, int density, int seed, bool leaveGaps)
+        public void GeneratePreview(IReadOnlyList<CatalogEntry> candidates, int density, int seed, bool leaveGaps,
+            IReadOnlyList<CatalogEntry> decor = null, int decorDensity = 50)
         {
             try
             {
@@ -272,8 +302,36 @@ namespace BuildingCollections.Systems
                     log.AppendLine($"  {(s.Virtual != null ? "tira" : "bloque " + s.Entity.Index)}: rejilla {grid.Width}x{grid.Depth}, {grid.FreeCount()} libres ({masked} tapadas por otros bloques), esquinas L={grid.LeftCorner} R={grid.RightCorner} -> {string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [esquina]" : string.Empty)}"))}");
                 }
 
+                // Decoración del espacio sobrante (patio, huecos): plantas de la colección elegida, lejos de la acera y de
+                // los edificios (los planificados y los que ya hay), y sin pisar árboles existentes.
+                int buildingsPlanned = preview.Count;
+                int plants = 0;
+                if (decor != null && decor.Count > 0 && areaOutline != null)
+                {
+                    var blockers = footprints.Select(f => f.quad).ToList();
+                    blockers.AddRange(BuildingFootprints(areaOutline));
+                    var spots = Decor.Scatter(areaOutline, blockers, TreePoints(areaOutline), Decor.SpacingFor(decorDensity), 2.5, 2.0, seed);
+                    var rng = new System.Random(seed ^ 0x5bd1e995);
+                    foreach (var q in spots)
+                    {
+                        var pick = decor[rng.Next(decor.Count)];
+                        preview.Add(new Planned
+                        {
+                            Name = pick.Info.PrefabName,
+                            Prefab = pick.Prefab,
+                            IsDecor = true,
+                            Pos = new float3((float)q.X, 0, (float)q.Y),
+                            Rot = quaternion.RotateY((float)(rng.NextDouble() * Math.PI * 2)),
+                        });
+                    }
+
+                    plants = spots.Count;
+                    log.AppendLine($"  decoración: {plants} plantas de {decor.Count} tipos, densidad {decorDensity}%.");
+                }
+
                 Mod.Log.Info(log.ToString().TrimEnd());
-                Say(preview.Count == 0 ? "Nothing fits in the selected area with these filters." : $"Preview: {preview.Count} buildings.");
+                Say(buildingsPlanned == 0 && plants == 0 ? "Nothing fits in the selected area with these filters."
+                    : plants > 0 ? $"Preview: {buildingsPlanned} buildings, {plants} plants." : $"Preview: {buildingsPlanned} buildings.");
             }
             catch (Exception e)
             {
@@ -322,9 +380,14 @@ namespace BuildingCollections.Systems
                 DrawSelection();
 
                 hasHover = GetRaycastResult(out Entity _, out RaycastHit hit);
+                hoverSnapped = false;
                 if (hasHover)
                 {
                     hoverPos = hit.m_HitPosition;
+                    if (mode == "polygon" && selection.Count == 0)
+                    {
+                        SnapHover();
+                    }
                 }
 
                 if (cancelAction.WasPressedThisFrame())
@@ -332,6 +395,8 @@ namespace BuildingCollections.Systems
                     if (mode == "polygon" && polygon.Count > 0 && selection.Count == 0)
                     {
                         polygon.RemoveAt(polygon.Count - 1);
+                        polyCurb.RemoveAt(polyCurb.Count - 1);
+                        polyArc.RemoveAt(polyArc.Count - 1);
                         Say(polygon.Count == 0 ? "Polygon cleared." : $"{polygon.Count} points.");
                     }
                     else
@@ -425,9 +490,20 @@ namespace BuildingCollections.Systems
                     continue;
                 }
 
-                var t = new Transform(ZoneUtils.GetPosition(p.Block, p.Min, p.Max), ZoneUtils.GetRotation(p.Block));
-                float3 front = BuildingUtils.CalculateFrontPosition(t, p.Max.y - p.Min.y);
-                float y = TerrainUtils.SampleHeight(ref heights, front);
+                Transform t;
+                float y;
+                if (p.IsDecor)
+                {
+                    t = new Transform(p.Pos, p.Rot);
+                    y = TerrainUtils.SampleHeight(ref heights, p.Pos);
+                }
+                else
+                {
+                    t = new Transform(ZoneUtils.GetPosition(p.Block, p.Min, p.Max), ZoneUtils.GetRotation(p.Block));
+                    float3 front = BuildingUtils.CalculateFrontPosition(t, p.Max.y - p.Min.y);
+                    y = TerrainUtils.SampleHeight(ref heights, front);
+                }
+
                 if (cfg.UsePlacementOffset && EntityManager.HasComponent<PlaceableObjectData>(p.Prefab))
                 {
                     var pod = EntityManager.GetComponentData<PlaceableObjectData>(p.Prefab);
@@ -581,9 +657,14 @@ namespace BuildingCollections.Systems
                 selection.Clear();
                 preview.Clear();
                 polygon.Clear();
+                polyCurb.Clear();
+                polyArc.Clear();
                 areaFill.Clear();
                 areaEdge.Clear();
+                areaOutline = null;
                 definitionsDirty = true;
+                SnapHover();
+                point = hoverPos;
             }
 
             if (polygon.Count >= 3 && math.distance(point.xz, polygon[0].xz) <= 12f)
@@ -598,17 +679,110 @@ namespace BuildingCollections.Systems
             }
 
             polygon.Add(point);
+            polyCurb.Add(hoverSnapped ? hoverHit.Curb : -1);
+            polyArc.Add(hoverSnapped ? hoverHit.Arc : 0);
             Say(polygon.Count < 3 ? $"{polygon.Count} points. Keep clicking corners." : $"{polygon.Count} points. Click the first point to close.");
         }
 
         void SelectPolygon()
         {
-            var poly = polygon.Select(p => new Pt(p.x, p.z)).ToList();
+            var cfg = DevConfig.Load();
+            var verts = polygon.Select(p => new Pt(p.x, p.z)).ToList();
+            CurbSnap.Sides(verts, polyCurb, polyArc, curbs, HugTolerance, out var sides, out var frontage);
+
+            // Lados pegados a una calle: parcelas propias mirando a ella, como en el modo bloque.
+            if (cfg.UseVirtualLots && frontage.Any(f => f) &&
+                SelectVirtualSides(sides, frontage, $"polígono de {polygon.Count} vértices ({frontage.Count(f => f)} lados con calle)"))
+            {
+                return;
+            }
+
+            var poly = VirtualLots.Outline(sides);
             if (!SelectInside(poly, $"polígono de {polygon.Count} vértices"))
             {
                 polygon.Clear();
-                Say("The polygon contains no zoned cells.");
+                polyCurb.Clear();
+                polyArc.Clear();
+                Say("The polygon touches no street and contains no zoned cells.");
             }
+        }
+
+        /// <summary>Engancha el cursor al bordillo más cercano (a menos de SnapDistance).</summary>
+        void SnapHover()
+        {
+            // Mientras se dibuja no se recalculan los bordillos: los vértices guardan su índice.
+            if (polygon.Count == 0 && (curbAge++ > 300 || math.distance(curbCenter, hoverPos.xz) > CurbRadius / 2))
+            {
+                RebuildCurbs(hoverPos.xz);
+            }
+
+            hoverSnapped = CurbSnap.TrySnap(curbs, new Pt(hoverPos.x, hoverPos.z), SnapDistance, out hoverHit);
+            if (hoverSnapped)
+            {
+                var heights = m_TerrainSystem.GetHeightData();
+                var p = new float3((float)hoverHit.Point.X, 0, (float)hoverHit.Point.Y);
+                p.y = TerrainUtils.SampleHeight(ref heights, p);
+                hoverPos = p;
+            }
+        }
+
+        /// <summary>Bordillos (los dos bordes exteriores de cada calle) cerca de un punto.</summary>
+        void RebuildCurbs(float2 center)
+        {
+            curbs = new List<List<Pt>>();
+            curbCenter = center;
+            curbAge = 0;
+            using (var entities = roadQuery.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var e in entities)
+                {
+                    if (!EntityManager.HasComponent<EdgeGeometry>(e))
+                    {
+                        continue;
+                    }
+
+                    var g = EntityManager.GetComponentData<EdgeGeometry>(e);
+                    var lo = g.m_Bounds.min.xz;
+                    var hi = g.m_Bounds.max.xz;
+                    if (math.distancesq(math.clamp(center, lo, hi), center) > CurbRadius * CurbRadius)
+                    {
+                        continue;
+                    }
+
+                    if (EntityManager.HasComponent<Game.Net.Elevation>(e))
+                    {
+                        var el = EntityManager.GetComponentData<Game.Net.Elevation>(e).m_Elevation;
+                        if (math.abs(el.x + el.y) * 0.5f >= 3f)
+                        {
+                            continue;
+                        }
+                    }
+
+                    foreach (bool left in new[] { true, false })
+                    {
+                        var pts = Sample(left ? g.m_Start.m_Left : g.m_Start.m_Right);
+                        pts.AddRange(Sample(left ? g.m_End.m_Left : g.m_End.m_Right).Skip(1));
+                        curbs.Add(pts);
+                    }
+                }
+            }
+        }
+
+        /// <summary>Puntos (a la altura del terreno) del lado del polígono entre dos vértices, siguiendo el bordillo si toca.</summary>
+        List<float3> PolygonSegment(float3 a, int curbA, double arcA, float3 b, int curbB, double arcB)
+        {
+            if (curbA < 0 || curbA != curbB || curbA >= curbs.Count)
+            {
+                return new List<float3> { a, b };
+            }
+
+            var heights = m_TerrainSystem.GetHeightData();
+            return CurbSnap.Path(curbs[curbA], arcA, arcB).Select(q =>
+            {
+                var p = new float3((float)q.X, 0, (float)q.Y);
+                p.y = TerrainUtils.SampleHeight(ref heights, p);
+                return p;
+            }).ToList();
         }
 
         /// <summary>Selecciona las celdas visibles cuyo centro cae dentro del contorno. Devuelve false si no hay ninguna.</summary>
@@ -742,6 +916,12 @@ namespace BuildingCollections.Systems
                 }
             }
 
+            return SelectVirtualSides(sides, null, description);
+        }
+
+        /// <summary>Parcelas propias a lo largo de los lados con calle (frontage null = todos) de un contorno.</summary>
+        bool SelectVirtualSides(List<List<Pt>> sides, List<bool> frontage, string description)
+        {
             var outline = VirtualLots.Outline(sides);
             if (outline.Count < 3)
             {
@@ -749,7 +929,7 @@ namespace BuildingCollections.Systems
             }
 
             var obstacles = BuildingFootprints(outline);
-            var strips = VirtualLots.Build(sides, obstacles);
+            var strips = VirtualLots.Build(sides, obstacles, frontage: frontage);
             var chosen = new List<SelectedBlock>();
             var heights = m_TerrainSystem.GetHeightData();
             foreach (var st in strips)
@@ -893,11 +1073,32 @@ namespace BuildingCollections.Systems
             return result;
         }
 
+        /// <summary>Árboles que ya hay dentro de la caja del contorno.</summary>
+        List<Pt> TreePoints(List<Pt> outline)
+        {
+            double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
+            double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
+            var result = new List<Pt>();
+            using (var transforms = treeQuery.ToComponentDataArray<Transform>(Allocator.Temp))
+            {
+                foreach (var tr in transforms)
+                {
+                    if (tr.m_Position.x >= minX && tr.m_Position.x <= maxX && tr.m_Position.z >= minZ && tr.m_Position.z <= maxZ)
+                    {
+                        result.Add(new Pt(tr.m_Position.x, tr.m_Position.z));
+                    }
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>Prepara el dibujo del área: franjas paralelas que la rellenan y su contorno.</summary>
         void SetArea(List<Pt> outline)
         {
             areaFill.Clear();
             areaEdge.Clear();
+            areaOutline = outline != null && outline.Count >= 3 ? outline : null;
             if (outline == null || outline.Count < 3)
             {
                 return;
@@ -949,6 +1150,7 @@ namespace BuildingCollections.Systems
             preview.Clear();
             areaFill.Clear();
             areaEdge.Clear();
+            areaOutline = null;
             definitionsDirty = true;
 
             freeFrontCells = 0;
@@ -1205,7 +1407,8 @@ namespace BuildingCollections.Systems
 
         void DrawSelection()
         {
-            if (selection.Count == 0 && polygon.Count == 0)
+            bool snapMarker = mode == "polygon" && selection.Count == 0 && hasHover && hoverSnapped;
+            if (selection.Count == 0 && polygon.Count == 0 && !snapMarker)
             {
                 return;
             }
@@ -1236,22 +1439,38 @@ namespace BuildingCollections.Systems
                 }
             }
 
+            var snapColor = new UnityEngine.Color(0.3f, 0.95f, 0.85f, 1f);
+            if (snapMarker)
+            {
+                buffer.DrawCircle(snapColor, hoverPos, 4f);
+            }
+
             if (polygon.Count > 0)
             {
                 var lineColor = new UnityEngine.Color(0.4f, 0.75f, 1f, 0.95f);
-                for (int i = 1; i < polygon.Count; i++)
+                void Path(List<float3> pts, float width, UnityEngine.Color color)
                 {
-                    buffer.DrawLine(lineColor, new Line3.Segment(polygon[i - 1], polygon[i]), 1f);
+                    for (int k = 1; k < pts.Count; k++)
+                    {
+                        buffer.DrawLine(color, new Line3.Segment(pts[k - 1], pts[k]), width);
+                    }
                 }
 
+                // Cerrado, el contorno ya lo dibuja el área; mientras se dibuja, cada lado sigue el bordillo si toca.
                 bool closed = selection.Count > 0;
-                if (closed)
+                if (!closed)
                 {
-                    buffer.DrawLine(lineColor, new Line3.Segment(polygon[polygon.Count - 1], polygon[0]), 1f);
-                }
-                else if (hasHover)
-                {
-                    buffer.DrawLine(lineColor, new Line3.Segment(polygon[polygon.Count - 1], hoverPos), 0.6f);
+                    for (int i = 1; i < polygon.Count; i++)
+                    {
+                        Path(PolygonSegment(polygon[i - 1], polyCurb[i - 1], polyArc[i - 1], polygon[i], polyCurb[i], polyArc[i]), 1f, polyCurb[i] >= 0 && polyCurb[i] == polyCurb[i - 1] ? snapColor : lineColor);
+                    }
+
+                    if (hasHover)
+                    {
+                        int last = polygon.Count - 1;
+                        bool follows = hoverSnapped && polyCurb[last] >= 0 && polyCurb[last] == hoverHit.Curb;
+                        Path(PolygonSegment(polygon[last], polyCurb[last], polyArc[last], hoverPos, hoverSnapped ? hoverHit.Curb : -1, hoverHit.Arc), 0.6f, follows ? snapColor : lineColor);
+                    }
                 }
 
                 // Punto de cierre: más grande, y resaltado cuando el cursor está encima.
