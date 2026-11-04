@@ -21,7 +21,7 @@ namespace BuildingCollections
                 { s.GetOptionTabLocaleID(BuildingCollectionsSettings.Keys), "Key bindings" },
                 { s.GetOptionGroupLocaleID(BuildingCollectionsSettings.Anarchy), "Anarchy" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.AnarchyOverlap)), "Max overlap with Anarchy (m)" },
-                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.AnarchyOverlap)), "When the Anarchy mod is on, buildings from different streets may overlap up to this distance, so fewer lots are lost at corners and curves. The actual overlap is whatever the geometry needs, between 0 and this value. Without Anarchy, buildings never overlap." },
+                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.AnarchyOverlap)), "When the Anarchy mod is on, buildings from different streets may overlap up to this distance, so fewer lots are lost at corners and curves. The actual overlap is whatever the geometry needs, between 0 and this value. 0 = no overlap, same as without Anarchy." },
                 { s.GetOptionGroupLocaleID(BuildingCollectionsSettings.Shortcuts), "Shortcuts" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.ActivateBinding)), "Toggle block builder tool" },
                 { s.GetBindingKeyLocaleID(BuildingCollectionsSettings.ActivateAction), "Toggle block builder tool" },

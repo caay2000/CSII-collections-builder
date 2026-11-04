@@ -252,6 +252,7 @@ namespace BuildingCollections.Systems
                 // Con Anarchy encendido (y nuestra herramienta en su lista) se admite un solape pequeño entre edificios
                 // de calles distintas; sin él, ninguno (0,05 m solo para que dos que se tocan no cuenten).
                 bool anarchy = AnarchyBridge.Enabled;
+                // 0 en las opciones = sin solape, igual que sin Anarchy (0,05 m de margen para que tocarse no cuente).
                 float overlap = anarchy ? math.clamp(Mod.Settings?.AnarchyOverlap ?? 0.5f, 0.05f, 2f) : 0.05f;
                 log.Append($"  solape admitido {overlap:F2} m{(anarchy ? " (Anarchy)" : string.Empty)}.\n");
                 var footprints = new List<(Quad quad, SelectedBlock owner)>();

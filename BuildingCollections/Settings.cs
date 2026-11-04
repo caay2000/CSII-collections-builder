@@ -147,7 +147,7 @@ namespace BuildingCollections
         /// Con Anarchy encendido: cuánto (m) pueden pisarse dos edificios de calles distintas. Es un tope: el solape
         /// real es el que dé la geometría, entre 0 y este valor.
         /// </summary>
-        [SettingsUISlider(min = 0.05f, max = 2f, step = 0.05f, unit = Unit.kFloatTwoFractions)]
+        [SettingsUISlider(min = 0f, max = 2f, step = 0.05f, unit = Unit.kFloatTwoFractions)]
         [SettingsUISection(Section, Anarchy)]
         public float AnarchyOverlap { get; set; } = 0.5f;
 
