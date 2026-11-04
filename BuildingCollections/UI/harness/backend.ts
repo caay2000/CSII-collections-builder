@@ -34,7 +34,7 @@ export const CATALOG = ALL;
 interface State {
     panelOpen: boolean; toolActive: boolean; findIt: boolean;
     cols: { name: string; ids: string[] }[]; selected: string; status: string;
-    builder: BuilderDto; plan: PlanDto; seed: number; log: string[];
+    builder: BuilderDto; plan: PlanDto; seed: number; log: string[]; anarchy: boolean;
 }
 const S: State = {
     panelOpen: true, toolActive: false, findIt: true,
@@ -46,9 +46,11 @@ const S: State = {
         ...Array.from({ length: 12 }, (_, i) => ({ name: "Extra collection " + (i + 1), ids: ALL.slice(0, i + 2).map((b) => b.id) })),
     ],
     selected: "Neo French", status: "", builder: { ...DEFAULT_BUILDER },
-    plan: { areaSelected: false, previewing: false, lots: 0 }, seed: 1, log: [],
+    plan: { areaSelected: false, previewing: false, lots: 0 }, seed: 1, log: [], anarchy: true,
 };
 export const state = S;
+const TREE_SETS = ["YYTC-wild-deciduous-trees", "YYTC-evergreen-trees", "YYTC-wild-bushes",
+    ...[1, 2, 3, 4, 5].map((i) => "YYTC-custom-set-" + i)];
 const cur = () => S.cols.find((c) => c.name === S.selected);
 export const note = (t: string) => { S.log.unshift(t); S.log = S.log.slice(0, 6); emit(); };
 
@@ -61,8 +63,13 @@ export function read(key: string): string {
         case "status": return S.status;
         case "collections": return JSON.stringify(S.cols.map((c): CollectionDto => ({ name: c.name, tag: c.name.replace(/\s+/g, "-"), count: c.ids.length })));
         case "buildings": return JSON.stringify((cur()?.ids ?? []).map((id) => ALL.find((b) => b.id === id)).filter(Boolean));
+        case "mixBuildings": {
+            const m = (S.builder as any).mix as string | undefined;
+            const c = m && m !== S.selected ? S.cols.find((x) => x.name === m) : undefined;
+            return JSON.stringify((c?.ids ?? []).map((id) => ALL.find((b) => b.id === id)).filter(Boolean));
+        }
         case "builder": return JSON.stringify(S.builder);
-        case "plan": return JSON.stringify(S.plan);
+        case "plan": return JSON.stringify({ ...S.plan, anarchyAvailable: true, anarchy: S.anarchy, treeSets: TREE_SETS });
     }
     return "";
 }
@@ -93,6 +100,7 @@ export function trigger(name: string, ...args: any[]) {
         case "setToolActive": S.toolActive = !!args[0]; if (!S.toolActive) S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
         case "generatePreview": if (S.plan.previewing) S.seed++; S.plan = { ...S.plan, previewing: true }; break;
         case "clearSelection": S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
+        case "AnarchyToggled": S.anarchy = !S.anarchy; break;
         case "build": S.status = `Construidos ${S.plan.lots} edificios (simulado).`; S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
     }
     emit();

@@ -207,7 +207,7 @@ namespace BuildingCollections.Core
                     continue;
                 }
 
-                var pick = fitting[rng.Next(fitting.Count)];
+                var pick = Pick(fitting, rng);
                 Occupy(used, x, 0, pick);
                 result.Add(new Placement { X = x, Y = 0, Building = pick, IsCorner = false });
                 x += pick.LotWidth;
@@ -262,7 +262,7 @@ namespace BuildingCollections.Core
                         continue;
                     }
 
-                    var pick = optimal[rng.Next(optimal.Count)];
+                    var pick = Pick(optimal, rng);
                     Occupy(used, x0 + k, 0, pick);
                     result.Add(new Placement { X = x0 + k, Y = 0, Building = pick, IsCorner = false });
                     k += pick.LotWidth;
@@ -298,7 +298,7 @@ namespace BuildingCollections.Core
                 return;
             }
 
-            var pick = fitting[rng.Next(fitting.Count)];
+            var pick = Pick(fitting, rng);
             int px = atRight ? grid.Width - pick.LotWidth : 0;
             Occupy(used, px, 0, pick);
             result.Add(new Placement { X = px, Y = 0, Building = pick, IsCorner = isCorner });
@@ -314,10 +314,33 @@ namespace BuildingCollections.Core
                 return false;
             }
 
-            var pick = fitting[rng.Next(fitting.Count)];
+            var pick = Pick(fitting, rng);
             Occupy(used, 0, 0, pick);
             result.Add(new Placement { X = 0, Y = 0, Building = pick, IsCorner = true });
             return true;
+        }
+
+        /// <summary>
+        /// Uno al azar. Con una mezcla de dos colecciones y opciones de las dos, primero se elige la colección según su
+        /// parte (Share) y luego un edificio de ella; así el reparto sigue el porcentaje elegido aunque una colección
+        /// tenga muchos más edificios que la otra. Sin mezcla, igual que antes (mismo uso del generador).
+        /// </summary>
+        internal static BuildingInfo Pick(List<BuildingInfo> options, Random rng)
+        {
+            int first = 0;
+            foreach (var b in options)
+            {
+                first += b.Group == 0 ? 1 : 0;
+            }
+
+            if (first == 0 || first == options.Count)
+            {
+                return options[rng.Next(options.Count)];
+            }
+
+            bool fromFirst = rng.NextDouble() < options.First(b => b.Group == 0).Share;
+            var pool = options.Where(b => (b.Group == 0) == fromFirst).ToList();
+            return pool[rng.Next(pool.Count)];
         }
 
         static bool Fits(bool[,] used, PlanGrid grid, int x, int y, BuildingInfo b)

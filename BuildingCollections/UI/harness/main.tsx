@@ -4,6 +4,7 @@ import { GameTopLeftButton } from "../src/panel";
 import { actions, useBuilder, usePlan, useToolActive } from "../src/bindings";
 import { areaPicked, addToCurrent, CATALOG, note, state, subscribe } from "./backend";
 import { useSyncExternalStore } from "react";
+import { GAME_ICONS } from "./game-icons";
 
 const ICON = "data:image/svg+xml;utf8," + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M8 21V6M11 21V6M8 9l3 3M8 14l3 3M5 21h9"/><path d="M2 6h20M9.5 2l-4.5 4M9.5 2l9 4"/><rect x="3" y="7" width="4" height="3"/><path d="M19 6v7"/><path d="M17.5 13h3v2.5h-3z"/></svg>');
@@ -93,7 +94,13 @@ function Harness() {
 // El icono real sale de coui://; en el navegador lo sustituimos por un data URI.
 const origCreate = document.createElement.bind(document);
 document.createElement = ((tag: string, o?: any) => origCreate(tag, o)) as any;
-const mo = new MutationObserver(() => document.querySelectorAll<HTMLImageElement>('img[src^="coui://"]').forEach((i) => (i.src = ICON)));
+const ICONS: Record<string, string> = (window as any).BC_ICONS ?? {};
+const mo = new MutationObserver(() => document.querySelectorAll<HTMLImageElement>('img[src^="coui://"], img[src^="Media/"]').forEach((i) => {
+    const src = i.getAttribute("src") || "";
+    const m = /icons\/([\w-]+)\.svg$/.exec(src);
+    const g = /([\w]+)\.svg$/.exec(src);
+    i.src = (m && ICONS[m[1]]) || (g && GAME_ICONS[g[1]]) || ICON;
+}));
 mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["src"] });
 createRoot(document.getElementById("root")!).render(<Harness />);
 
@@ -121,4 +128,22 @@ setTimeout(() => {
     const btn = (t: string) => [...document.querySelectorAll("button")].find((b) => b.textContent === t) as HTMLButtonElement | undefined;
     btn("Builder")?.click();
     setTimeout(() => ([...document.querySelectorAll("button")].find((b) => /\(\d+\)/.test(b.textContent || "")) as HTMLButtonElement)?.click(), 80);
+}, 200);
+
+setTimeout(() => {
+    if (location.hash !== "#builder-mix") return;
+    const btn = (t: string) => [...document.querySelectorAll("button")].find((b) => b.textContent === t) as HTMLButtonElement | undefined;
+    btn("Builder")?.click();
+    setTimeout(() => btn("Add another collection")?.click(), 80);
+}, 200);
+
+setTimeout(() => {
+    if (location.hash !== "#builder-trees") return;
+    const btn = (t: string) => [...document.querySelectorAll("button")].find((b) => b.textContent === t) as HTMLButtonElement | undefined;
+    btn("Builder")?.click();
+    setTimeout(() => {
+        const row = [...document.querySelectorAll("span")].find((x) => x.textContent === "Trees in leftover space");
+        (row?.parentElement?.querySelector("button") as HTMLButtonElement)?.click();
+        setTimeout(() => document.querySelector("[class*=builderFilters]:nth-of-type(3)")?.scrollIntoView(), 80);
+    }, 80);
 }, 200);

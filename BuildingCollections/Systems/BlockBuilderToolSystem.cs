@@ -813,8 +813,18 @@ namespace BuildingCollections.Systems
             if (cfg.UseRoadFace)
             {
                 var face = TraceRoadFace(point.xz, cfg.RoadSearchRadius, out int roads, out var path);
+                lastSidesFull = false;
                 if (face != null && cfg.UseVirtualLots && SelectVirtual(face, path, $"manzana de calles ({path.Count} tramos), clic en ({point.x:F1}, {point.z:F1})"))
                 {
+                    return;
+                }
+
+                // Manzana encontrada pero sin una celda libre (ya construida entera): no se cae a las celdas de zona,
+                // que dibujaban el contorno por el eje de las calles (cruzando la calzada) sin nada que construir.
+                if (face != null && lastSidesFull)
+                {
+                    Mod.Log.Info($"[selección] clic en ({point.x:F1}, {point.z:F1}): la manzana ya está llena; no se selecciona.");
+                    Say("This block is already full.");
                     return;
                 }
 
@@ -1141,6 +1151,9 @@ namespace BuildingCollections.Systems
         /// Parcelas propias a lo largo de la acera de cada calle de la manzana, como Street Builder: no hacen falta
         /// celdas de zona, así que se llenan también las diagonales y las esquinas. Evita los edificios existentes.
         /// </summary>
+        /// <summary>La última manzana probada tenía aceras con parcelas, pero ninguna libre.</summary>
+        bool lastSidesFull;
+
         bool SelectVirtual(List<Pt> centerFace, List<(Entity edge, bool forward)> path, string description)
         {
             var sides = new List<List<Pt>>();
@@ -1167,6 +1180,7 @@ namespace BuildingCollections.Systems
 
             var obstacles = BuildingFootprints(outline);
             var strips = VirtualLots.Build(sides, obstacles, frontage: frontage);
+            lastSidesFull = strips.Count > 0 && strips.All(st => st.Grid.FreeCount() == 0);
             if (!SelectStrips(strips, outline, $"{description}: {sides.Count} aceras, {obstacles.Count} edificios existentes"))
             {
                 return false;
@@ -1687,6 +1701,14 @@ namespace BuildingCollections.Systems
                 chain.Add(p);
             }
 
+            // Solo el esquinero en ese extremo (calle corta): no hay cadena que apretar. Se mide el hueco igualmente y
+            // se registra, para saber cuánto queda sin cerrar.
+            bool cornerOnly = chain.Count == 0 && mine.Count == 1 && mine[0].Corner && mine[0].Shift == 0;
+            if (cornerOnly)
+            {
+                chain.Add(mine[0]);
+            }
+
             if (chain.Count == 0)
             {
                 return 0;
@@ -1736,10 +1758,18 @@ namespace BuildingCollections.Systems
                 return 0;
             }
 
+            if (cornerOnly)
+            {
+                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} junto al esquinero (calle sin más edificios): no hay cadena que apretar; se deja.");
+                return 0;
+            }
+
             float missing = ZoneUtils.CELL_SIZE - gap;
             int joints = chain.Count + 1;
             float perJoint = missing / joints;
-            if (overlap <= StrictOverlap || perJoint > overlap)
+            // El hueco se mide en pasos de 0,1 m sumados en float: 6,5 m sale 6,4999995 y pedía "0,50 m" con máximo
+            // 0,5, y se rechazaba. Un centímetro de margen absorbe ese error.
+            if (overlap <= StrictOverlap || perJoint > overlap + 0.01f)
             {
                 log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")}: cerrarlo pide {perJoint:F2} m de solape en cada una de {joints} juntas{(overlap <= StrictOverlap ? " (sin solape)" : $" (máximo {overlap:F1} m)")}; se deja.");
                 return 0;
