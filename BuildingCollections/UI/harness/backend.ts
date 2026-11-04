@@ -29,7 +29,11 @@ FAMILIES.forEach(([n, w, d, zone, pack]) => [1, 2, 3, 4, 5].forEach((lv) => {
     if ((n.length + lv) % 4 === 0) return;
     ALL.push({ id: `${n} L${lv}`, name: `${n} - L${lv} ${w}x${d}`, w, d, level: lv, icon: icon(n, lv, w, d) });
 }));
-export const CATALOG = ALL;
+export const CATALOG = ALL.slice();
+// Colección grande para probar el rendimiento de la rejilla (como la de 1600 de la partida de pruebas).
+const BIG = Array.from({ length: 1600 }, (_, i) => ({ ...CATALOG[i % CATALOG.length], id: `${CATALOG[i % CATALOG.length].id} #${i}` }));
+ALL.push(...BIG);
+const BY_ID = new Map<string, BuildingDto>();
 
 interface State {
     panelOpen: boolean; toolActive: boolean; findIt: boolean;
@@ -39,11 +43,12 @@ interface State {
 const S: State = {
     panelOpen: true, toolActive: false, findIt: true,
     cols: [
-        { name: "Neo French", ids: ALL.filter((b) => b.name.startsWith("FR")).map((b) => b.id) },
-        { name: "med modern city", ids: ALL.filter((b) => b.w >= 3).map((b) => b.id) },
-        { name: "med historic", ids: ALL.filter((b) => b.name.startsWith("BE")).map((b) => b.id) },
-        { name: "Test", ids: [ALL[0].id] },
-        ...Array.from({ length: 12 }, (_, i) => ({ name: "Extra collection " + (i + 1), ids: ALL.slice(0, i + 2).map((b) => b.id) })),
+        { name: "Neo French", ids: CATALOG.filter((b) => b.name.startsWith("FR")).map((b) => b.id) },
+        { name: "med modern city", ids: CATALOG.filter((b) => b.w >= 3).map((b) => b.id) },
+        { name: "med historic", ids: CATALOG.filter((b) => b.name.startsWith("BE")).map((b) => b.id) },
+        { name: "Test", ids: [CATALOG[0].id] },
+        { name: "Big 1600", ids: BIG.map((b) => b.id) },
+        ...Array.from({ length: 12 }, (_, i) => ({ name: "Extra collection " + (i + 1), ids: CATALOG.slice(0, i + 2).map((b) => b.id) })),
     ],
     selected: "Neo French", status: "", builder: { ...DEFAULT_BUILDER },
     plan: { areaSelected: false, previewing: false, lots: 0 }, seed: 1, log: [], anarchy: true,
@@ -51,6 +56,7 @@ const S: State = {
 export const state = S;
 const TREE_SETS = ["YYTC-wild-deciduous-trees", "YYTC-evergreen-trees", "YYTC-wild-bushes",
     ...[1, 2, 3, 4, 5].map((i) => "YYTC-custom-set-" + i)];
+const byId = (id: string) => { if (BY_ID.size === 0) ALL.forEach((b) => BY_ID.set(b.id, b)); return BY_ID.get(id); };
 const cur = () => S.cols.find((c) => c.name === S.selected);
 export const note = (t: string) => { S.log.unshift(t); S.log = S.log.slice(0, 6); emit(); };
 
@@ -63,11 +69,11 @@ export function read(key: string): string {
         case "status": return S.status;
         case "builderMessage": return S.plan.previewing ? `Preview: ${S.plan.lots} buildings.` : S.plan.areaSelected ? "1 blocks selected, 18 free roadside cells." : "";
         case "collections": return JSON.stringify(S.cols.map((c): CollectionDto => ({ name: c.name, tag: c.name.replace(/\s+/g, "-"), count: c.ids.length })));
-        case "buildings": return JSON.stringify((cur()?.ids ?? []).map((id) => ALL.find((b) => b.id === id)).filter(Boolean));
+        case "buildings": return JSON.stringify((cur()?.ids ?? []).map((id) => byId(id)).filter(Boolean));
         case "mixBuildings": {
             const m = (S.builder as any).mix as string | undefined;
             const c = m && m !== S.selected ? S.cols.find((x) => x.name === m) : undefined;
-            return JSON.stringify((c?.ids ?? []).map((id) => ALL.find((b) => b.id === id)).filter(Boolean));
+            return JSON.stringify((c?.ids ?? []).map((id) => byId(id)).filter(Boolean));
         }
         case "builder": return JSON.stringify(S.builder);
         case "plan": return JSON.stringify({ ...S.plan, anarchyAvailable: true, anarchy: S.anarchy, treeSets: TREE_SETS });
@@ -96,7 +102,7 @@ export function trigger(name: string, ...args: any[]) {
         case "clear": if (c) { c.ids = []; S.status = "OK"; } break;
         case "delete": if (c) { S.cols = S.cols.filter((x) => x !== c); S.selected = S.cols[0]?.name ?? ""; S.status = "OK"; } break;
         case "removeBuildings": if (c) { const rm = new Set<string>(JSON.parse(args[0])); c.ids = c.ids.filter((i) => !rm.has(i)); S.status = "OK"; } break;
-        case "addAll": if (c) { ALL.slice(0, 6).forEach((b) => { if (!c.ids.includes(b.id)) c.ids.push(b.id); }); S.status = "OK"; } break;
+        case "addAll": if (c) { CATALOG.slice(0, 6).forEach((b) => { if (!c.ids.includes(b.id)) c.ids.push(b.id); }); S.status = "OK"; } break;
         case "setBuilder": S.builder = JSON.parse(args[0]); S.plan = { ...S.plan }; break;
         case "setToolActive": S.toolActive = !!args[0]; if (!S.toolActive) S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
         case "generatePreview": if (S.plan.previewing) S.seed++; S.plan = { ...S.plan, previewing: true }; break;

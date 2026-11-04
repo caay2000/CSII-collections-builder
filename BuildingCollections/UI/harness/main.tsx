@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { GameTopLeftButton } from "../src/panel";
 import { actions, useBuilder, usePlan, useToolActive } from "../src/bindings";
-import { areaPicked, addToCurrent, CATALOG, note, state, subscribe } from "./backend";
+import { areaPicked, addToCurrent, CATALOG, note, state, subscribe, trigger } from "./backend";
 import { useSyncExternalStore } from "react";
 import { GAME_ICONS } from "./game-icons";
 
@@ -146,4 +146,29 @@ setTimeout(() => {
         (row?.parentElement?.querySelector("button") as HTMLButtonElement)?.click();
         setTimeout(() => document.querySelector("[class*=builderFilters]:nth-of-type(3)")?.scrollIntoView(), 80);
     }, 80);
+}, 200);
+
+// #big: colección de 1600 edificios, desplazada a la mitad (prueba de la rejilla virtual).
+setTimeout(() => {
+    if (location.hash !== "#big") return;
+    trigger("select", "Big 1600");
+    setTimeout(() => {
+        const sc = [...document.querySelectorAll<HTMLDivElement>("div")].find((d) => d.style.overflowY === "auto" && d.scrollHeight > 3000);
+        if (sc) { sc.scrollTop = sc.scrollHeight / 2; sc.dispatchEvent(new Event("scroll")); }
+        setTimeout(() => { document.body.dataset.cards = String(document.querySelectorAll("[title*='· level']").length); }, 300);
+    }, 300);
+}, 200);
+
+// #big-switch: desplazada a la mitad de la grande, se cambia a una pequeña (no debe quedar en blanco).
+setTimeout(() => {
+    if (location.hash !== "#big-switch") return;
+    trigger("select", "Big 1600");
+    setTimeout(() => {
+        const sc = [...document.querySelectorAll<HTMLDivElement>("div")].find((d) => d.style.overflowY === "auto" && d.scrollHeight > 3000);
+        if (sc) { sc.scrollTop = sc.scrollHeight / 2; sc.dispatchEvent(new Event("scroll")); }
+        setTimeout(() => {
+            trigger("select", "Test");
+            setTimeout(() => { document.body.dataset.cards = String(document.querySelectorAll("[title*='· level']").length); }, 300);
+        }, 300);
+    }, 300);
 }, 200);
