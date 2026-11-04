@@ -99,6 +99,30 @@ namespace BuildingCollections
         [SettingsUISection(Section, Collections)]
         public string Status => lastMessage;
 
+        bool findItTags = true;
+
+        /// <summary>Los ajustes ya se han leído del fichero: a partir de aquí un cambio de FindItTags es del usuario.</summary>
+        internal bool Loaded;
+
+        /// <summary>
+        /// Etiquetar en Find It los edificios de cada colección (#nombre). Apagado, el mod no toca las etiquetas de Find
+        /// It; al cambiarlo se ponen o se quitan las de todas las colecciones (en bloque, un solo guardado).
+        /// </summary>
+        [SettingsUISection(Section, Collections)]
+        public bool FindItTags
+        {
+            get => findItTags;
+            set
+            {
+                bool changed = Loaded && value != findItTags;
+                findItTags = value;
+                if (changed)
+                {
+                    CollectionService.SyncFindItTags(value);
+                }
+            }
+        }
+
         [SettingsUIKeyboardBinding(BindingKeyboard.B, ActivateAction, ctrl: true)]
         [SettingsUISection(Keys, Shortcuts)]
         public ProxyBinding ActivateBinding { get; set; }
@@ -211,6 +235,7 @@ namespace BuildingCollections
         {
             SelectedCollection = string.Empty;
             NewCollectionName = string.Empty;
+            FindItTags = true; // por la propiedad: si estaba apagada, "restablecer" vuelve a poner las etiquetas
             WidthOp = DepthOp = LevelOp = CompareOp.Equal;
             WidthValue = DepthValue = LevelValue = 0;
             Density = 100;
