@@ -154,6 +154,111 @@ namespace BuildingCollections
             catch (Exception e) { Mod.Log.Warn($"Find It GetAllTags falló: {e.Message}"); return new string[0]; }
         }
 
+        /// <summary>
+        /// Muchos cambios de etiquetas con un solo guardado. AddTag / RemoveTag de Find It reescriben su fichero
+        /// entero (CustomPrefabData.json) en cada llamada: borrar una colección de 1600 edificios eran 1600 guardados
+        /// y el juego a 2 FPS durante minutos. Aquí se hace lo mismo que esos métodos (por reflexión, sobre sus datos)
+        /// y se guarda una vez con su SaveCustomPrefabData. Devuelve false, sin tocar nada, si Find It no tiene esa
+        /// forma; entonces se usan AddTag / RemoveTag de uno en uno.
+        /// </summary>
+        public static bool TryApplyBatch(IReadOnlyList<(bool add, string prefab, string tag)> changes, out int skipped)
+        {
+            skipped = 0;
+            Resolve();
+            if (utilType == null)
+            {
+                return false;
+            }
+
+            const BindingFlags S = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            var dataField = utilType.GetField("customPrefabsData", S);
+            var getIndex = utilType.GetMethod("GetPrefabIndex", S, null, new[] { typeof(int) }, null);
+            var save = utilType.GetMethod("SaveCustomPrefabData", S, null, Type.EmptyTypes, null);
+            var normalize = utilType.GetMethod("NormalizeTag", S, null, new[] { typeof(string) }, null);
+            var dict = dataField?.GetValue(null) as IDictionary;
+            var dataType = dataField?.FieldType.IsGenericType == true ? dataField.FieldType.GetGenericArguments()[1] : null;
+            var dataTags = dataType?.GetProperty("Tags");
+            if (dict == null || getIndex == null || save == null || dataTags == null || dataTags.PropertyType != typeof(List<string>))
+            {
+                Mod.Log.Warn("Find It: su forma interna ha cambiado; etiquetas de una en una.");
+                return false;
+            }
+
+            // Como AddTag: si la etiqueta ya existe con otras mayúsculas, se usa la que hay (una sola llamada por bloque).
+            var canon = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var t in GetAllTags())
+            {
+                if (!string.IsNullOrEmpty(t) && !canon.ContainsKey(t)) canon[t] = t;
+            }
+
+            foreach (var (add, prefab, rawTag) in changes)
+            {
+                if (!TryGetId(prefab, out int id) || !(getIndex.Invoke(null, new object[] { id }) is object index))
+                {
+                    skipped++;
+                    continue;
+                }
+
+                var it = index.GetType();
+                var name = it.GetProperty("PrefabName")?.GetValue(index) as string;
+                var indexTags = it.GetProperty("Tags");
+                if (string.IsNullOrEmpty(name) || indexTags == null)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                string tag = normalize?.Invoke(null, new object[] { rawTag }) as string ?? rawTag;
+                if (string.IsNullOrEmpty(tag))
+                {
+                    continue;
+                }
+
+                if (canon.TryGetValue(tag, out var known)) tag = known;
+                else if (add) canon[tag] = tag;
+
+                var data = dict.Contains(name) ? dict[name] : null;
+                var tags = data != null ? dataTags.GetValue(data) as List<string> : null;
+                if (add)
+                {
+                    // Como AddTag: una etiqueta que ya pone el autor no se repite.
+                    if (it.GetProperty("CreatorTags")?.GetValue(index) is string[] creator && creator.Any(x => string.Equals(x, tag, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    if (data == null)
+                    {
+                        data = Activator.CreateInstance(dataType);
+                        dict[name] = data;
+                    }
+
+                    if (tags == null)
+                    {
+                        tags = new List<string>();
+                        dataTags.SetValue(data, tags);
+                    }
+
+                    if (tags.Any(x => string.Equals(x, tag, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    tags.Add(tag);
+                    tags.Sort(StringComparer.OrdinalIgnoreCase);
+                }
+                else if (tags == null || tags.RemoveAll(x => string.Equals(x, tag, StringComparison.OrdinalIgnoreCase)) == 0)
+                {
+                    continue;
+                }
+
+                indexTags.SetValue(index, new List<string>(tags));
+            }
+
+            save.Invoke(null, null);
+            return true;
+        }
+
         public static bool AddTag(int id, string tag) => Tag("AddTag", id, tag);
 
         public static bool RemoveTag(int id, string tag) => Tag("RemoveTag", id, tag);
