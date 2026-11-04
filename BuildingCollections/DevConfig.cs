@@ -18,8 +18,11 @@ namespace BuildingCollections
         /// </summary>
         public double BlockTouchTolerance = 4.0;
 
-        /// <summary>Distancia máxima (m) del clic a un bloque si el clic no cae dentro de ninguno.</summary>
-        public double ClickSnapDistance = 6.0;
+        /// <summary>
+        /// Margen (m) sobre la media diagonal de una celda (5,7 m) para aceptar el clic cerca de una celda visible.
+        /// Negativo = el clic tiene que caer dentro de la celda (un clic en la calle no selecciona nada).
+        /// </summary>
+        public double ClickSnapDistance = -1.5;
 
         /// <summary>Radio (m) alrededor del clic en el que se buscan bloques. Una manzana más grande queda cortada.</summary>
         public double SearchRadius = 400.0;

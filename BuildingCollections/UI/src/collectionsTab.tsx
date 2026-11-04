@@ -35,7 +35,8 @@ export const CollectionsTab = () => {
     return (
         <div className={styles.split}>
             <div className={styles.side}>
-                <input className={styles.input} value={name} placeholder="New collection name" onChange={(e) => setName(e.target.value)} />
+                <span className={styles.fieldLabel}>New collection</span>
+                <input className={styles.inputBox} value={name} placeholder="Name" onChange={(e) => setName(e.target.value)} />
                 <button className={styles.btnPrimary} disabled={!name.trim()} onClick={() => { actions.create(name); setName(""); }}>Create collection</button>
                 <Scrollable className={styles.list} vertical trackVisibility="scrollable">
                     {collections.length === 0 && <div className={styles.muted}>No collections yet.</div>}
@@ -71,21 +72,25 @@ export const CollectionsTab = () => {
                     <span className={styles.title2}>{current ? current.name : "No collection"}</span>
                     <span className={styles.muted}>{current ? `${shown.length} of ${buildings.length} shown` : ""}</span>
                 </div>
-                <input className={styles.input} placeholder="Search in collection" value={q} onChange={(e) => setQ(e.target.value)} />
+                <div className={styles.row}>
+                    <span className={styles.label}>Search</span>
+                    <input className={styles.input} placeholder="Name" value={q} onChange={(e) => setQ(e.target.value)} />
+                </div>
                 <StepFilter label="Lot width" op={f.wOp} value={f.wV} onChange={(o, v) => setF({ ...f, wOp: o, wV: v })} />
                 <StepFilter label="Lot depth" op={f.dOp} value={f.dV} onChange={(o, v) => setF({ ...f, dOp: o, dV: v })} />
                 <StepFilter label="Level" op={f.lOp} value={f.lV} onChange={(o, v) => setF({ ...f, lOp: o, lV: v })} />
                 <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable">
                     <div className={styles.grid}>
                     {shown.map((b) => {
-                        const name = prettyName(b.name);
-                        const size = `${b.w}x${b.d}`;
-                        const label = b.w > 0 && !name.endsWith(size) ? `${name} ${size}` : name;
+                        const size = b.w > 0 ? `${b.w}x${b.d}` : "";
+                        const head = [size, b.level > 0 ? `L${b.level}` : ""].filter((x) => x).join(" · ");
+                        // El tamaño y el nivel ya van en la primera línea: se quitan del final del nombre.
+                        const name = prettyName(b.name).replace(/(\s+(L\d|\d+x\d+))+$/, "");
                         return (
                             <div key={b.id} className={styles.card} title={`${b.name} · level ${b.level}`}>
                                 <img className={styles.thumb} src={b.icon} />
-                                <div className={styles.cardName}>{label}</div>
-                                {b.level > 0 && <span className={styles.lvl}>{`L${b.level}`}</span>}
+                                <div className={styles.cardHead}>{head}</div>
+                                <div className={styles.cardName}>{name}</div>
                                 <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])}>×</button>
                             </div>
                         );
