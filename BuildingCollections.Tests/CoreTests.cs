@@ -133,7 +133,43 @@ namespace BuildingCollections.Tests
             var g = PlanGrid.AllFree(30, 3, true, true);
             var plan = GridPlanner.Plan(g, Plain, Corners, density, 3);
             AssertNoOverlapAndInside(g, plan);
-            Assert.True(plan.Sum(p => p.Cells) <= System.Math.Floor(g.FreeCount() * density / 100.0) || plan.All(p => p.IsCorner));
+            Assert.True(plan.Sum(p => p.Building.LotWidth) <= System.Math.Floor(g.Width * density / 100.0) || plan.All(p => p.IsCorner));
+        }
+
+        [Theory]
+        [InlineData(7)]
+        [InlineData(11)]
+        [InlineData(24)]
+        public void Without_gaps_the_whole_front_is_covered(int width)
+        {
+            var g = PlanGrid.AllFree(width, 3, false, false);
+            for (int seed = 0; seed < 20; seed++)
+            {
+                var plan = GridPlanner.Plan(g, Plain, Corners, 100, seed);
+                AssertNoOverlapAndInside(g, plan);
+                Assert.Equal(width, plan.Sum(p => p.Building.LotWidth));
+            }
+        }
+
+        [Fact]
+        public void Without_gaps_covers_the_maximum_when_exact_is_impossible()
+        {
+            // Solo hay edificios de 3: en un tramo de 7 caben dos (6 de fachada), nunca menos.
+            var g = PlanGrid.AllFree(7, 3, false, false);
+            var threes = new[] { B("p3", 3, 2) };
+            for (int seed = 0; seed < 20; seed++)
+            {
+                Assert.Equal(6, GridPlanner.Plan(g, threes, new BuildingInfo[0], 100, seed).Sum(p => p.Building.LotWidth));
+            }
+        }
+
+        [Fact]
+        public void Density_counts_only_the_road_front()
+        {
+            // 20 de fachada y 6 de fondo: con edificios de 2 de fondo, el 60% tiene que dejar el 40% de la fachada vacía.
+            var g = PlanGrid.AllFree(20, 6, false, false);
+            var plan = GridPlanner.Plan(g, Plain, Corners, 60, 4);
+            Assert.InRange(plan.Sum(p => p.Building.LotWidth), 9, 12);
         }
 
         [Fact]

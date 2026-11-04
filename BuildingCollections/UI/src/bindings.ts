@@ -13,11 +13,12 @@ export interface BuilderDto {
     depthOp: number; depthValue: number;
     levelOp: number; levelValue: number;
     density: number;
+    leaveGaps: boolean;
 }
-export interface PlanDto { areaSelected: boolean; previewing: boolean; lots: number }
+export interface PlanDto { areaSelected: boolean; previewing: boolean; lots: number; blocks: number }
 
 export const DEFAULT_BUILDER: BuilderDto = {
-    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100,
+    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false,
 };
 
 const panelOpen$ = bindValue<boolean>(G, "panelOpen", false);
@@ -42,7 +43,7 @@ export const useStatus = () => useValue(status$);
 export const useCollections = (): CollectionDto[] => parse(useValue(collections$), []);
 export const useBuildings = (): BuildingDto[] => parse(useValue(buildings$), []);
 export const useBuilder = (): BuilderDto => ({ ...DEFAULT_BUILDER, ...parse<Partial<BuilderDto>>(useValue(builder$), {}) });
-export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
+export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
 
 export const actions = {
     setPanelOpen: (v: boolean) => trigger(G, "setPanelOpen", v),
@@ -51,6 +52,7 @@ export const actions = {
     clear: () => trigger(G, "clear"),
     remove: () => trigger(G, "delete"),
     clone: () => trigger(G, "clone"),
+    rename: (name: string) => trigger(G, "rename", name),
     removeBuildings: (ids: string[]) => trigger(G, "removeBuildings", JSON.stringify(ids)),
     addAllFromFindIt: () => trigger(G, "addAll"),
     setBuilder: (b: BuilderDto) => trigger(G, "setBuilder", JSON.stringify(b)),

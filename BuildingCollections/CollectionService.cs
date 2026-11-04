@@ -122,6 +122,47 @@ namespace BuildingCollections
             return null;
         }
 
+        /// <summary>Cambia el nombre de la colección y su etiqueta de Find It (quita la vieja y pone la nueva).</summary>
+        public static string Rename(string collectionName, string newName, out string finalName)
+        {
+            finalName = null;
+            var c = CollectionStore.Find(collectionName);
+            if (c == null)
+            {
+                return "No hay colección seleccionada.";
+            }
+
+            newName = (newName ?? string.Empty).Trim();
+            if (newName.Length == 0)
+            {
+                return "El nombre está vacío.";
+            }
+
+            var other = CollectionStore.Find(newName);
+            if (other != null && other != c)
+            {
+                return $"Ya existe la colección '{newName}'.";
+            }
+
+            string oldName = c.Name, oldTag = c.Tag, newTag = CollectionLogic.NormalizeTag(newName);
+            c.Name = newName;
+            c.Tag = newTag;
+            if (!string.Equals(oldTag, newTag, System.StringComparison.OrdinalIgnoreCase))
+            {
+                FindItBridge.RefreshIds();
+                foreach (var p in c.Prefabs)
+                {
+                    TagQueue.Remove(p, oldTag);
+                    TagQueue.Add(p, newTag);
+                }
+            }
+
+            CollectionStore.Save();
+            finalName = newName;
+            Mod.Log.Info($"Colección '{oldName}' renombrada a '{newName}' (etiqueta #{oldTag} -> #{newTag}).");
+            return null;
+        }
+
         /// <summary>Copia la colección con un nombre nuevo ("X copy", "X copy 2"...) y su propia etiqueta.</summary>
         public static string Clone(string collectionName, out string newName)
         {

@@ -1,83 +1,162 @@
-$bg: rgba(24, 32, 44, 0.97);
-$line: rgba(255, 255, 255, 0.13);
-$accent: #3b82f6;
-$soft: rgba(255, 255, 255, 0.08);
+// Estilo cercano al juego (Transit Planner, Recolor, Find It). Gameface: sin CSS grid ni gap fiable, así que las
+// separaciones van con márgenes. 1rem = 1px en la UI del juego.
+$panel: rgba(20, 28, 43, 0.94);
+$panelLine: rgba(255, 255, 255, 0.08);
+$line: rgba(255, 255, 255, 0.07);
+$primary: #3d8fe0;
+$gradTop: #55aef5;
+$gradBottom: #2f7fd0;
+$danger: #ff8a80;
+$text: #f2f5f9;
+$text2: #a9b6c8;
+$secLabel: #8fa0b8;
+$title: #7cc6ff;
+$levelOn: #6bdc7a;
+$dark: rgba(0, 0, 0, 0.5);
+$soft: rgba(255, 255, 255, 0.07);
 
+@mixin gradient { background-image: linear-gradient(to bottom, $gradTop, $gradBottom); }
+@mixin secLabel { font-size: 12rem; font-weight: bold; letter-spacing: 1rem; text-transform: uppercase; color: $secLabel; }
+
+// ---------- Panel ----------
 .panel, .panelWide {
     position: fixed; left: 20rem; top: 90rem;
     max-height: calc(100vh - 120rem);
     display: flex; flex-direction: column;
     pointer-events: auto;
-    background-color: $bg; border: 1rem solid $line; border-radius: 8rem;
-    color: #e8edf5; font-size: 13rem;
+    background-color: $panel; border: 1rem solid $panelLine; border-radius: 6rem;
+    box-shadow: 0 8rem 30rem rgba(0, 0, 0, 0.45);
+    color: $text; font-size: 14rem;
 }
-.panel, .panelWide { width: 700rem; }
-.panelWide { max-height: 70vh; }
-.header { cursor: move; display: flex; justify-content: space-between; align-items: center; padding: 8rem 12rem; border-bottom: 1rem solid $line; flex: none; }
-.title { font-weight: bold; font-size: 15rem; }
-.close { background: transparent; color: #e8edf5; border: none; font-size: 18rem; padding: 0 6rem; }
-.tabs { display: flex; flex: none; }
-.tab, .tabOn { flex: 1; padding: 8rem; background: transparent; color: #aab4c3; border: none; border-bottom: 2rem solid transparent; }
-.tabOn { color: #fff; border-bottom-color: $accent; }
-.body { padding: 10rem 12rem 12rem; overflow-y: auto; flex: 1; min-height: 0; }
-.col { display: flex; flex-direction: column; }
-.col > * { margin-bottom: 8rem; }
-.split { display: flex; flex-direction: row; }
-.side { width: 190rem; flex: none; margin-right: 12rem; display: flex; flex-direction: column; }
-.side > * { margin-bottom: 8rem; }
-.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.main > * { margin-bottom: 8rem; }
-.row { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; }
-.row > * { margin-right: 6rem; }
-.label { width: 78rem; flex: none; }
-.value { width: 36rem; text-align: right; }
-.title2 { font-weight: bold; font-size: 24rem; }
-.sec { font-size: 11rem; letter-spacing: 1rem; text-transform: uppercase; color: #60a5fa; text-align: center; }
-.input { flex: 1; min-width: 0; padding: 6rem 8rem; background: $soft; border: 1rem solid $line; border-radius: 4rem; color: #fff; }
-.list { max-height: 240rem; border: 1rem solid $line; border-radius: 4rem; background: rgba(255, 255, 255, 0.04); }
-.item, .itemOn { display: flex; justify-content: space-between; padding: 6rem 8rem; border-bottom: 1rem solid $line; }
-.itemOn { background: rgba(59, 130, 246, 0.38); }
-.btn, .btnDanger, .btnBuild, .btnPrimary, .btnClear { padding: 7rem 12rem; background: rgba(255, 255, 255, 0.1); border: 1rem solid $line; border-radius: 4rem; color: #fff; }
-.btnDanger { background: rgba(220, 60, 60, 0.38); }
-.btnBuild { background: #22a559; border-color: #22a559; font-weight: bold; padding: 9rem; }
-.btnPrimary { background: $accent; border-color: $accent; font-weight: bold; padding: 9rem; }
-.btnClear { background: rgba(220, 60, 60, 0.45); border-color: rgba(220, 60, 60, 0.7); padding: 8rem; }
+.panel { width: 432rem; }
+.panelWide { width: 704rem; height: 812rem; }
+
+.header { position: relative; cursor: move; display: flex; justify-content: center; align-items: center; height: 52rem; flex: none; border-bottom: 1rem solid $panelLine; }
+.title { font-size: 20rem; font-weight: 800; letter-spacing: 1.5rem; text-transform: uppercase; color: $title; }
+.close { position: absolute; right: 10rem; top: 10rem; width: 32rem; height: 32rem; padding: 7rem; background: transparent; border: none; }
+.close img { width: 18rem; height: 18rem; }
+
+.tabs { display: flex; flex-direction: row; flex: none; padding: 8rem 16rem 0; }
+.tab, .tabOn { flex: 1; height: 40rem; margin-right: 6rem; border: none; border-radius: 6rem 6rem 0 0; background-color: $soft; color: #c9d4e3; font-size: 16rem; font-weight: bold; letter-spacing: 1rem; text-transform: uppercase; }
+.tab:last-child, .tabOn:last-child { margin-right: 0; }
+.tab:hover { background-color: rgba(255, 255, 255, 0.14); }
+.tabOn { @include gradient; color: #fff; }
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; border-top: 2rem solid $primary; background-color: rgba(10, 16, 28, 0.35); }
+
+// ---------- Comunes ----------
+.secLabel { @include secLabel; }
+.lbl { font-size: 13rem; font-weight: bold; letter-spacing: 1rem; text-transform: uppercase; color: #c9d4e3; }
+.row { display: flex; flex-direction: row; align-items: center; }
+.muted { color: $text2; }
+.hint { color: $text2; font-size: 13rem; line-height: 18rem; }
+.ok { color: $levelOn; font-size: 13rem; }
+.warn { color: #fbbf77; font-size: 13rem; }
 button:disabled { opacity: 0.4; }
-.seg { display: flex; }
-.segBtnWide, .segOnWide { flex: 1; padding: 7rem; background: $soft; border: 1rem solid $line; color: #cbd5e1; }
-.segOnWide { background: $accent; border-color: $accent; color: #fff; }
-.step { display: flex; align-items: center; }
-.stepOp, .stepArrow { width: 28rem; height: 26rem; padding: 0; background: $soft; border: 1rem solid $line; color: #fff; }
-.stepOp { background: rgba(59, 130, 246, 0.45); margin-right: 4rem; border-radius: 4rem; }
-.stepArrow:first-of-type { border-radius: 4rem 0 0 4rem; }
-.stepArrow:last-child { border-radius: 0 4rem 4rem 0; }
-.stepValue { display: flex; align-items: center; justify-content: center; min-width: 56rem; height: 26rem; text-align: center; background: rgba(0, 0, 0, 0.3); border-top: 1rem solid $line; border-bottom: 1rem solid $line; }
-.gridScroll { max-height: calc(70vh - 330rem); min-height: 150rem; }
+
+.iconBtn, .iconBtnSmall, .iconBtnDanger { width: 36rem; height: 36rem; padding: 0; display: flex; align-items: center; justify-content: center; border: none; border-radius: 4rem; background-color: $soft; }
+.iconBtn:hover, .iconBtnSmall:hover, .iconBtnDanger:hover { background-color: rgba(255, 255, 255, 0.16); }
+.iconBtn img, .iconBtnDanger img { width: 18rem; height: 18rem; }
+.iconBtnSmall { width: 28rem; height: 28rem; }
+.iconBtnSmall img { width: 16rem; height: 16rem; }
+
+.inlineInput { height: 32rem; padding: 0 8rem; border: 1rem solid $primary; border-radius: 3rem; background-color: rgba(0, 0, 0, 0.35); color: #fff; font-size: 13rem; }
+
+.confirm { display: flex; flex-direction: column; padding: 8rem; border: 1rem solid rgba(255, 138, 128, 0.5); border-radius: 4rem; background-color: rgba(220, 60, 60, 0.12); font-size: 13rem; }
+.confirmBtns { display: flex; flex-direction: row; margin-top: 6rem; }
+.smallBtn, .smallBtnDanger, .smallBtnPrimary { height: 28rem; padding: 0 12rem; margin-right: 6rem; border: none; border-radius: 3rem; background-color: rgba(255, 255, 255, 0.1); color: #fff; font-size: 13rem; font-weight: bold; }
+.smallBtnDanger { background-color: rgba(220, 60, 60, 0.6); }
+.smallBtnPrimary { @include gradient; }
+
+// ---------- Filtros (StepFilter) ----------
+.filterBox { display: flex; flex-direction: column; padding: 6rem 10rem; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.04); }
+.filter { display: flex; flex-direction: row; align-items: center; height: 34rem; }
+.filterLabel { flex: 1; font-size: 14rem; font-weight: bold; color: #e6edf6; }
+.stepBtn, .stepOp { width: 30rem; height: 30rem; margin-left: 4rem; padding: 0; flex: none; display: flex; align-items: center; justify-content: center; border: none; border-radius: 3rem; background-color: $dark; color: #fff; font-size: 17rem; font-weight: 800; }
+.stepBtn:hover, .stepOp:hover { background-color: rgba(255, 255, 255, 0.18); }
+.stepBtn img { width: 14rem; height: 14rem; }
+.stepOpHidden { visibility: hidden; }
+.stepValue { width: 64rem; height: 30rem; margin-left: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 3rem; background-color: $dark; font-size: 15rem; font-weight: bold; }
+.check { width: 30rem; height: 30rem; margin-right: 34rem; padding: 4rem; border: none; border-radius: 3rem; background-color: $dark; }
+.checkOn { @include gradient; }
+.check img { width: 22rem; height: 22rem; }
+
+// ---------- Pestaña Collections ----------
+.split { flex: 1; min-height: 0; display: flex; flex-direction: row; }
+.side { width: 206rem; flex: none; display: flex; flex-direction: column; padding: 12rem 10rem; border-right: 1rem solid $line; }
+.side > * { margin-bottom: 8rem; }
+.sideHead { display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 0 4rem; }
+.list { flex: 1; min-height: 0; }
+.item, .itemOn { display: flex; flex-direction: row; align-items: center; justify-content: space-between; height: 36rem; padding: 0 10rem; margin-bottom: 2rem; border-radius: 3rem; color: #dbe5f2; }
+.item:hover { background-color: rgba(255, 255, 255, 0.08); }
+.itemOn { background-color: rgba(61, 143, 224, 0.35); color: #fff; }
+.itemName { font-size: 14rem; font-weight: 600; }
+.itemCount { font-size: 13rem; color: $text2; }
+.toolbar { display: flex; flex-direction: row; justify-content: space-between; padding-top: 8rem; border-top: 1rem solid $line; }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 12rem 14rem; }
+.main > * { margin-bottom: 10rem; }
+.searchRow { display: flex; flex-direction: row; align-items: center; }
+.search { flex: 1; display: flex; flex-direction: row; align-items: center; height: 36rem; padding: 0 10rem; margin-right: 8rem; border: 1rem solid rgba(255, 255, 255, 0.22); border-radius: 4rem; background-color: rgba(0, 0, 0, 0.3); }
+.search img { width: 18rem; height: 18rem; margin-right: 8rem; }
+.searchInput { flex: 1; min-width: 0; border: none; background-color: transparent; color: #fff; font-size: 15rem; }
+.count { font-size: 13rem; color: $text2; white-space: nowrap; }
+
+.gridScroll { flex: 1; min-height: 0; }
 .grid { display: flex; flex-direction: row; flex-wrap: wrap; }
-.card { position: relative; width: 81rem; height: 135rem; margin: 0 6rem 6rem 0; padding: 6rem 4rem 4rem; background: rgba(110, 130, 150, 0.22); border-radius: 4rem; display: flex; flex-direction: column; align-items: center; }
-.card:hover { background: rgba(140, 165, 190, 0.35); }
-.thumb { width: 62rem; height: 62rem; flex: none; margin-bottom: 5rem; }
-.cardHead { font-size: 11rem; font-weight: bold; color: #93c5fd; margin-bottom: 2rem; }
-.cardName { width: 100%; max-height: 39rem; overflow: hidden; font-size: 10rem; line-height: 13rem; text-align: center; color: #f1f5f9; }
-.lvl { position: absolute; top: 4rem; left: 4rem; background: rgba(0, 0, 0, 0.55); border-radius: 3rem; padding: 0 4rem; font-size: 10rem; }
-.remove { position: absolute; top: 3rem; right: 3rem; width: 20rem; height: 20rem; padding: 0; border: none; border-radius: 4rem; background: rgba(0, 0, 0, 0.65); color: #fff; opacity: 0; line-height: 18rem; }
+.card { position: relative; width: 86rem; height: 128rem; margin: 0 6rem 6rem 0; padding: 6rem 4rem 8rem; display: flex; flex-direction: column; align-items: center; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.08); }
+.card:hover { background-color: rgba(255, 255, 255, 0.15); }
+.thumb { width: 64rem; height: 64rem; flex: none; margin-bottom: 4rem; }
+.sizeTag { position: absolute; left: 5rem; top: 5rem; padding: 1rem 5rem; border-radius: 2rem; background-color: rgba(0, 0, 0, 0.55); font-size: 11rem; font-weight: bold; color: $title; }
+.pips { position: absolute; right: 5rem; top: 6rem; display: flex; flex-direction: row; }
+.pip, .pipOn { width: 4rem; height: 9rem; margin-left: 2rem; border-radius: 1rem; background-color: rgba(255, 255, 255, 0.18); }
+.pipOn { background-color: $levelOn; }
+.cardName { width: 100%; max-height: 42rem; overflow: hidden; font-size: 12rem; line-height: 14rem; font-weight: 600; text-align: center; color: #e6edf6; }
+.remove { position: absolute; right: 3rem; bottom: 3rem; width: 22rem; height: 22rem; padding: 5rem; border: none; border-radius: 3rem; background-color: rgba(200, 60, 50, 0.9); opacity: 0; }
+.remove img { width: 12rem; height: 12rem; }
 .card:hover .remove { opacity: 1; }
-.remove:hover { background: #e5484d; }
-.dd { display: flex; flex-direction: column; }
-.ddToggle { display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 7rem 10rem; background: $soft; border: 1rem solid $line; border-radius: 4rem; color: #fff; }
-.ddLabel { flex: 1; text-align: left; }
-.ddList { max-height: 200rem; overflow-y: auto; margin-top: 2rem; border: 1rem solid $line; border-radius: 4rem; background: rgba(0, 0, 0, 0.35); }
-.confirm { display: flex; flex-direction: column; padding: 8rem; border: 1rem solid rgba(220, 60, 60, 0.6); border-radius: 4rem; background: rgba(220, 60, 60, 0.12); }
-.confirm > * { margin-bottom: 6rem; }
-.fieldLabel { font-size: 12rem; color: #aab4c3; margin-bottom: 3rem; }
-.inputBox { flex: none; height: 30rem; padding: 6rem 8rem; background: $soft; border: 1rem solid $line; border-radius: 4rem; color: #fff; }
-.slider { position: relative; flex: 1; height: 22rem; margin-right: 8rem; }
-.sliderTrack { position: absolute; left: 0; right: 0; top: 9rem; height: 4rem; background: $soft; border-radius: 2rem; }
-.sliderFill { height: 4rem; background: $accent; border-radius: 2rem; }
-.sliderThumb { position: absolute; top: 3rem; width: 14rem; height: 14rem; margin-left: -7rem; background: #fff; border-radius: 7rem; }
-.status { font-size: 12rem; color: #aab4c3; display: flex; flex-direction: row; flex-wrap: wrap; align-items: baseline; white-space: pre-wrap; }
-.status b { color: #fff; }
-.muted { color: #8b97a8; }
-.hint { color: #8b97a8; font-size: 12rem; }
-.ok { color: #6ee7a0; }
-.warn { color: #fbbf77; }
+.empty { padding: 12rem 4rem; color: $text2; font-size: 13rem; }
+
+.footer { display: flex; flex-direction: row; align-items: center; padding-top: 8rem; border-top: 1rem solid $line; margin-bottom: 0; }
+.footerHint { flex: 1; display: flex; flex-direction: row; align-items: center; font-size: 13rem; color: $text2; }
+.kbd { padding: 1rem 6rem; margin-right: 6rem; border: 1rem solid rgba(255, 255, 255, 0.3); border-radius: 3rem; font-size: 12rem; font-weight: bold; color: #fff; }
+.textDanger { height: 30rem; padding: 0 12rem; border: none; background-color: transparent; color: $danger; font-size: 13rem; font-weight: bold; }
+.textDanger:hover { background-color: rgba(255, 138, 128, 0.12); }
+
+// ---------- Pestaña Builder ----------
+.sec { display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-height: 44rem; padding: 8rem 16rem; border-bottom: 1rem solid $line; }
+.secCol { display: flex; flex-direction: column; padding: 12rem 16rem; border-bottom: 1rem solid $line; }
+.secCol > * { margin-bottom: 8rem; }
+.secCol > *:last-child { margin-bottom: 0; }
+.modes { display: flex; flex-direction: row; }
+.mode, .modeOn { flex: 1; height: 56rem; margin-right: 6rem; display: flex; flex-direction: column; align-items: center; justify-content: center; border: none; border-radius: 4rem; background-color: $soft; color: #c9d4e3; font-size: 13rem; font-weight: bold; }
+.mode:last-child, .modeOn:last-child { margin-right: 0; }
+.mode:hover { background-color: rgba(255, 255, 255, 0.14); }
+.modeOn { @include gradient; color: #fff; }
+.mode img, .modeOn img { width: 22rem; height: 22rem; margin-bottom: 3rem; }
+.mode img { opacity: 0.8; }
+.builderFilters { padding: 10rem 16rem; border-bottom: 1rem solid $line; }
+
+.summary { display: flex; flex-direction: row; margin: 14rem 16rem 12rem; padding: 12rem 14rem; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.05); }
+.summaryCol { flex: 1; display: flex; flex-direction: column; }
+.big { font-size: 26rem; font-weight: 800; line-height: 30rem; color: #fff; }
+.bigAccent { font-size: 26rem; font-weight: 800; line-height: 30rem; color: $title; }
+.bigOf { font-size: 15rem; font-weight: 600; color: $text2; }
+.small { font-size: 13rem; color: $text2; }
+.summaryEmpty { font-size: 14rem; color: $text2; }
+
+.actions { display: flex; flex-direction: row; padding: 0 16rem 16rem; }
+.btnClear { width: 44rem; height: 44rem; flex: none; margin-right: 8rem; padding: 12rem; border: none; border-radius: 4rem; background-color: $soft; }
+.btnClear img { width: 20rem; height: 20rem; }
+.btn, .btnPrimary { flex: 1; height: 44rem; margin-right: 8rem; display: flex; flex-direction: row; align-items: center; justify-content: center; border: none; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.1); color: #fff; font-size: 15rem; font-weight: bold; }
+.btn:last-child, .btnPrimary:last-child { margin-right: 0; }
+.btn img, .btnPrimary img { width: 18rem; height: 18rem; margin-right: 8rem; }
+.btn:hover { background-color: rgba(255, 255, 255, 0.16); }
+.btnPrimary { @include gradient; }
+
+// Desplegable de colección
+.dd { position: relative; width: 220rem; }
+.ddToggle { width: 220rem; height: 36rem; display: flex; flex-direction: row; align-items: center; padding: 0 10rem; border: none; border-radius: 3rem; background-color: rgba(0, 0, 0, 0.45); color: #fff; font-size: 14rem; font-weight: 600; }
+.ddLabel { flex: 1; text-align: left; overflow: hidden; white-space: nowrap; }
+.ddCount { margin: 0 8rem; font-size: 13rem; color: $text2; }
+.ddToggle img { width: 14rem; height: 14rem; }
+.ddList { position: absolute; left: 0; top: 38rem; width: 220rem; max-height: 240rem; overflow-y: auto; z-index: 10; padding: 2rem; border: 1rem solid $panelLine; border-radius: 3rem; background-color: rgba(14, 20, 32, 0.98); }

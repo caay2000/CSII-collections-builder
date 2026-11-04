@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import styles from "./panel.module.scss";
 import { actions, BuilderDto, useBuilder, useBuildings, useCollections, usePlan, useSelected } from "./bindings";
 import { matches } from "./collectionsTab";
-import { CollectionPicker, Slider, StepFilter } from "./widgets";
+import { CheckRow, CollectionPicker, icon, StepFilter, Stepper } from "./widgets";
 
 export const BuilderTab = () => {
     const b = useBuilder();
@@ -21,46 +21,82 @@ export const BuilderTab = () => {
     const candidates = buildings.filter((x) =>
         matches(b.widthOp, b.widthValue, x.w) && matches(b.depthOp, b.depthValue, x.d) && matches(b.levelOp, b.levelValue, x.level));
     const canGenerate = plan.areaSelected && !!selected && candidates.length > 0;
+    const density = Math.max(10, Math.min(100, Math.round(b.density / 10) * 10));
 
     return (
-        <div className={styles.col}>
-            <div className={styles.sec}>Area</div>
-            <div className={styles.row}>
-                <div className={styles.seg} style={{ flex: 1 }}>
-                    <button className={b.mode === "block" ? styles.segOnWide : styles.segBtnWide} onClick={() => set({ mode: "block" })}>Block</button>
-                    <button className={b.mode === "polygon" ? styles.segOnWide : styles.segBtnWide} onClick={() => set({ mode: "polygon" })}>Polygon</button>
+        <>
+            <div className={styles.sec}>
+                <span className={styles.lbl}>Collection</span>
+                <CollectionPicker items={collections} selected={selected} onSelect={actions.select} />
+            </div>
+
+            <div className={styles.secCol}>
+                <span className={styles.lbl}>Area</span>
+                <div className={styles.modes}>
+                    <button className={b.mode === "block" ? styles.modeOn : styles.mode} onClick={() => set({ mode: "block" })}>
+                        <img src={icon("block")} />Block
+                    </button>
+                    <button className={b.mode === "polygon" ? styles.modeOn : styles.mode} onClick={() => set({ mode: "polygon" })}>
+                        <img src={icon("polygon")} />Polygon
+                    </button>
+                </div>
+                <span className={styles.hint}>
+                    {b.mode === "block"
+                        ? "Click inside a block enclosed by roads: everything inside is selected. Right-click clears."
+                        : "Click to place corners, click the first one to close. Right-click undoes the last corner."}
+                </span>
+            </div>
+
+            <div className={styles.builderFilters}>
+                <div className={styles.filterBox}>
+                    <StepFilter label="Lot Width" op={b.widthOp} value={b.widthValue} onChange={(o, v) => set({ widthOp: o, widthValue: v })} />
+                    <StepFilter label="Lot Depth" op={b.depthOp} value={b.depthValue} onChange={(o, v) => set({ depthOp: o, depthValue: v })} />
+                    <StepFilter label="Building Level" op={b.levelOp} value={b.levelValue} onChange={(o, v) => set({ levelOp: o, levelValue: v })} />
+                    <div className={styles.filter}>
+                        <span className={styles.filterLabel}>Density</span>
+                        <Stepper value={`${density}%`}
+                            onDown={() => set({ density: Math.max(10, density - 10) })}
+                            onUp={() => set({ density: Math.min(100, density + 10) })} />
+                    </div>
+                    <CheckRow label="Leave gaps" checked={b.leaveGaps} onChange={(v) => set({ leaveGaps: v })}
+                        title="Off: fill the whole road front with the sizes available. On: pick buildings at random and leave gaps." />
                 </div>
             </div>
-            <div className={styles.hint}>
-                {b.mode === "block"
-                    ? "Click inside a block enclosed by roads: the whole zoned area is selected. Right click: clear."
-                    : "Click to place corners and click the first point to close the polygon. Right click: undo last point."}
+
+            <div className={styles.summary}>
+                {!selected ? (
+                    <span className={styles.summaryEmpty}>Choose a collection.</span>
+                ) : (
+                    <>
+                        <div className={styles.summaryCol}>
+                            {plan.areaSelected ? (
+                                <>
+                                    <span className={styles.bigAccent}>{`${plan.lots}`}</span>
+                                    <span className={styles.small}>{plan.blocks > 0 ? `lots to fill · ${plan.blocks} blocks` : "lots to fill"}</span>
+                                </>
+                            ) : (
+                                <span className={styles.summaryEmpty}>Select an area in the world.</span>
+                            )}
+                        </div>
+                        <div className={styles.summaryCol}>
+                            <span className={styles.big}>{`${candidates.length}`}<span className={styles.bigOf}>{` / ${buildings.length}`}</span></span>
+                            <span className={styles.small}>buildings match</span>
+                        </div>
+                    </>
+                )}
             </div>
 
-            <div className={styles.sec}>Collection</div>
-            <CollectionPicker items={collections} selected={selected} onSelect={actions.select} />
-
-            <div className={styles.sec}>Filters</div>
-            <StepFilter label="Lot width" op={b.widthOp} value={b.widthValue} onChange={(o, v) => set({ widthOp: o, widthValue: v })} />
-            <StepFilter label="Lot depth" op={b.depthOp} value={b.depthValue} onChange={(o, v) => set({ depthOp: o, depthValue: v })} />
-            <StepFilter label="Level" op={b.levelOp} value={b.levelValue} onChange={(o, v) => set({ levelOp: o, levelValue: v })} />
-            <div className={styles.row}>
-                <span className={styles.label}>Density</span>
-                <Slider min={10} max={100} step={10} value={Math.max(10, Math.round(b.density / 10) * 10)} onChange={(v) => v !== b.density && set({ density: v })} />
-                <span className={styles.value}>{`${Math.max(10, Math.round(b.density / 10) * 10)}%`}</span>
+            <div className={styles.actions}>
+                <button className={styles.btnClear} title="Clear selection (right-click)" disabled={!plan.areaSelected} onClick={() => actions.clearSelection()}>
+                    <img src={icon("clear")} />
+                </button>
+                <button className={styles.btn} disabled={!canGenerate} onClick={() => actions.generatePreview()}>
+                    <img src={icon("shuffle")} />{plan.previewing ? "Reshuffle" : "Preview"}
+                </button>
+                <button className={plan.previewing ? styles.btnPrimary : styles.btn} disabled={!plan.previewing} onClick={() => actions.build()}>
+                    <img src={icon("build")} />Build
+                </button>
             </div>
-
-            <div className={styles.status}>
-                {selected ? <><b>{candidates.length}</b> of {buildings.length} buildings match</> : "Choose a collection."}
-                {plan.areaSelected && <> · <b>{plan.lots}</b> lots to fill</>}
-                {!plan.areaSelected && selected && <> · select an area in the world</>}
-            </div>
-
-            <button className={styles.btnPrimary} disabled={!canGenerate} onClick={() => actions.generatePreview()}>
-                {plan.previewing ? "New combination" : "Generate preview"}
-            </button>
-            <button className={styles.btnClear} disabled={!plan.areaSelected} onClick={() => actions.clearSelection()}>Clear</button>
-            <button className={styles.btnBuild} disabled={!plan.previewing} onClick={() => actions.build()}>Build</button>
-        </div>
+        </>
     );
 };

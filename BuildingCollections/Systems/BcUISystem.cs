@@ -42,12 +42,16 @@ namespace BuildingCollections.Systems
         int saveCountdown = -1;
         bool wantTool;   // la pestaña Builder está abierta y quiere la herramienta
         ToolBaseSystem lastTool;
+        ToolBaseSystem lastNonDefault;   // última herramienta activa que no era la normal
+        int defaultFrames;               // fotogramas seguidos con la herramienta normal activa
+        const int ExitFrames = 30;
 
         sealed class BuilderDto
         {
             public string mode = "block";
             public int widthOp, widthValue, depthOp, depthValue, levelOp, levelValue;
             public int density = 100;
+            public bool leaveGaps;
         }
 
         protected override void OnCreate()
@@ -85,6 +89,15 @@ namespace BuildingCollections.Systems
             {
                 Report(CollectionService.Delete(selected.value));
                 SetSelected(CollectionStore.Collections.FirstOrDefault()?.Name ?? string.Empty);
+            })));
+            AddBinding(new TriggerBinding<string>(Group, "rename", name => Safe(() =>
+            {
+                var error = CollectionService.Rename(selected.value, name, out var newName);
+                Report(error);
+                if (error == null)
+                {
+                    SetSelected(newName);
+                }
             })));
             AddBinding(new TriggerBinding(Group, "clone", () => Safe(() =>
             {
@@ -132,24 +145,47 @@ namespace BuildingCollections.Systems
             try
             {
                 // Si el usuario usó otra herramienta (p. ej. una carretera) y volvió a la normal con la pestaña Builder
-                // abierta, se reactiva la nuestra: si no, la pestaña se quedaba sin responder hasta cerrarla.
-                // Solo al volver de otra herramienta: si el usuario sale de la nuestra a la normal (Esc), se respeta.
+                // abierta, se reactiva la nuestra. Al elegir otra herramienta desde la barra el juego pasa a veces por
+                // la normal un fotograma (nuestra -> normal -> carretera): por eso salir de la nuestra a la normal
+                // solo cuenta como salida a propósito (Esc) si la normal sigue activa unos fotogramas.
                 var active = toolSystem.activeTool;
-                if (wantTool && panelOpen.value && active == defaultTool && lastTool != null && lastTool != defaultTool && lastTool != builder)
+                if (active != lastTool)
                 {
-                    toolSystem.activeTool = builder;
-                    active = builder;
+                    Mod.Log.Info($"[herramienta] {lastTool?.toolID ?? "-"} -> {active?.toolID ?? "-"}");
                 }
 
-                if (lastTool == builder && active == defaultTool)
+                if (active == defaultTool)
                 {
-                    wantTool = false; // salió de la nuestra a propósito (Esc): no se reactiva hasta volver a la pestaña
+                    defaultFrames++;
+                }
+                else
+                {
+                    defaultFrames = 0;
+                    if (active != null)
+                    {
+                        lastNonDefault = active;
+                    }
+                }
+
+                if (wantTool && panelOpen.value && active == defaultTool)
+                {
+                    if (lastNonDefault != null && lastNonDefault != builder)
+                    {
+                        toolSystem.activeTool = builder;
+                        active = builder;
+                        lastNonDefault = builder;
+                        defaultFrames = 0;
+                    }
+                    else if (lastNonDefault == builder && defaultFrames > ExitFrames)
+                    {
+                        wantTool = false; // salió de la nuestra a propósito (Esc): no se reactiva hasta volver a la pestaña
+                    }
                 }
 
                 lastTool = active;
 
                 toolActive.Update(toolSystem.activeTool == builder);
-                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots}}}");
+                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks}}}");
 
                 if (builder.MessageSerial != messageSerial)
                 {
@@ -369,6 +405,7 @@ namespace BuildingCollections.Systems
                 depthOp = (int)s.DepthOp, depthValue = s.DepthValue,
                 levelOp = (int)s.LevelOp, levelValue = s.LevelValue,
                 density = s.Density,
+                leaveGaps = s.LeaveGaps,
             }));
         }
 
@@ -386,6 +423,7 @@ namespace BuildingCollections.Systems
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
+            s.LeaveGaps = f.leaveGaps;
             builder.SetMode(s.Mode);
             saveCountdown = 60;
             PushBuilder();
@@ -409,7 +447,7 @@ namespace BuildingCollections.Systems
                 .OrderBy(e => e.Info.PrefabName, StringComparer.Ordinal)
                 .ToList();
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
-            builder.GeneratePreview(candidates, s.Density, seed);
+            builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps);
         }
 
         static CompareOp ToOp(int v) => v >= 0 && v <= 3 ? (CompareOp)v : CompareOp.Equal;

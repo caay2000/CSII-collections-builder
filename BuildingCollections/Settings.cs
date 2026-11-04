@@ -137,6 +137,11 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public int Density { get; set; } = 100;
 
+        /// <summary>Dejar huecos: relleno al azar sin intentar cubrir toda la fachada.</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public bool LeaveGaps { get; set; }
+
         /// <summary>Modo de selección del constructor: "block" o "polygon".</summary>
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
@@ -170,6 +175,7 @@ namespace BuildingCollections
             WidthOp = DepthOp = LevelOp = CompareOp.Equal;
             WidthValue = DepthValue = LevelValue = 0;
             Density = 100;
+            LeaveGaps = false;
             Mode = "block";
         }
     }

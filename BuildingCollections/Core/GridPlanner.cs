@@ -66,9 +66,10 @@ namespace BuildingCollections.Core
         /// <summary>
         /// Reparte edificios a lo largo de la fila frontal. Las esquinas llevan edificios esquineros (si la lista
         /// tiene alguno que encaje; si no, uno normal) y el resto, normales. La densidad (1 a 100) es el porcentaje
-        /// de celdas libres que se cubren. El resultado depende solo de las entradas y de la semilla.
+        /// de la fachada libre (fila frontal) que se cubre. Sin <paramref name="leaveGaps"/>, el relleno cubre el
+        /// máximo de fachada posible con los anchos disponibles. El resultado depende solo de las entradas y de la semilla.
         /// </summary>
-        public static List<Placement> Plan(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, int density, int seed)
+        public static List<Placement> Plan(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, int density, int seed, bool leaveGaps = false)
         {
             var result = new List<Placement>();
             if (grid.Width <= 0 || grid.Depth <= 0 || density <= 0)
@@ -97,7 +98,55 @@ namespace BuildingCollections.Core
                 TryCorner(grid, used, corners, plain, CornerKind.Left, false, rng, result);
             }
 
-            // 2) relleno del medio, de izquierda a derecha.
+            // 2) relleno del medio. Sin huecos: en cada tramo libre de la fila frontal se elige al azar una de las
+            //    combinaciones que cubren el máximo de fachada. Con huecos: de izquierda a derecha, al azar.
+            if (leaveGaps)
+            {
+                FillGreedy(grid, used, plain, rng, result);
+            }
+            else
+            {
+                FillMax(grid, used, plain, rng, result);
+            }
+
+            // 3) densidad: porcentaje de la fachada a calle (celdas libres de la fila frontal), no de toda la rejilla:
+            //    el fondo de la parcela no cuenta. Se quitan al azar edificios (primero los normales).
+            int front = FrontFree(grid);
+            int target = (int)Math.Floor(front * density / 100.0);
+            int covered = result.Sum(p => p.Building.LotWidth);
+            while (covered > target && result.Count > 0)
+            {
+                var removable = result.Where(p => !p.IsCorner).ToList();
+                if (removable.Count == 0)
+                {
+                    removable = result;
+                }
+
+                var victim = removable[rng.Next(removable.Count)];
+                result.Remove(victim);
+                covered -= victim.Building.LotWidth;
+            }
+
+            return result.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
+        }
+
+        static int FrontFree(PlanGrid grid)
+        {
+            int n = 0;
+            for (int x = 0; x < grid.Width; x++)
+            {
+                if (grid.Free[x, 0])
+                {
+                    n++;
+                }
+            }
+
+            return n;
+        }
+
+        /// <summary>De izquierda a derecha, un edificio al azar entre los que caben en el tramo (puede dejar huecos).</summary>
+        static void FillGreedy(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> plain, Random rng, List<Placement> result)
+        {
             int x = 0;
             while (x < grid.Width)
             {
@@ -125,25 +174,64 @@ namespace BuildingCollections.Core
                 result.Add(new Placement { X = x, Y = 0, Building = pick, IsCorner = false });
                 x += pick.LotWidth;
             }
+        }
 
-            // 3) densidad: se quitan al azar edificios (primero los normales) hasta no pasar el objetivo.
-            int free = grid.FreeCount();
-            int target = (int)Math.Floor(free * density / 100.0);
-            int covered = result.Sum(p => p.Cells);
-            while (covered > target && result.Count > 0)
+        /// <summary>
+        /// En cada tramo libre de la fila frontal, programación dinámica: best[i] = máxima fachada cubierta desde i
+        /// hasta el final del tramo. Luego se recorre eligiendo al azar entre las opciones que mantienen el óptimo.
+        /// </summary>
+        static void FillMax(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> plain, Random rng, List<Placement> result)
+        {
+            int x0 = 0;
+            while (x0 < grid.Width)
             {
-                var removable = result.Where(p => !p.IsCorner).ToList();
-                if (removable.Count == 0)
+                if (!used[x0, 0])
                 {
-                    removable = result;
+                    x0++;
+                    continue;
                 }
 
-                var victim = removable[rng.Next(removable.Count)];
-                result.Remove(victim);
-                covered -= victim.Cells;
-            }
+                int len = 0;
+                while (x0 + len < grid.Width && used[x0 + len, 0])
+                {
+                    len++;
+                }
 
-            return result.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
+                // Dentro del tramo los edificios ocupan columnas distintas: lo que cabe se decide con el estado inicial.
+                var options = new List<BuildingInfo>[len];
+                for (int i = 0; i < len; i++)
+                {
+                    options[i] = plain.Where(b => b.LotWidth <= len - i && Fits(used, grid, x0 + i, 0, b)).ToList();
+                }
+
+                var best = new int[len + 1];
+                for (int i = len - 1; i >= 0; i--)
+                {
+                    best[i] = best[i + 1];
+                    foreach (var b in options[i])
+                    {
+                        best[i] = Math.Max(best[i], b.LotWidth + best[i + b.LotWidth]);
+                    }
+                }
+
+                int k = 0;
+                while (k < len)
+                {
+                    var optimal = options[k].Where(b => b.LotWidth + best[k + b.LotWidth] == best[k]).ToList();
+                    if (optimal.Count == 0)
+                    {
+                        k++; // saltarse esta celda es lo óptimo
+                        continue;
+                    }
+
+                    var pick = optimal[rng.Next(optimal.Count)];
+                    Occupy(used, x0 + k, 0, pick);
+                    result.Add(new Placement { X = x0 + k, Y = 0, Building = pick, IsCorner = false });
+                    k += pick.LotWidth;
+                }
+
+                x0 += len;
+            }
         }
 
         static void TryCorner(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<BuildingInfo> plain,

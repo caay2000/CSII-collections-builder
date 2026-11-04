@@ -7,6 +7,7 @@ using Colossal.Mathematics;
 using Game.Buildings;
 using Game.City;
 using Game.Common;
+using Game.Net;
 using Game.Objects;
 using Game.Prefabs;
 using Game.Rendering;
@@ -54,6 +55,7 @@ namespace BuildingCollections.Systems
         EntityQuery blockQuery;
         EntityQuery tempBuildingQuery;
         EntityQuery definitionQuery;
+        EntityQuery roadQuery;
         OverlayRenderSystem overlay;
         CityConfigurationSystem city;
         BuiltGuardSystem guard;
@@ -74,6 +76,9 @@ namespace BuildingCollections.Systems
         /// <summary>Parcelas: edificios de la vista previa, o celdas frontales libres si aún no hay vista previa.</summary>
         public int Lots => Previewing ? preview.Count : freeFrontCells;
 
+        /// <summary>Bloques de zona seleccionados.</summary>
+        public int Blocks => selection.Count;
+
         public string Message { get; private set; } = string.Empty;
 
         public int MessageSerial { get; private set; }
@@ -93,6 +98,12 @@ namespace BuildingCollections.Systems
                 ComponentType.Exclude<Deleted>(),
                 ComponentType.Exclude<Owner>());
             definitionQuery = GetDefinitionQuery();
+            roadQuery = GetEntityQuery(
+                ComponentType.ReadOnly<Edge>(),
+                ComponentType.ReadOnly<Curve>(),
+                ComponentType.ReadOnly<Road>(),
+                ComponentType.Exclude<Deleted>(),
+                ComponentType.Exclude<Temp>());
             overlay = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
             city = World.GetOrCreateSystemManaged<CityConfigurationSystem>();
             guard = World.GetOrCreateSystemManaged<BuiltGuardSystem>();
@@ -160,7 +171,7 @@ namespace BuildingCollections.Systems
         }
 
         /// <summary>Calcula una combinación nueva con la semilla dada y pide al juego la vista previa.</summary>
-        public void GeneratePreview(IReadOnlyList<CatalogEntry> candidates, int density, int seed)
+        public void GeneratePreview(IReadOnlyList<CatalogEntry> candidates, int density, int seed, bool leaveGaps)
         {
             try
             {
@@ -173,7 +184,7 @@ namespace BuildingCollections.Systems
                 var prefabs = usable.ToDictionary(c => c.Info.PrefabName, c => c.Prefab, StringComparer.OrdinalIgnoreCase);
 
                 int index = 0;
-                var log = new StringBuilder($"[vista previa] semilla {seed}, densidad {density}%, {plain.Count} normales, {corners.Count} esquineros.\n");
+                var log = new StringBuilder($"[vista previa] semilla {seed}, densidad {density}%, huecos {leaveGaps}, {plain.Count} normales, {corners.Count} esquineros.\n");
 
                 // Huellas (en el suelo) de lo ya planificado: las celdas compartidas entre bloques que queden libres
                 // detrás de un edificio poco profundo se aprovechan desde la otra calle, sin solaparse.
@@ -205,7 +216,7 @@ namespace BuildingCollections.Systems
                     s.Outline = BuildOutline(s, cells, m_TerrainSystem.GetHeightData());
                     var grid = BuildGrid(s.Block, s.Area, cells, s.Include);
                     int masked = MaskFootprints(grid, s.Block, s.Area, footprints);
-                    var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++);
+                    var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++, leaveGaps);
                     foreach (var p in plan)
                     {
                         var min = new int2(s.Area.x + p.X, s.Area.z + p.Y);
@@ -356,7 +367,7 @@ namespace BuildingCollections.Systems
                 if (cfg.UsePlacementOffset && EntityManager.HasComponent<PlaceableObjectData>(p.Prefab))
                 {
                     var pod = EntityManager.GetComponentData<PlaceableObjectData>(p.Prefab);
-                    if ((pod.m_Flags & (PlacementFlags.Shoreline | PlacementFlags.Floating)) == 0)
+                    if ((pod.m_Flags & (Game.Objects.PlacementFlags.Shoreline | Game.Objects.PlacementFlags.Floating)) == 0)
                     {
                         y += pod.m_PlacementOffset.y;
                     }
@@ -433,6 +444,26 @@ namespace BuildingCollections.Systems
         void SelectAt(float3 point)
         {
             var cfg = DevConfig.Load();
+
+            // Como Street Builder: la manzana es todo lo que queda dentro de las calles que rodean el clic. Si el
+            // clic no está encerrado por calles, se cae al método de celdas que se tocan.
+            if (cfg.UseRoadFace)
+            {
+                var face = TraceRoadFace(point.xz, cfg.RoadSearchRadius, out int roads);
+                if (face != null)
+                {
+                    if (SelectInside(face, $"manzana de calles ({face.Count} puntos, {roads} tramos cerca), clic en ({point.x:F1}, {point.z:F1})"))
+                    {
+                        return;
+                    }
+
+                    Mod.Log.Info("[selección] La manzana de calles no contiene celdas de zona; se prueba por celdas.");
+                }
+                else
+                {
+                    Mod.Log.Info($"[selección] clic en ({point.x:F1}, {point.z:F1}): no está encerrado por calles ({roads} tramos cerca); se prueba por celdas.");
+                }
+            }
             var blocks = GatherBlocks(point.xz, cfg.SearchRadius, out int platter);
             var click = new Pt(point.x, point.z);
 
@@ -501,16 +532,20 @@ namespace BuildingCollections.Systems
 
         void SelectPolygon()
         {
-            var cfg = DevConfig.Load();
             var poly = polygon.Select(p => new Pt(p.x, p.z)).ToList();
-            float2 centroid = float2.zero;
-            foreach (var p in polygon)
+            if (!SelectInside(poly, $"polígono de {polygon.Count} vértices"))
             {
-                centroid += p.xz;
+                polygon.Clear();
+                Say("The polygon contains no zoned cells.");
             }
+        }
 
-            centroid /= polygon.Count;
-            double radius = polygon.Max(p => (double)math.distance(p.xz, centroid)) + 80;
+        /// <summary>Selecciona las celdas visibles cuyo centro cae dentro del contorno. Devuelve false si no hay ninguna.</summary>
+        bool SelectInside(List<Pt> poly, string description)
+        {
+            double cx = poly.Average(p => p.X), cz = poly.Average(p => p.Y);
+            var centroid = new float2((float)cx, (float)cz);
+            double radius = poly.Max(p => Math.Sqrt((p.X - cx) * (p.X - cx) + (p.Y - cz) * (p.Y - cz))) + 80;
             var blocks = GatherBlocks(centroid, radius, out int platter);
             var chosen = new List<SelectedBlock>();
             foreach (var (b, _) in blocks)
@@ -546,12 +581,67 @@ namespace BuildingCollections.Systems
 
             if (chosen.Count == 0)
             {
-                polygon.Clear();
-                Say("The polygon contains no zoned cells.");
-                return;
+                return false;
             }
 
-            SetSelection(chosen, $"polígono de {polygon.Count} vértices, {platter} de Platter ignorados");
+            SetSelection(chosen, $"{description}, {platter} de Platter ignorados");
+            return true;
+        }
+
+        /// <summary>Contorno (x, z) de la manzana de calles que contiene el punto, o null.</summary>
+        List<Pt> TraceRoadFace(float2 point, double radius, out int count)
+        {
+            var edges = new List<RoadEdge>();
+            var nodes = new Dictionary<Entity, int>();
+            int Id(Entity n)
+            {
+                if (!nodes.TryGetValue(n, out int id))
+                {
+                    nodes[n] = id = nodes.Count;
+                }
+
+                return id;
+            }
+
+            using (var entities = roadQuery.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var e in entities)
+                {
+                    var curve = EntityManager.GetComponentData<Curve>(e);
+                    var bz = curve.m_Bezier;
+                    // Cerca si algún punto de control lo está (las curvas quedan dentro de su envolvente).
+                    float r2 = (float)(radius * radius);
+                    if (math.distancesq(bz.a.xz, point) > r2 && math.distancesq(bz.d.xz, point) > r2 &&
+                        math.distancesq(bz.b.xz, point) > r2 && math.distancesq(bz.c.xz, point) > r2)
+                    {
+                        continue;
+                    }
+
+                    // Puentes y túneles no cierran manzanas en el suelo.
+                    if (EntityManager.HasComponent<Game.Net.Elevation>(e))
+                    {
+                        var el = EntityManager.GetComponentData<Game.Net.Elevation>(e).m_Elevation;
+                        if (math.abs(el.x) >= 3f && math.abs(el.y) >= 3f)
+                        {
+                            continue;
+                        }
+                    }
+
+                    var edge = EntityManager.GetComponentData<Edge>(e);
+                    var re = new RoadEdge { Start = Id(edge.m_Start), End = Id(edge.m_End) };
+                    int n = math.clamp((int)math.ceil(curve.m_Length / 4f), 1, 64);
+                    for (int k = 0; k <= n; k++)
+                    {
+                        var p = MathUtils.Position(bz, k / (float)n);
+                        re.Points.Add(new Pt(p.x, p.z));
+                    }
+
+                    edges.Add(re);
+                }
+            }
+
+            count = edges.Count;
+            return RoadFace.Trace(edges, new Pt(point.x, point.y));
         }
 
         void SetSelection(IEnumerable<SelectedBlock> blocks, string description)
