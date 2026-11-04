@@ -151,6 +151,14 @@ namespace BuildingCollections.Systems
             base.OnUpdate();
             try
             {
+                // Esc con el panel abierto: la acción "Back" de la UI no le llega al panel, así que se lee aquí la
+                // tecla y se avisa a la UI (que cancela un campo abierto o cierra el panel).
+                var keyboard = Keyboard.current;
+                if (panelOpen.value && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+                {
+                    escapes.Update(escapes.value + 1);
+                }
+
                 // Si el usuario usó otra herramienta (p. ej. una carretera) y volvió a la normal con la pestaña Builder
                 // abierta, se reactiva la nuestra. Al elegir otra herramienta desde la barra el juego pasa a veces por
                 // la normal un fotograma (nuestra -> normal -> carretera): por eso salir de la nuestra a la normal
@@ -195,13 +203,6 @@ namespace BuildingCollections.Systems
 
                 toolActive.Update(toolSystem.activeTool == builder);
 
-                // Esc con el panel abierto: la acción "Back" de la UI no le llega al panel, así que se lee aquí la
-                // tecla y se avisa a la UI (que cancela un campo abierto o cierra el panel).
-                var keyboard = Keyboard.current;
-                if (panelOpen.value && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
-                {
-                    escapes.Update(escapes.value + 1);
-                }
                 plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks}}}");
 
                 if (builder.MessageSerial != messageSerial)

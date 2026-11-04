@@ -15,12 +15,18 @@ export const IconButton = (p: { name: string; title: string; className?: string;
 // El campo también ve la tecla Esc (keydown) y puede desmontarse antes de que llegue "Back": esa misma pulsación
 // no debe cerrar además el panel.
 let escapeOverride: (() => void) | null = null;
-let lastInputEscape = 0;
-export const handleEscape = (): boolean => {
-    if (Date.now() - lastInputEscape < 300) return true;
-    if (!escapeOverride) return false;
-    escapeOverride();
-    return true;
+let lastEscape = 0;
+
+/**
+ * Único punto de entrada de Esc (tecla leída desde C#, acción "Back" o el propio campo): una misma pulsación
+ * puede llegar por varios caminos y solo cuenta una vez. Cancela el campo en línea abierto o, si no hay, cierra.
+ */
+export const onEscape = (close: () => void) => {
+    const now = Date.now();
+    if (now - lastEscape < 400) return;
+    lastEscape = now;
+    if (escapeOverride) escapeOverride();
+    else close();
 };
 
 /** Campo en línea: Enter confirma, Esc cancela. Se enfoca al aparecer. */
@@ -37,7 +43,7 @@ export const InlineInput = (p: { initial?: string; placeholder: string; onSubmit
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
                 if (e.key === "Enter" || e.keyCode === 13) { if (value.trim()) p.onSubmit(value.trim()); }
-                else if (e.key === "Escape" || e.keyCode === 27) { lastInputEscape = Date.now(); p.onCancel(); }
+                else if (e.key === "Escape" || e.keyCode === 27) onEscape(() => undefined);
             }} />
     );
 };

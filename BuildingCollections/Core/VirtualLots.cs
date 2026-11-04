@@ -77,7 +77,12 @@ namespace BuildingCollections.Core
                     double inward = 0;
                     for (int m = chunks[k].from + 1; m < chunks[k].to; m++)
                     {
-                        inward = Math.Max(inward, Pt.Cross(t, side.Points[m] - a));
+                        // Solo la parte de la curva delante de la tira (el sobrante no cuenta).
+                        double along = Pt.Dot(t, side.Points[m] - a);
+                        if (along >= offset - 0.5 && along <= offset + width * Cell + 0.5)
+                        {
+                            inward = Math.Max(inward, Pt.Cross(t, side.Points[m] - a));
+                        }
                     }
 
                     var normal = new Pt(-t.Y, t.X);

@@ -5,7 +5,7 @@ import styles from "./panel.module.scss";
 import { actions, useEscapes, usePanelOpen } from "./bindings";
 import { CollectionsTab } from "./collectionsTab";
 import { BuilderTab } from "./builderTab";
-import { handleEscape, icon } from "./widgets";
+import { icon, onEscape } from "./widgets";
 
 // Servido desde la carpeta del mod (Mod.cs registra coui://buildingcollections/). El motor no admite data: URIs.
 const ICON = "coui://buildingcollections/icon.svg";
@@ -54,12 +54,15 @@ const Panel = () => {
     const drag = useDrag();
     // Esc ("Back") cierra el panel, como los paneles del juego; con el panel cerrado, Esc vuelve a abrir el menú.
     // Si hay un campo en línea abierto (crear, renombrar), Esc solo lo cancela.
-    const back = useMemo(() => ({ Back: () => { if (!handleEscape()) actions.setPanelOpen(false); } }), []);
+    const back = useMemo(() => ({ Back: () => onEscape(() => actions.setPanelOpen(false)) }), []);
     // Esc leído desde C# (el contador sube con cada pulsación): mismo criterio que "Back".
     const escapes = useEscapes();
-    const firstEscapes = useRef(escapes);
+    const seenEscapes = useRef(escapes);
     useEffect(() => {
-        if (escapes !== firstEscapes.current && !handleEscape()) actions.setPanelOpen(false);
+        if (escapes !== seenEscapes.current) {
+            seenEscapes.current = escapes;
+            onEscape(() => actions.setPanelOpen(false));
+        }
     }, [escapes]);
     return (
         <InputActionConsumer actions={back} ignoreFocusState>
