@@ -40,6 +40,8 @@ namespace BuildingCollections.Systems
         int frame;
         int seedCounter;
         int saveCountdown = -1;
+        bool wantTool;   // la pestaña Builder está abierta y quiere la herramienta
+        ToolBaseSystem lastTool;
 
         sealed class BuilderDto
         {
@@ -84,6 +86,15 @@ namespace BuildingCollections.Systems
                 Report(CollectionService.Delete(selected.value));
                 SetSelected(CollectionStore.Collections.FirstOrDefault()?.Name ?? string.Empty);
             })));
+            AddBinding(new TriggerBinding(Group, "clone", () => Safe(() =>
+            {
+                var error = CollectionService.Clone(selected.value, out var newName);
+                Report(error);
+                if (error == null)
+                {
+                    SetSelected(newName);
+                }
+            })));
             AddBinding(new TriggerBinding<string>(Group, "removeBuildings", json => Safe(() =>
                 Report(CollectionService.RemoveBuildings(selected.value, JsonConvert.DeserializeObject<List<string>>(json) ?? new List<string>())))));
             AddBinding(new TriggerBinding<string>(Group, "setBuilder", json => Safe(() => ApplyBuilder(json))));
@@ -120,6 +131,18 @@ namespace BuildingCollections.Systems
             base.OnUpdate();
             try
             {
+                // Si el usuario usó otra herramienta (p. ej. una carretera) y volvió a la normal con la pestaña Builder
+                // abierta, se reactiva la nuestra: si no, la pestaña se quedaba sin responder hasta cerrarla.
+                // Solo al volver de otra herramienta: si el usuario sale de la nuestra a la normal (Esc), se respeta.
+                var active = toolSystem.activeTool;
+                if (wantTool && panelOpen.value && active == defaultTool && lastTool != null && lastTool != defaultTool && lastTool != builder)
+                {
+                    toolSystem.activeTool = builder;
+                    active = builder;
+                }
+
+                lastTool = active;
+
                 toolActive.Update(toolSystem.activeTool == builder);
                 plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots}}}");
 
@@ -138,6 +161,21 @@ namespace BuildingCollections.Systems
                     {
                         catalogVersion = PrefabCatalog.Version;
                         buildingsDirty = true;
+                    }
+                }
+
+                // Etiquetas de Find It repartidas entre fotogramas (cada una guarda el fichero de Find It).
+                if (TagQueue.Count > 0)
+                {
+                    int before = TagQueue.Count;
+                    if (TagQueue.Process(6))
+                    {
+                        Mod.Log.Info("Etiquetas de Find It actualizadas.");
+                        status.Update("OK");
+                    }
+                    else if (before / 25 != TagQueue.Count / 25)
+                    {
+                        status.Update($"Updating Find It tags... {TagQueue.Count} left");
                     }
                 }
 
@@ -219,6 +257,7 @@ namespace BuildingCollections.Systems
 
         void SetToolActive(bool active)
         {
+            wantTool = active;
             if (active)
             {
                 toolSystem.activeTool = builder;
@@ -341,7 +380,8 @@ namespace BuildingCollections.Systems
             s.WidthOp = ToOp(f.widthOp); s.WidthValue = Clamp(f.widthValue, 0, 5);
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
-            s.Density = Clamp(f.density, 1, 100);
+            s.Density = Clamp((int)Math.Round(f.density / 10.0) * 10, 10, 100);
+            builder.SetMode(s.Mode);
             saveCountdown = 60;
             PushBuilder();
         }

@@ -3,6 +3,11 @@ import styles from "./panel.module.scss";
 import { actions, useBuildings, useCollections, useFindIt, useSelected, useStatus } from "./bindings";
 import { StepFilter } from "./widgets";
 
+/** Nombre legible como el de Find It: "CCP5_ResidentialMediumLeft01_L1_2x2" -> "CCP5 Residential Medium Left01 L1 2x2". */
+export function prettyName(n: string): string {
+    return n.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+/g, " ").trim();
+}
+
 export function matches(op: number, value: number, n: number): boolean {
     if (!value) return true;
     return op === 0 ? n === value : op === 1 ? n !== value : op === 2 ? n > value : n < value;
@@ -22,7 +27,7 @@ export const CollectionsTab = () => {
     const shown = useMemo(
         () => buildings.filter((b) =>
             matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) &&
-            b.name.toLowerCase().includes(q.toLowerCase())),
+            (b.name.toLowerCase().includes(q.toLowerCase()) || prettyName(b.name).toLowerCase().includes(q.toLowerCase()))),
         [buildings, f, q]);
     const current = collections.find((c) => c.name === selected);
 
@@ -49,6 +54,7 @@ export const CollectionsTab = () => {
                 <div className={styles.row}>
                     {confirm === "" ? (
                         <>
+                            <button className={styles.btn} disabled={!current} onClick={() => actions.clone()}>Clone</button>
                             <button className={styles.btn} disabled={!current} onClick={() => setConfirm("clear")}>Empty</button>
                             <button className={styles.btnDanger} disabled={!current} onClick={() => setConfirm("delete")}>Delete</button>
                         </>
@@ -73,15 +79,19 @@ export const CollectionsTab = () => {
                 <StepFilter label="Lot depth" op={f.dOp} value={f.dV} onChange={(o, v) => setF({ ...f, dOp: o, dV: v })} />
                 <StepFilter label="Level" op={f.lOp} value={f.lV} onChange={(o, v) => setF({ ...f, lOp: o, lV: v })} />
                 <div className={styles.grid}>
-                    {shown.map((b) => (
-                        <div key={b.id} className={styles.card} title={`${b.name}\n${b.w}x${b.d} · level ${b.level}`}>
-                            <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])}>×</button>
-                            <span className={styles.lvl}>L{b.level}</span>
-                            <img className={styles.thumb} src={b.icon} />
-                            <div className={styles.cardName}>{b.name}</div>
-                            <div className={styles.muted}>{b.w}x{b.d}</div>
-                        </div>
-                    ))}
+                    {shown.map((b) => {
+                        const name = prettyName(b.name);
+                        const size = `${b.w}x${b.d}`;
+                        const label = b.w > 0 && !name.endsWith(size) ? `${name} ${size}` : name;
+                        return (
+                            <div key={b.id} className={styles.card} title={`${b.name} · level ${b.level}`}>
+                                <img className={styles.thumb} src={b.icon} />
+                                <div className={styles.cardName}>{label}</div>
+                                {b.level > 0 && <span className={styles.lvl}>{`L${b.level}`}</span>}
+                                <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])}>×</button>
+                            </div>
+                        );
+                    })}
                     {current && shown.length === 0 && (
                         <div className={styles.muted}>{buildings.length === 0 ? "Empty collection. Add buildings with Shift+click in Find It." : "Nothing matches these filters."}</div>
                     )}

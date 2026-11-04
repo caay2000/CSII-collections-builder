@@ -73,3 +73,36 @@ namespace BuildingCollections.Tests
         }
     }
 }
+
+namespace BuildingCollections.Tests
+{
+    public class PolygonAndCellGroupingTests
+    {
+        static Pt[] Cells(double x0, double y0, int w, int d) =>
+            Enumerable.Range(0, w * d).Select(i => new Pt(x0 + 4 + 8 * (i % w), y0 + 4 + 8 * (i / w))).ToArray();
+
+        [Fact]
+        public void Concave_polygon_contains()
+        {
+            // "L": el hueco de arriba a la derecha queda fuera.
+            var poly = new[] { new Pt(0, 0), new Pt(20, 0), new Pt(20, 10), new Pt(10, 10), new Pt(10, 20), new Pt(0, 20) };
+            Assert.True(Polygon.Contains(poly, new Pt(5, 15)));
+            Assert.True(Polygon.Contains(poly, new Pt(15, 5)));
+            Assert.False(Polygon.Contains(poly, new Pt(15, 15)));
+        }
+
+        [Fact]
+        public void Cell_flood_joins_adjacent_blocks_and_skips_across_road()
+        {
+            var blocks = new[]
+            {
+                Cells(0, 0, 6, 6),      // 0
+                Cells(48, 0, 4, 6),     // 1 contiguo (centros a 8 m)
+                Cells(0, 48 + 16, 6, 6),// 2 al otro lado de una calle de 16 m
+                Cells(81, 0, 2, 2),     // 3 contiguo a 1 con 1 m de cuña (centros a 9 m)
+            };
+            var g = BlockGrouping.FloodByCells(blocks, 0, 11).OrderBy(i => i).ToArray();
+            Assert.Equal(new[] { 0, 1, 3 }, g);
+        }
+    }
+}

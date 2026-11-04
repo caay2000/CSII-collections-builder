@@ -46,8 +46,8 @@ export const BuilderTab = () => {
             <StepFilter label="Level" op={b.levelOp} value={b.levelValue} onChange={(o, v) => set({ levelOp: o, levelValue: v })} />
             <div className={styles.row}>
                 <span className={styles.label}>Density</span>
-                <Slider min={1} max={100} value={b.density} onChange={(v) => set({ density: v })} />
-                <span className={styles.value}>{b.density}%</span>
+                <Slider min={10} max={100} step={10} value={Math.max(10, Math.round(b.density / 10) * 10)} onChange={(v) => v !== b.density && set({ density: v })} />
+                <span className={styles.value}>{`${Math.max(10, Math.round(b.density / 10) * 10)}%`}</span>
             </div>
 
             <div className={styles.status}>

@@ -98,8 +98,103 @@ namespace BuildingCollections.Core
         }
     }
 
+    public static class Polygon
+    {
+        /// <summary>Punto dentro de un polígono simple (convexo o cóncavo), por paridad de cruces.</summary>
+        public static bool Contains(IReadOnlyList<Pt> poly, Pt q)
+        {
+            bool inside = false;
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+            {
+                var a = poly[i];
+                var b = poly[j];
+                if ((a.Y > q.Y) != (b.Y > q.Y) && q.X < (b.X - a.X) * (q.Y - a.Y) / (b.Y - a.Y) + a.X)
+                {
+                    inside = !inside;
+                }
+            }
+
+            return inside;
+        }
+    }
+
     public static class BlockGrouping
     {
+        /// <summary>
+        /// Agrupa bloques por sus celdas visibles: dos bloques son de la misma manzana si alguna celda de uno tiene el
+        /// centro a menos de <paramref name="maxCenterDistance"/> metros de alguna del otro (celdas contiguas: 8 m). Una
+        /// calle en medio, aunque sea diagonal, los separa más; las curvas, con huecos en cuña entre bloques, no.
+        /// </summary>
+        public static List<int> FloodByCells(IReadOnlyList<Pt[]> cells, int start, double maxCenterDistance, int maxBlocks = 256)
+        {
+            var result = new List<int>();
+            if (start < 0 || start >= cells.Count)
+            {
+                return result;
+            }
+
+            var box = new (double minX, double minY, double maxX, double maxY)[cells.Count];
+            for (int i = 0; i < cells.Count; i++)
+            {
+                double x0 = double.MaxValue, y0 = double.MaxValue, x1 = double.MinValue, y1 = double.MinValue;
+                foreach (var c in cells[i])
+                {
+                    x0 = Math.Min(x0, c.X); y0 = Math.Min(y0, c.Y); x1 = Math.Max(x1, c.X); y1 = Math.Max(y1, c.Y);
+                }
+
+                box[i] = (x0, y0, x1, y1);
+            }
+
+            double d2 = maxCenterDistance * maxCenterDistance;
+            var seen = new bool[cells.Count];
+            var queue = new Queue<int>();
+            queue.Enqueue(start);
+            seen[start] = true;
+            while (queue.Count > 0 && result.Count < maxBlocks)
+            {
+                int i = queue.Dequeue();
+                result.Add(i);
+                for (int j = 0; j < cells.Count; j++)
+                {
+                    if (seen[j] || cells[j].Length == 0)
+                    {
+                        continue;
+                    }
+
+                    if (box[j].minX > box[i].maxX + maxCenterDistance || box[j].maxX < box[i].minX - maxCenterDistance ||
+                        box[j].minY > box[i].maxY + maxCenterDistance || box[j].maxY < box[i].minY - maxCenterDistance)
+                    {
+                        continue;
+                    }
+
+                    if (AnyClose(cells[i], cells[j], d2))
+                    {
+                        seen[j] = true;
+                        queue.Enqueue(j);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        static bool AnyClose(Pt[] a, Pt[] b, double d2)
+        {
+            foreach (var p in a)
+            {
+                foreach (var q in b)
+                {
+                    var d = p - q;
+                    if (Pt.Dot(d, d) <= d2)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Índices de los bloques conectados con el de partida: dos bloques están conectados si sus contornos están a
         /// menos de <paramref name="tolerance"/> metros. Los bloques del otro lado de una calle quedan fuera porque la

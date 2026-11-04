@@ -12,8 +12,11 @@ namespace BuildingCollections
     /// </summary>
     public sealed class DevConfig
     {
-        /// <summary>Distancia máxima (m) entre contornos para que dos bloques sean de la misma manzana.</summary>
-        public double BlockTouchTolerance = 2.0;
+        /// <summary>
+        /// Holgura (m) sobre los 8 m entre centros de celdas contiguas para que dos bloques sean de la misma manzana.
+        /// Debe ser menor que el ancho de la calle más estrecha (una calle en medio los separa 16 m o más).
+        /// </summary>
+        public double BlockTouchTolerance = 4.0;
 
         /// <summary>Distancia máxima (m) del clic a un bloque si el clic no cae dentro de ninguno.</summary>
         public double ClickSnapDistance = 6.0;
