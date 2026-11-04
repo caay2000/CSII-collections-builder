@@ -52,6 +52,18 @@ namespace BuildingCollections.Tests
             Assert.True(Polygon.Contains(poly, new Pt(x, y)));
         }
 
+        [Theory]
+        [InlineData(97, 97, 0, 0)]
+        [InlineData(103, 97, 100, 0)]
+        [InlineData(97, 103, 0, 100)]
+        [InlineData(103, 103, 100, 100)]
+        public void Click_next_to_a_junction_picks_the_right_block(double x, double y, double x0, double y0)
+        {
+            var poly = RoadFace.Trace(Grid(), new Pt(x, y));
+            Assert.NotNull(poly);
+            Assert.Equal((x0, y0, x0 + 100, y0 + 100), Bounds(poly));
+        }
+
         [Fact]
         public void Dead_end_inside_the_block_is_walked_around()
         {

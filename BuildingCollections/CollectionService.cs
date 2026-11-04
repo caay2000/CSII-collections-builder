@@ -20,6 +20,11 @@ namespace BuildingCollections
                 return $"Ya existe la colección '{name}'.";
             }
 
+            if (TagInUse(CollectionLogic.NormalizeTag(name), null))
+            {
+                return $"Otra colección ya usa la etiqueta #{CollectionLogic.NormalizeTag(name)}.";
+            }
+
             CollectionStore.Collections.Add(new BuildingCollection { Name = name, Tag = CollectionLogic.NormalizeTag(name) });
             CollectionStore.Save();
             Mod.Log.Info($"Colección '{name}' creada (etiqueta #{CollectionLogic.NormalizeTag(name)}).");
@@ -145,10 +150,16 @@ namespace BuildingCollections
             }
 
             string oldName = c.Name, oldTag = c.Tag, newTag = CollectionLogic.NormalizeTag(newName);
+            if (TagInUse(newTag, c))
+            {
+                return $"Otra colección ya usa la etiqueta #{newTag}.";
+            }
+
             c.Name = newName;
-            c.Tag = newTag;
             if (!string.Equals(oldTag, newTag, System.StringComparison.OrdinalIgnoreCase))
             {
+                // Si solo cambian mayúsculas se conserva la etiqueta tal como está en Find It.
+                c.Tag = newTag;
                 FindItBridge.RefreshIds();
                 foreach (var p in c.Prefabs)
                 {
@@ -162,6 +173,9 @@ namespace BuildingCollections
             Mod.Log.Info($"Colección '{oldName}' renombrada a '{newName}' (etiqueta #{oldTag} -> #{newTag}).");
             return null;
         }
+
+        static bool TagInUse(string tag, BuildingCollection except) =>
+            CollectionStore.Collections.Any(o => o != except && string.Equals(o.Tag, tag, System.StringComparison.OrdinalIgnoreCase));
 
         /// <summary>Copia la colección con un nombre nuevo ("X copy", "X copy 2"...) y su propia etiqueta.</summary>
         public static string Clone(string collectionName, out string newName)

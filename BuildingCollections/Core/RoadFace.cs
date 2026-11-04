@@ -25,29 +25,56 @@ namespace BuildingCollections.Core
         /// </summary>
         public static List<Pt> Trace(IReadOnlyList<RoadEdge> edges, Pt click, int maxSteps = 400)
         {
-            int startEdge = -1;
-            bool startForward = true;
-            double best = double.MaxValue;
+            // Tramos más cercanos. Si el más cercano es un nodo compartido por varios tramos, se prueban todos (y
+            // en los dos sentidos) hasta dar con la cara que contiene el clic.
+            var near = new List<(double d, int edge, bool forward)>();
             for (int e = 0; e < edges.Count; e++)
             {
                 var pts = edges[e].Points;
+                double best = double.MaxValue, bestSide = 0;
                 for (int i = 1; i < pts.Count; i++)
                 {
                     double d = SegmentDistance(pts[i - 1], pts[i], click, out double side);
                     if (d < best)
                     {
                         best = d;
-                        startEdge = e;
-                        startForward = side > 0;
+                        bestSide = side;
                     }
+                }
+
+                if (best < double.MaxValue)
+                {
+                    near.Add((best, e, bestSide > 0));
                 }
             }
 
-            if (startEdge < 0)
+            if (near.Count == 0)
             {
                 return null;
             }
 
+            near.Sort((a, b) => a.d.CompareTo(b.d));
+            double limit = near[0].d + 0.5;
+            var byNode = Adjacency(edges);
+            foreach (var c in near)
+            {
+                if (c.d > limit)
+                {
+                    break;
+                }
+
+                var poly = Walk(edges, byNode, c.edge, c.forward, click, maxSteps) ?? Walk(edges, byNode, c.edge, !c.forward, click, maxSteps);
+                if (poly != null)
+                {
+                    return poly;
+                }
+            }
+
+            return null;
+        }
+
+        static Dictionary<int, List<int>> Adjacency(IReadOnlyList<RoadEdge> edges)
+        {
             var byNode = new Dictionary<int, List<int>>();
             for (int e = 0; e < edges.Count; e++)
             {
@@ -63,6 +90,11 @@ namespace BuildingCollections.Core
                 }
             }
 
+            return byNode;
+        }
+
+        static List<Pt> Walk(IReadOnlyList<RoadEdge> edges, Dictionary<int, List<int>> byNode, int startEdge, bool startForward, Pt click, int maxSteps)
+        {
             var poly = new List<Pt>();
             int edge = startEdge;
             bool forward = startForward;

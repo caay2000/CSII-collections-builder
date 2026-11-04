@@ -45,6 +45,7 @@ namespace BuildingCollections.Systems
         ToolBaseSystem lastNonDefault;   // última herramienta activa que no era la normal
         int defaultFrames;               // fotogramas seguidos con la herramienta normal activa
         const int ExitFrames = 30;
+        const int ReactivateFrames = 3;
 
         sealed class BuilderDto
         {
@@ -169,7 +170,9 @@ namespace BuildingCollections.Systems
 
                 if (wantTool && panelOpen.value && active == defaultTool)
                 {
-                    if (lastNonDefault != null && lastNonDefault != builder)
+                    // Se espera unos fotogramas: al cambiar de una herramienta a otra (carretera -> zonas) el juego
+                    // también puede pasar un instante por la normal, y no hay que quitarle la herramienta nueva.
+                    if (lastNonDefault != null && lastNonDefault != builder && defaultFrames >= ReactivateFrames)
                     {
                         toolSystem.activeTool = builder;
                         active = builder;

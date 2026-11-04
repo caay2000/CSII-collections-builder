@@ -609,10 +609,11 @@ namespace BuildingCollections.Systems
                 {
                     var curve = EntityManager.GetComponentData<Curve>(e);
                     var bz = curve.m_Bezier;
-                    // Cerca si algún punto de control lo está (las curvas quedan dentro de su envolvente).
-                    float r2 = (float)(radius * radius);
-                    if (math.distancesq(bz.a.xz, point) > r2 && math.distancesq(bz.d.xz, point) > r2 &&
-                        math.distancesq(bz.b.xz, point) > r2 && math.distancesq(bz.c.xz, point) > r2)
+                    // Cerca si lo está la caja de sus puntos de control (la curva queda dentro): así no se pierde un
+                    // tramo largo que pasa al lado del clic con los extremos lejos.
+                    float2 lo = math.min(math.min(bz.a.xz, bz.b.xz), math.min(bz.c.xz, bz.d.xz));
+                    float2 hi = math.max(math.max(bz.a.xz, bz.b.xz), math.max(bz.c.xz, bz.d.xz));
+                    if (math.distancesq(math.clamp(point, lo, hi), point) > (float)(radius * radius))
                     {
                         continue;
                     }
@@ -621,7 +622,7 @@ namespace BuildingCollections.Systems
                     if (EntityManager.HasComponent<Game.Net.Elevation>(e))
                     {
                         var el = EntityManager.GetComponentData<Game.Net.Elevation>(e).m_Elevation;
-                        if (math.abs(el.x) >= 3f && math.abs(el.y) >= 3f)
+                        if (math.abs(el.x + el.y) * 0.5f >= 3f)
                         {
                             continue;
                         }
