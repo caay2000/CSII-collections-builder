@@ -15,8 +15,8 @@ namespace BuildingCollections
     /// </summary>
     [FileLocation(nameof(BuildingCollections))]
     [SettingsUITabOrder(Section, Keys)]
-    [SettingsUIGroupOrder(Collections, Builder, Shortcuts)]
-    [SettingsUIShowGroupName(Collections, Builder, Shortcuts)]
+    [SettingsUIGroupOrder(Collections, Builder, Anarchy, Shortcuts)]
+    [SettingsUIShowGroupName(Collections, Builder, Anarchy, Shortcuts)]
     public class BuildingCollectionsSettings : ModSetting
     {
         public const string Section = "Main";
@@ -24,6 +24,7 @@ namespace BuildingCollections
         public const string Builder = "Builder";
         public const string Keys = "KeyBindings";
         public const string Shortcuts = "Shortcuts";
+        public const string Anarchy = "Anarchy";
         public const string ActivateAction = "BuildingCollectionsActivate";
 
         public BuildingCollectionsSettings(IMod mod) : base(mod) { }
@@ -142,6 +143,14 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public bool LeaveGaps { get; set; }
 
+        /// <summary>
+        /// Con Anarchy encendido: cuánto (m) pueden pisarse dos edificios de calles distintas. Es un tope: el solape
+        /// real es el que dé la geometría, entre 0 y este valor.
+        /// </summary>
+        [SettingsUISlider(min = 0.05f, max = 2f, step = 0.05f, unit = Unit.kFloatTwoFractions)]
+        [SettingsUISection(Section, Anarchy)]
+        public float AnarchyOverlap { get; set; } = 0.5f;
+
         /// <summary>Árboles del juego base en el espacio sobrante (patios, huecos).</summary>
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
@@ -187,6 +196,7 @@ namespace BuildingCollections
             Density = 100;
             LeaveGaps = false;
             Trees = false;
+            AnarchyOverlap = 0.5f;
             DecorDensity = 50;
             Mode = "block";
         }

@@ -36,12 +36,6 @@ namespace BuildingCollections
         /// <summary>Radio (m) alrededor del clic en el que se leen las calles para cerrar la manzana.</summary>
         public double RoadSearchRadius = 1500.0;
 
-        /// <summary>
-        /// Con Anarchy encendido: cuánto (m) pueden pisarse dos edificios de calles distintas. Es un tope: el solape
-        /// real es el que dé la geometría, entre 0 y este valor.
-        /// </summary>
-        public double AnarchyOverlap = 0.5;
-
         /// <summary>Intercambia izquierda y derecha al leer m_AccessType, por si el criterio del juego es el contrario.</summary>
         public bool SwapCornerSides = false;
 
