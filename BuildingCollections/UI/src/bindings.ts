@@ -18,7 +18,7 @@ export interface BuilderDto {
     trees: boolean;
     decorDensity: number;
 }
-export interface PlanDto { areaSelected: boolean; previewing: boolean; lots: number; blocks: number }
+export interface PlanDto { areaSelected: boolean; previewing: boolean; lots: number; blocks: number; anarchy: boolean }
 
 export const DEFAULT_BUILDER: BuilderDto = {
     mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, trees: false, decorDensity: 50,
@@ -48,7 +48,7 @@ export const useStatus = () => useValue(status$);
 export const useCollections = (): CollectionDto[] => parse(useValue(collections$), []);
 export const useBuildings = (): BuildingDto[] => parse(useValue(buildings$), []);
 export const useBuilder = (): BuilderDto => ({ ...DEFAULT_BUILDER, ...parse<Partial<BuilderDto>>(useValue(builder$), {}) });
-export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
+export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, anarchy: false, ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
 
 export const actions = {
     setPanelOpen: (v: boolean) => trigger(G, "setPanelOpen", v),

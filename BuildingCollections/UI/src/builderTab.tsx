@@ -101,6 +101,8 @@ export const BuilderTab = () => {
                 )}
             </div>
 
+            {plan.anarchy && <div className={styles.anarchyHint}>Anarchy on: buildings from different streets may overlap slightly.</div>}
+
             <div className={styles.actions}>
                 <button className={styles.btnClear} title="Clear selection (right-click)" disabled={!plan.areaSelected} onClick={() => actions.clearSelection()}>
                     <img src={icon("clear")} />

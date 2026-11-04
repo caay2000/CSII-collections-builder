@@ -39,6 +39,7 @@ namespace BuildingCollections.Systems
         int catalogVersion = -1;
         int messageSerial;
         int frame;
+        int anarchyTick;
         int seedCounter;
         int saveCountdown = -1;
         bool wantTool;   // la pestaña Builder está abierta y quiere la herramienta
@@ -203,7 +204,7 @@ namespace BuildingCollections.Systems
 
                 toolActive.Update(toolSystem.activeTool == builder);
 
-                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks}}}");
+                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)}}}");
 
                 if (builder.MessageSerial != messageSerial)
                 {
@@ -212,6 +213,12 @@ namespace BuildingCollections.Systems
                 }
 
                 // Cada ~2 s (o al abrir el panel) se comprueba si han llegado prefabs nuevos.
+                // Anarchy puede crear su sistema después que nosotros: se reintenta cada ~2 s hasta registrarse.
+                if (anarchyTick++ % 120 == 0)
+                {
+                    AnarchyBridge.TryRegister(World, builder.toolID);
+                }
+
                 if (panelOpen.value && (++frame % 120 == 0 || catalogVersion < 0))
                 {
                     findItAvailable.Update(FindItBridge.IsAvailable);

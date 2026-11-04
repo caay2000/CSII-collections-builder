@@ -249,6 +249,11 @@ namespace BuildingCollections.Systems
 
                 // Huellas (en el suelo) de lo ya planificado: las celdas compartidas entre bloques que queden libres
                 // detrás de un edificio poco profundo se aprovechan desde la otra calle, sin solaparse.
+                // Con Anarchy encendido (y nuestra herramienta en su lista) se admite un solape pequeño entre edificios
+                // de calles distintas; sin él, ninguno (0,05 m solo para que dos que se tocan no cuenten).
+                bool anarchy = AnarchyBridge.Enabled;
+                float overlap = anarchy ? (float)math.clamp(cfg.AnarchyOverlap, 0.05, 2.0) : 0.05f;
+                log.Append($"  solape admitido {overlap:F2} m{(anarchy ? " (Anarchy)" : string.Empty)}.\n");
                 var footprints = new List<(Quad quad, SelectedBlock owner)>();
                 Quad Footprint(SelectedBlock s, Placement p)
                 {
@@ -285,7 +290,7 @@ namespace BuildingCollections.Systems
                 var cornerPlans = new Dictionary<SelectedBlock, List<Placement>>();
                 foreach (var (s, grid) in grids)
                 {
-                    MaskFootprints(grid, s.Block, s.Area, Others(s));
+                    MaskFootprints(grid, s.Block, s.Area, Others(s), overlap);
                     var cp = GridPlanner.PlanCorners(grid, plain, corners, seed + 7919 * index++);
                     cornerPlans[s] = cp;
                     footprints.AddRange(cp.Select(p => (Footprint(s, p), s)));
@@ -294,7 +299,7 @@ namespace BuildingCollections.Systems
                 // Pasada 2: relleno, respetando las esquinas propias y las huellas de los demás.
                 foreach (var (s, grid) in grids)
                 {
-                    int masked = MaskFootprints(grid, s.Block, s.Area, Others(s));
+                    int masked = MaskFootprints(grid, s.Block, s.Area, Others(s), overlap);
                     var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++, leaveGaps, cornerPlans[s]);
                     footprints.RemoveAll(f => f.owner == s);
                     foreach (var p in plan)
@@ -468,7 +473,7 @@ namespace BuildingCollections.Systems
                 return inputDeps;
             }
 
-            if (cfg.RequireNoErrors && !GetAllowApply())
+            if (cfg.RequireNoErrors && !AnarchyBridge.Enabled && !GetAllowApply())
             {
                 // Se quitan de la vista previa los que el juego marca en rojo (chocan con algo) y se pide otro Build.
                 int removed = RemoveErrored();
@@ -1440,20 +1445,20 @@ namespace BuildingCollections.Systems
         }
 
         /// <summary>Marca como ocupadas las celdas cuyo centro cae dentro de un edificio ya planificado en otro bloque.</summary>
-        static int MaskFootprints(PlanGrid grid, Block block, int4 area, List<Quad> footprints)
+        static int MaskFootprints(PlanGrid grid, Block block, int4 area, List<Quad> footprints, float overlap)
         {
             if (footprints.Count == 0)
             {
                 return 0;
             }
 
-            // Solape real entre la celda (metida 0,25 m, para que dos edificios que solo se tocan no cuenten) y cada
+            // Solape real entre la celda (metida "overlap" m: lo que se admite que se pisen) y cada
             // huella. Antes se probaban el centro y las esquinas metidas 1 m: entre rejillas que no coinciden (dos
             // calles que se cruzan, con el sobrante de una tira en la esquina) se colaban solapes pequeños, y el juego
             // marcaba en rojo los dos edificios.
             int masked = 0;
-            float2 r = MathUtils.Right(block.m_Direction) * (ZoneUtils.CELL_SIZE * 0.5f - 0.25f);
-            float2 f = block.m_Direction * (ZoneUtils.CELL_SIZE * 0.5f - 0.25f);
+            float2 r = MathUtils.Right(block.m_Direction) * (ZoneUtils.CELL_SIZE * 0.5f - overlap);
+            float2 f = block.m_Direction * (ZoneUtils.CELL_SIZE * 0.5f - overlap);
             for (int y = 0; y < grid.Depth; y++)
             {
                 for (int x = 0; x < grid.Width; x++)
