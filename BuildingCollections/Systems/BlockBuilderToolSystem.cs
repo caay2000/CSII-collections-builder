@@ -41,6 +41,9 @@ namespace BuildingCollections.Systems
 
             /// <summary>Parcelas propias (sin celdas de zona): la rejilla calculada al seleccionar. null = bloque del juego.</summary>
             public PlanGrid Virtual;
+
+            /// <summary>Tira de la que sale (solo diagnóstico: largo real, sobrante, curva).</summary>
+            public LotStrip Strip;
         }
 
         sealed class Planned
@@ -373,6 +376,15 @@ namespace BuildingCollections.Systems
                 FrontTotal = frontTotal + justified;
                 FrontFilled = CountFront();
                 log.AppendLine($"  fachada: {FrontFilled} de {FrontTotal} celdas a la calle ocupadas.");
+                // Solo diagnóstico: si falla, no debe tirar una vista previa buena.
+                try
+                {
+                    LogUncovered(existing, log);
+                }
+                catch (Exception e)
+                {
+                    Mod.Log.Error(e);
+                }
 
                 // Decoración del espacio sobrante (patio, huecos): plantas de la colección elegida, lejos de la acera y de
                 // los edificios (los planificados y los que ya hay), y sin pisar árboles existentes.
@@ -1179,7 +1191,9 @@ namespace BuildingCollections.Systems
             }
 
             var obstacles = BuildingFootprints(outline);
-            var strips = VirtualLots.Build(sides, obstacles, frontage: frontage);
+            var notes = new List<string>();
+            var strips = VirtualLots.Build(sides, obstacles, frontage: frontage, notes: notes);
+            Mod.Log.Info($"[selección] contorno: {sides.Count} aceras, {outline.Count} puntos, {obstacles.Count} edificios existentes.\n  " + string.Join("\n  ", notes));
             lastSidesFull = strips.Count > 0 && strips.All(st => st.Grid.FreeCount() == 0);
             if (!SelectStrips(strips, outline, $"{description}: {sides.Count} aceras, {obstacles.Count} edificios existentes"))
             {
@@ -1251,7 +1265,9 @@ namespace BuildingCollections.Systems
 
                     sideCount += sides.Count;
                     outlines.Add(VirtualLots.Outline(sides));
-                    strips.AddRange(VirtualLots.Build(sides, obstacles, clip: clip));
+                    var notes = new List<string>();
+                    strips.AddRange(VirtualLots.Build(sides, obstacles, clip: clip, notes: notes));
+                    Mod.Log.Info($"[selección] polígono, manzana {faces.Count}: {sides.Count} aceras.\n  " + string.Join("\n  ", notes));
                 }
             }
 
@@ -1307,6 +1323,7 @@ namespace BuildingCollections.Systems
                     Block = new Block { m_Position = pos, m_Direction = dir, m_Size = new int2(st.Width, st.Depth) },
                     Area = new int4(0, st.Width, 0, st.Depth),
                     Virtual = st.Grid,
+                    Strip = st,
                 });
             }
 
@@ -1330,6 +1347,13 @@ namespace BuildingCollections.Systems
                 }
 
                 log.AppendLine($"  tira {s.Virtual.Width}x{s.Virtual.Depth} dir=({s.Block.m_Direction.x:F2},{s.Block.m_Direction.y:F2}) libres={s.Virtual.FreeCount()} esquinas L={s.Virtual.LeftCorner} R={s.Virtual.RightCorner}");
+                log.AppendLine($"    {StripInfo(s.Strip)}; fila delantera {Row(s.Virtual, 0)}");
+            }
+
+            // Las que se descartan por no tener ni una celda libre (tapadas por edificios existentes o fuera).
+            foreach (var st in strips.Where(st => st.Grid.FreeCount() == 0))
+            {
+                log.AppendLine($"  tira descartada (0 libres) {st.Width}x{st.Depth}: {StripInfo(st)}");
             }
 
             Mod.Log.Info(log.ToString().TrimEnd());
@@ -1635,6 +1659,111 @@ namespace BuildingCollections.Systems
 
         /// <summary>Celdas a la calle ocupadas por los edificios de la vista previa.</summary>
         int CountFront() => preview.Where(p => !p.IsDecor && p.Owner != null && p.Min.y == p.Owner.Area.z).Sum(p => p.Max.x - p.Min.x);
+
+        static string StripInfo(LotStrip st) => st == null ? "(sin datos)"
+            : $"lado {st.SideIndex} tramo {st.ChunkIndex + 1}/{st.ChunkCount}, acera de ({st.ChunkStart.X:F1},{st.ChunkStart.Y:F1}) largo {st.ChunkLength:F2} m, " +
+              $"celdas desde {st.Offset:F2} m, sobran {st.Slack:F2} m{(st.Inward > 0 ? $", metida {st.Inward:F2} m por curva" : string.Empty)}";
+
+        /// <summary>Fila de la rejilla como texto: o libre, x ocupada/tapada.</summary>
+        static string Row(PlanGrid g, int y)
+        {
+            var sb = new StringBuilder(g.Width);
+            for (int x = 0; x < g.Width; x++)
+            {
+                sb.Append(g.Free[x, y] ? 'o' : 'x');
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Diagnóstico de huecos: recorre la acera real de cada tira (todo su largo, no solo las celdas) 1,5 m hacia
+        /// dentro y anota los trozos que no cubre ningún edificio (planificado, con su desplazamiento, o existente).
+        /// Así se ven los huecos de esquinas, curvas y diagonales, que el recuento de celdas no ve.
+        /// </summary>
+        void LogUncovered(List<Quad> existing, StringBuilder log)
+        {
+            var quads = preview.Where(p => !p.IsDecor).Select(p => LotQuad(p, p.Shift, 0f)).ToList();
+            quads.AddRange(existing);
+            foreach (var s in selection.Where(x => x.Strip != null))
+            {
+                var st = s.Strip;
+                var n = new Pt(-st.T.Y, st.T.X);
+                double depth = st.Inward + 1.5;
+                var runs = new List<string>();
+                double runStart = -1;
+                const double step = 0.25;
+                for (double u = 0; u <= st.ChunkLength + 1e-6; u += step)
+                {
+                    var q = new Pt(st.ChunkStart.X + st.T.X * u + n.X * depth, st.ChunkStart.Y + st.T.Y * u + n.Y * depth);
+                    bool covered = Covered(quads, q);
+                    if (!covered && runStart < 0)
+                    {
+                        runStart = u;
+                    }
+
+                    bool endRun = runStart >= 0 && (covered || u + step > st.ChunkLength + 1e-6);
+                    if (endRun)
+                    {
+                        double end = covered ? u : st.ChunkLength;
+                        if (end - runStart >= 0.5)
+                        {
+                            string where = runStart < 0.01 ? "al principio" : end > st.ChunkLength - 0.01 ? "al final" : "en medio";
+                            runs.Add($"{runStart:F1}-{end:F1} m ({end - runStart:F1} m, {where}){Neighbours(quads, st, n, depth, runStart, end)}");
+                        }
+
+                        runStart = -1;
+                    }
+                }
+
+                log.AppendLine(runs.Count == 0
+                    ? $"  acera lado {st.SideIndex} tramo {st.ChunkIndex + 1}/{st.ChunkCount} ({st.ChunkLength:F1} m): cubierta entera."
+                    : $"  acera lado {st.SideIndex} tramo {st.ChunkIndex + 1}/{st.ChunkCount} ({st.ChunkLength:F1} m): SIN CUBRIR {string.Join("; ", runs)}");
+            }
+        }
+
+        static bool Covered(List<Quad> quads, Pt q)
+        {
+            foreach (var o in quads)
+            {
+                if (q.X >= o.MinX && q.X <= o.MaxX && q.Y >= o.MinY && q.Y <= o.MaxY && Polygon.Contains(o.P, q))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// En los extremos de la acera, qué hay más allá (la esquina, la calle de al lado): distancia al primer edificio.
+        /// Un trozo en medio de la acera tiene edificios pegados a los dos lados.
+        /// </summary>
+        static string Neighbours(List<Quad> quads, LotStrip st, Pt n, double depth, double a, double b)
+        {
+            bool atStart = a < 0.01, atEnd = b > st.ChunkLength - 0.01;
+            if (!atStart && !atEnd)
+            {
+                return " [entre dos edificios]";
+            }
+
+            Pt At(double u) => new Pt(st.ChunkStart.X + st.T.X * u + n.X * depth, st.ChunkStart.Y + st.T.Y * u + n.Y * depth);
+            string Probe(double from, int dir)
+            {
+                for (double d = 0.25; d <= 12; d += 0.25)
+                {
+                    var q = At(from + dir * d);
+                    if (Covered(quads, q))
+                    {
+                        return $"{d:F2} m";
+                    }
+                }
+
+                return "nada a <12 m";
+            }
+
+            return $" [{(atStart ? $"antes del principio: {Probe(0, -1)}" : "pegado antes")}, {(atEnd ? $"después del final: {Probe(st.ChunkLength, +1)}" : "pegado después")}]";
+        }
 
         /// <summary>Huella en el suelo de un edificio planificado, corrida "shift" m por la fachada y metida "inset" m.</summary>
         static Quad LotQuad(Planned p, float shift, float inset) => LotQuad(p.Block, p.Min, p.Max, shift, inset);

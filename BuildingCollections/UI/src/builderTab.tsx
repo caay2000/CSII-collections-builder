@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import styles from "./panel.module.scss";
-import { actions, BuilderDto, BuildingDto, useBuilder, useBuildings, useCollections, useMixBuildings, usePlan, useSelected } from "./bindings";
+import { actions, BuilderDto, BuildingDto, useBuilder, useBuilderMessage, useBuildings, useCollections, useMixBuildings, usePlan, useSelected } from "./bindings";
 import { matches } from "./collectionsTab";
 import { CheckRow, CollectionPicker, icon, MixSlider, StepFilter, Stepper } from "./widgets";
 
@@ -33,6 +33,7 @@ export const BuilderTab = () => {
     const selected = useSelected();
     const buildings = useBuildings();
     const plan = usePlan();
+    const message = useBuilderMessage();
     const set = (patch: Partial<BuilderDto>) => actions.setBuilder({ ...b, ...patch });
 
     // Abrir la pestaña activa la herramienta de selección; cerrarla la desactiva (como StreetBuilder).
@@ -49,6 +50,14 @@ export const BuilderTab = () => {
     const candidates = buildings.filter(passes);
     const mixCandidates = mix ? mixBuildings.filter(passes) : [];
     const canGenerate = plan.areaSelected && !!selected && candidates.length + mixCandidates.length > 0;
+    // Por qué Preview está desactivado. Los problemas de la colección van en la línea de mensaje (tienen prioridad
+    // sobre el último mensaje de la herramienta); "elige zona" ya lo dice el resumen, así que solo va en el tooltip.
+    const collectionProblem = !selected ? null
+        : buildings.length + (mix ? mixBuildings.length : 0) === 0 ? (mix ? "Both collections are empty." : "The collection is empty.")
+        : candidates.length + mixCandidates.length === 0 ? "No building in the collection passes the filters."
+        : null;
+    const previewWhy = canGenerate ? undefined : !selected ? "Choose a collection." : collectionProblem ?? "Select an area in the world.";
+    const line = collectionProblem ?? message;
     // Elegir como primera la que estaba de segunda las intercambia (y el reparto se invierte con ellas).
     const selectFirst = (n: string) => {
         if (mix && n === mix) set({ mix: selected, mixShare: 100 - b.mixShare });
@@ -219,12 +228,13 @@ export const BuilderTab = () => {
                 )}
             </div>
 
+            {line && <div className={collectionProblem ? styles.builderMsgWarn : styles.builderMsg}>{line}</div>}
 
             <div className={styles.actions}>
                 <button className={styles.btnClear} title="Clear selection (right-click)" disabled={!plan.areaSelected} onClick={() => actions.clearSelection()}>
                     <img src={icon("clear")} />
                 </button>
-                <button className={styles.btn} disabled={!canGenerate} onClick={() => actions.generatePreview()}>
+                <button className={styles.btn} disabled={!canGenerate} title={previewWhy} onClick={() => actions.generatePreview()}>
                     <img src={icon("shuffle")} />{plan.previewing ? "Reshuffle" : "Preview"}
                 </button>
                 <button className={plan.previewing ? styles.btnPrimary : styles.btn} disabled={!plan.previewing} onClick={() => actions.build()}>

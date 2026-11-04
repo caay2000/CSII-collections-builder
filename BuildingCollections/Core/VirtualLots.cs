@@ -17,6 +17,20 @@ namespace BuildingCollections.Core
         public int Depth;
         public PlanGrid Grid;
 
+        // Diagnóstico (log): de dónde sale la tira.
+        /// <summary>Tramo recto de acera del que sale (inicio, sentido y largo real en metros).</summary>
+        public Pt ChunkStart;
+        public double ChunkLength;
+        /// <summary>Dónde empiezan las celdas dentro del tramo, y cuánto sobra (largo - ancho * 8).</summary>
+        public double Offset;
+        public double Slack;
+        /// <summary>Cuánto se mete hacia dentro por una curva (0 en un tramo recto).</summary>
+        public double Inward;
+        /// <summary>Lado de la manzana (tras unir los casi rectos) y tramo dentro del lado.</summary>
+        public int SideIndex;
+        public int ChunkIndex;
+        public int ChunkCount;
+
         /// <summary>Normal hacia dentro de la manzana (izquierda de T).</summary>
         public Pt N => new Pt(-T.Y, T.X);
 
@@ -39,7 +53,7 @@ namespace BuildingCollections.Core
         /// (un polígono que corta la manzana) solo cierra el contorno, y no hace esquina con sus vecinos.</param>
         public static List<LotStrip> Build(IReadOnlyList<List<Pt>> sides, IReadOnlyList<Quad> obstacles, int maxDepth = 6,
             double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 2.0, IReadOnlyList<bool> frontage = null,
-            IReadOnlyList<Pt> clip = null)
+            IReadOnlyList<Pt> clip = null, IList<string> notes = null)
         {
             var strips = new List<LotStrip>();
             var outline = Outline(sides);
@@ -48,17 +62,43 @@ namespace BuildingCollections.Core
                 return strips;
             }
 
+            int sideIndex = -1;
             foreach (var side in Merge(sides, frontage, mergeAngleDeg, cornerAngleDeg))
             {
+                sideIndex++;
                 if (!side.Frontage)
                 {
+                    notes?.Add($"lado {sideIndex}: sin calle (solo cierra el contorno), largo {Length(side.Points):F1} m.");
                     continue;
                 }
 
                 // Tramos de al menos una celda: un tramo corto al principio no debe quitarle la esquina al siguiente.
-                var chunks = Chunks(side.Points, straightTolerance)
+                var allChunks = Chunks(side.Points, straightTolerance);
+                var chunks = allChunks
                     .Where(c => (int)Math.Floor((Dist(side.Points[c.from], side.Points[c.to]) + 0.5) / Cell) >= 1)
                     .ToList();
+                if (notes != null)
+                {
+                    var parts = new List<string>();
+                    for (int c = 0; c < allChunks.Count; c++)
+                    {
+                        var (f, t2) = allChunks[c];
+                        double l = Dist(side.Points[f], side.Points[t2]);
+                        string turnNext = "";
+                        if (c + 1 < allChunks.Count)
+                        {
+                            var d1 = side.Points[t2] - side.Points[f];
+                            var d2 = side.Points[allChunks[c + 1].to] - side.Points[allChunks[c + 1].from];
+                            turnNext = $", gira {Angle(d1, d2):F0}°";
+                        }
+
+                        parts.Add($"{l:F1} m{(chunks.Contains(allChunks[c]) ? "" : " (DESCARTADO: < 1 celda)")}{turnNext}");
+                    }
+
+                    var p0 = side.Points[0];
+                    var p1 = side.Points[side.Points.Count - 1];
+                    notes.Add($"lado {sideIndex}: {side.Points.Count} puntos, largo {Length(side.Points):F1} m, de ({p0.X:F1},{p0.Y:F1}) a ({p1.X:F1},{p1.Y:F1}), esquina inicio={side.StartCorner} fin={side.EndCorner}; tramos rectos: {string.Join("; ", parts)}");
+                }
                 for (int k = 0; k < chunks.Count; k++)
                 {
                     var a = side.Points[chunks[k].from];
@@ -86,7 +126,12 @@ namespace BuildingCollections.Core
                     }
 
                     var normal = new Pt(-t.Y, t.X);
-                    var strip = new LotStrip { P0 = LotStrip.Add(a, t, offset, normal, inward > 0 ? inward + 0.1 : 0), T = t, Width = width, Depth = maxDepth };
+                    var strip = new LotStrip
+                    {
+                        P0 = LotStrip.Add(a, t, offset, normal, inward > 0 ? inward + 0.1 : 0), T = t, Width = width, Depth = maxDepth,
+                        ChunkStart = a, ChunkLength = len, Offset = offset, Slack = slack, Inward = inward,
+                        SideIndex = sideIndex, ChunkIndex = k, ChunkCount = chunks.Count,
+                    };
                     var grid = PlanGrid.AllFree(width, maxDepth, false, false);
                     grid.LeftCorner = first && side.StartCorner && offset < 1;
                     grid.RightCorner = last && side.EndCorner && slack - offset < 1;

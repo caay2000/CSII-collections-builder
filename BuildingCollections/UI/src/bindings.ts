@@ -53,6 +53,8 @@ const status$ = bindValue<string>(G, "status", "");
 const builder$ = bindValue<string>(G, "builder", "{}");
 const plan$ = bindValue<string>(G, "plan", "{}");
 const escapes$ = bindValue<number>(G, "escapes", 0);
+/** Último mensaje de la herramienta del constructor (selección, vista previa, Build). */
+const builderMessage$ = bindValue<string>(G, "builderMessage", "");
 
 function parse<T>(raw: string, fallback: T): T {
     try { return JSON.parse(raw) as T; } catch { return fallback; }
@@ -64,6 +66,7 @@ export const useToolActive = () => useValue(toolActive$);
 export const useFindIt = () => useValue(findIt$);
 export const useSelected = () => useValue(selected$);
 export const useStatus = () => useValue(status$);
+export const useBuilderMessage = () => useValue(builderMessage$);
 /** JSON de un binding, parseado solo cuando cambia el texto (no en cada render): así la lista conserva su identidad. */
 function useJson<T>(raw: string, fallback: T): T {
     return useMemo(() => parse(raw, fallback), [raw]);
