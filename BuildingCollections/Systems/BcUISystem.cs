@@ -32,6 +32,7 @@ namespace BuildingCollections.Systems
         ValueBinding<string> status;
         ValueBinding<string> builderBinding;
         ValueBinding<string> plan;
+        ValueBinding<int> escapes;   // se incrementa con cada Esc con el panel abierto: la UI decide qué cerrar
 
         bool collectionsDirty = true;
         bool buildingsDirty = true;
@@ -73,6 +74,7 @@ namespace BuildingCollections.Systems
             AddBinding(status = new ValueBinding<string>(Group, "status", string.Empty));
             AddBinding(builderBinding = new ValueBinding<string>(Group, "builder", "{}"));
             AddBinding(plan = new ValueBinding<string>(Group, "plan", "{}"));
+            AddBinding(escapes = new ValueBinding<int>(Group, "escapes", 0));
 
             AddBinding(new TriggerBinding<bool>(Group, "setPanelOpen", v => Safe(() => SetPanelOpen(v))));
             AddBinding(new TriggerBinding<string>(Group, "select", name => Safe(() => SetSelected(name))));
@@ -192,6 +194,14 @@ namespace BuildingCollections.Systems
                 lastTool = active;
 
                 toolActive.Update(toolSystem.activeTool == builder);
+
+                // Esc con el panel abierto: la acción "Back" de la UI no le llega al panel, así que se lee aquí la
+                // tecla y se avisa a la UI (que cancela un campo abierto o cierra el panel).
+                var keyboard = Keyboard.current;
+                if (panelOpen.value && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+                {
+                    escapes.Update(escapes.value + 1);
+                }
                 plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks}}}");
 
                 if (builder.MessageSerial != messageSerial)

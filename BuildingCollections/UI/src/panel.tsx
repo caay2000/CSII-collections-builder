@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Tooltip } from "cs2/ui";
 import { InputActionConsumer } from "cs2/input";
 import styles from "./panel.module.scss";
-import { actions, usePanelOpen } from "./bindings";
+import { actions, useEscapes, usePanelOpen } from "./bindings";
 import { CollectionsTab } from "./collectionsTab";
 import { BuilderTab } from "./builderTab";
 import { handleEscape, icon } from "./widgets";
@@ -55,6 +55,12 @@ const Panel = () => {
     // Esc ("Back") cierra el panel, como los paneles del juego; con el panel cerrado, Esc vuelve a abrir el menú.
     // Si hay un campo en línea abierto (crear, renombrar), Esc solo lo cancela.
     const back = useMemo(() => ({ Back: () => { if (!handleEscape()) actions.setPanelOpen(false); } }), []);
+    // Esc leído desde C# (el contador sube con cada pulsación): mismo criterio que "Back".
+    const escapes = useEscapes();
+    const firstEscapes = useRef(escapes);
+    useEffect(() => {
+        if (escapes !== firstEscapes.current && !handleEscape()) actions.setPanelOpen(false);
+    }, [escapes]);
     return (
         <InputActionConsumer actions={back} ignoreFocusState>
             <div className={tab === "collections" ? styles.panelWide : styles.panel} style={drag.style}>

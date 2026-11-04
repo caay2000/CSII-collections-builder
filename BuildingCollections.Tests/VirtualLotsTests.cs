@@ -83,6 +83,39 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void Curve_bulging_into_the_block_keeps_the_front_row()
+        {
+            // El lado de arriba es una curva que se mete 6 m en la manzana (de y = 60 a y = 54 en el centro).
+            var top = new List<Pt>();
+            for (int i = 0; i <= 20; i++)
+            {
+                double x = 100 - i * 5, u = (x - 50) / 50;
+                top.Add(new Pt(x, 54 + 6 * u * u));
+            }
+
+            var sides = new List<List<Pt>> { L(0, 0, 100, 0), L(100, 0, 100, 60), top, L(0, 60, 0, 0) };
+            var strips = VirtualLots.Build(sides, new Quad[0]);
+            var curved = strips.Where(s => s.T.X < -0.5).ToList();
+            Assert.NotEmpty(curved);
+            Assert.Contains(curved, s => Enumerable.Range(0, s.Width).Any(x => s.Grid.Free[x, 0]));
+        }
+
+        [Fact]
+        public void Gentle_curve_gives_long_strips()
+        {
+            var arc = new List<Pt>();
+            for (int i = 0; i <= 40; i++)
+            {
+                double ang = System.Math.PI / 2 * i / 40; // cuarto de círculo de radio 200
+                arc.Add(new Pt(200 * System.Math.Cos(ang), 200 * System.Math.Sin(ang)));
+            }
+
+            var sides = new List<List<Pt>> { arc, L(0, 200, 0, 0), L(0, 0, 200, 0) };
+            var strips = VirtualLots.Build(sides, new Quad[0]).Where(s => s.T.X < 0.99 && s.T.Y < 0.99 && s.T.X > -0.99).ToList();
+            Assert.True(strips.Average(s => s.Width) >= 5, "tramos de la curva demasiado cortos");
+        }
+
+        [Fact]
         public void Curve_is_split_in_straight_pieces()
         {
             var arc = new List<Pt>();

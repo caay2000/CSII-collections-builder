@@ -38,7 +38,7 @@ namespace BuildingCollections.Core
         /// <param name="frontage">Por lado: si da a una calle (lleva parcelas). null = todos. Un lado sin calle
         /// (un polígono que corta la manzana) solo cierra el contorno, y no hace esquina con sus vecinos.</param>
         public static List<LotStrip> Build(IReadOnlyList<List<Pt>> sides, IReadOnlyList<Quad> obstacles, int maxDepth = 6,
-            double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 0.75, IReadOnlyList<bool> frontage = null,
+            double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 2.0, IReadOnlyList<bool> frontage = null,
             IReadOnlyList<Pt> clip = null)
         {
             var strips = new List<LotStrip>();
@@ -71,7 +71,17 @@ namespace BuildingCollections.Core
                     bool first = k == 0, last = k == chunks.Count - 1;
                     double slack = Math.Max(0, len - width * Cell);
                     double offset = first && side.StartCorner ? 0 : last && side.EndCorner ? slack : first ? 0 : last ? slack : slack / 2;
-                    var strip = new LotStrip { P0 = LotStrip.Add(a, t, offset, t, 0), T = t, Width = width, Depth = maxDepth };
+
+                    // En una curva que entra en la manzana, la cuerda corta la acera: la fachada se mete hacia dentro
+                    // lo justo para quedar detrás del bordillo (si no, se perdía la fila delantera entera).
+                    double inward = 0;
+                    for (int m = chunks[k].from + 1; m < chunks[k].to; m++)
+                    {
+                        inward = Math.Max(inward, Pt.Cross(t, side.Points[m] - a));
+                    }
+
+                    var normal = new Pt(-t.Y, t.X);
+                    var strip = new LotStrip { P0 = LotStrip.Add(a, t, offset, normal, inward > 0 ? inward + 0.1 : 0), T = t, Width = width, Depth = maxDepth };
                     var grid = PlanGrid.AllFree(width, maxDepth, false, false);
                     grid.LeftCorner = first && side.StartCorner && offset < 1;
                     grid.RightCorner = last && side.EndCorner && slack - offset < 1;

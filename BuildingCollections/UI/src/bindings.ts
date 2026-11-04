@@ -33,12 +33,14 @@ const selected$ = bindValue<string>(G, "selected", "");
 const status$ = bindValue<string>(G, "status", "");
 const builder$ = bindValue<string>(G, "builder", "{}");
 const plan$ = bindValue<string>(G, "plan", "{}");
+const escapes$ = bindValue<number>(G, "escapes", 0);
 
 function parse<T>(raw: string, fallback: T): T {
     try { return JSON.parse(raw) as T; } catch { return fallback; }
 }
 
 export const usePanelOpen = () => useValue(panelOpen$);
+export const useEscapes = () => useValue(escapes$);
 export const useToolActive = () => useValue(toolActive$);
 export const useFindIt = () => useValue(findIt$);
 export const useSelected = () => useValue(selected$);
