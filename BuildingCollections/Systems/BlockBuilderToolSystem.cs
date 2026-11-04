@@ -276,7 +276,8 @@ namespace BuildingCollections.Systems
                 // de calles distintas; sin él, ninguno (0,05 m solo para que dos que se tocan no cuenten).
                 bool anarchy = AnarchyBridge.Enabled;
                 // 0 en las opciones = sin solape, igual que sin Anarchy (0,05 m de margen para que tocarse no cuente).
-                float overlap = anarchy ? math.clamp(Mod.Settings?.AnarchyOverlap ?? 0.5f, StrictOverlap, MaxOverlap) : StrictOverlap;
+                // Casilla "Overlap buildings": 0,5 m o nada (un 1 m o 2 m guardado de antes cuenta como 0,5).
+                float overlap = anarchy && (Mod.Settings?.AnarchyOverlap ?? 0.5f) > 0 ? OverlapOn : StrictOverlap;
                 log.Append($"  solape admitido {overlap:F2} m{(anarchy ? " (Anarchy)" : string.Empty)}.\n");
 
                 // Lo que ya está construido no se pisa nunca, ni con Anarchy: se relee ahora (la selección puede ser de
@@ -1650,8 +1651,9 @@ namespace BuildingCollections.Systems
         /// <summary>Margen sin solape: dos edificios que solo se tocan no cuentan como solapados.</summary>
         const float StrictOverlap = 0.05f;
 
-        /// <summary>Tope del solape configurable con Anarchy.</summary>
-        public const float MaxOverlap = 3.5f; // por debajo de media celda (4 m): una celda metida más desaparece
+        /// <summary>Solape por junta con "Overlap buildings" (Anarchy): más no mejoraba el resultado.</summary>
+        const float OverlapOn = 0.5f;
+
 
         /// <summary>Eje de la fachada (dirección de x creciente en las celdas del bloque).</summary>
         static float2 FrontAxis(Block b) =>

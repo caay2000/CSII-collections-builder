@@ -138,12 +138,10 @@ export const BuilderTab = () => {
                             title="Turns the Anarchy mod on or off (same as its own button). With it on, new buildings may overlap a little, so street ends close up. Existing buildings are never removed; at most the last joint touches them by the same overlap." />
                     )}
                     {plan.anarchy && (
-                        <div className={styles.filter} title="How much each joint between two new buildings may overlap. Street lengths are rarely a multiple of 8 m: to close the last gap, one building is made a cell wider and the row is squeezed, spreading the overlap over all its joints. Press Reshuffle to apply.">
-                            <span className={styles.filterLabelAnarchy}>Max overlap</span>
-                            <Stepper value={b.overlap === 0 ? "None" : `${b.overlap.toFixed(1)} m`}
-                                onDown={() => set({ overlap: Math.max(0, b.overlap - 0.5) })}
-                                onUp={() => set({ overlap: Math.min(3.5, b.overlap + 0.5) })} />
-                        </div>
+                        // Con Anarchy, los edificios nuevos pueden pisarse 0,5 m para cerrar el sobrante de cada calle
+                        // (probado: más solape no mejora y se nota). Apagado: sin solape. Pulsa Reshuffle para aplicarlo.
+                        <CheckRow label="Overlap buildings" accent checked={b.overlap > 0} onChange={(v) => set({ overlap: v ? 0.5 : 0 })}
+                            title="Street lengths are rarely a multiple of 8 m. On: to close the leftover at the end of a street, one building is made a cell wider and the row is squeezed, each joint overlapping by up to 0.5 m. Off: no overlap, a single gap stays. Press Reshuffle to apply." />
                     )}
                 </div>
             </div>

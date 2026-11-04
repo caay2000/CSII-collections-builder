@@ -110,7 +110,6 @@ namespace BuildingCollections
         /// un momento, por eso el aviso). Al apagarla no se quita nada: las que hay se quedan.
         /// </summary>
         [SettingsUISection(Section, Collections)]
-        [SettingsUIWarning(typeof(BuildingCollectionsSettings), nameof(TagWarning))]
         public bool FindItTags
         {
             get => findItTags;
@@ -125,8 +124,10 @@ namespace BuildingCollections
             }
         }
 
-        /// <summary>Icono de aviso junto a la casilla mientras está apagada: encenderla etiqueta todas las colecciones.</summary>
-        public bool TagWarning() => !findItTags && CollectionStore.Collections.Count > 0;
+        /// <summary>Texto bajo la casilla: encenderla etiqueta todas las colecciones y puede parar el juego un momento.</summary>
+        [SettingsUIMultilineText]
+        [SettingsUISection(Section, Collections)]
+        public string FindItTagsNote => string.Empty;
 
         /// <summary>Ya se decidió el valor inicial de FindItTags (migración de la versión en que siempre etiquetaba).</summary>
         [SettingsUIHidden]
@@ -194,9 +195,8 @@ namespace BuildingCollections
         public bool LeaveGaps { get; set; }
 
         /// <summary>
-        /// Con Anarchy encendido: cuánto (m) pueden pisarse dos edificios nuevos de calles distintas. Es un tope: el
-        /// solape real es el que dé la geometría, entre 0 y este valor. Se ajusta en el panel (solo con Anarchy);
-        /// lo ya construido no se pisa nunca.
+        /// Con Anarchy encendido, casilla "Overlap buildings" del panel: 0,5 m (marcada) o 0. Es un tope por junta entre
+        /// edificios nuevos; lo ya construido no se pisa nunca.
         /// </summary>
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]

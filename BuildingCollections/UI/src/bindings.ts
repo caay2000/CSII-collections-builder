@@ -18,7 +18,7 @@ export interface BuilderDto {
     /** Árboles del juego base en el espacio sobrante. */
     trees: boolean;
     decorDensity: number;
-    /** Solape máximo (m) entre edificios nuevos con Anarchy, de 0 a 3,5. */
+    /** Solape entre edificios nuevos con Anarchy: 0,5 m ("Overlap buildings" marcado) o 0. */
     overlap: number;
     /** Set de Tree Controller ("" = todos los árboles del juego base). */
     treeSet: string;
