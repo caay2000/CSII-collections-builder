@@ -1,8 +1,8 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./panel.module.scss";
 import { actions, BuildingDto, useBuildings, useCollections, useFindIt, useSelected, useStatus } from "./bindings";
 import { icon, IconButton, InlineInput, StepFilter } from "./widgets";
-import { Scrollable } from "cs2/ui";
+import { Scrollable, ScrollController } from "cs2/ui";
 
 /** Nombre legible como el de Find It: "CCP5_ResidentialMediumLeft01_L1_2x2" -> "CCP5 Residential Medium Left01 L1 2x2". */
 export function prettyName(n: string): string {
@@ -33,6 +33,18 @@ const Card = memo(({ b, label }: { b: BuildingDto; label: string }) => (
 // Pintar cientos de tarjetas con miniatura de golpe congela el panel 1-2 s: se pintan por tandas, una por fotograma.
 const FIRST_BATCH = 40;
 const BATCH = 60;
+
+// Rejilla virtual: solo se pintan las filas visibles (más un margen). Tarjeta 80x128 + 6 de margen (panel.module.scss).
+const CARD_W = 86;
+const CARD_H = 134;
+const SPARE_ROWS = 2;
+
+/** Controlador del Scrollable del juego; si en esta versión no existe, la rejilla vuelve a pintar por tandas. */
+function useScrollController(): ScrollController | undefined {
+    return useMemo(() => {
+        try { return new ScrollController(); } catch { return undefined; }
+    }, []);
+}
 
 export const CollectionsTab = () => {
     const collections = useCollections();
@@ -65,13 +77,55 @@ export const CollectionsTab = () => {
     const listKey = `${selected}\u0000${q}\u0000${JSON.stringify(f)}`;
     const [batch, setBatch] = useState({ key: listKey, limit: FIRST_BATCH });
     const limit = batch.key === listKey ? batch.limit : FIRST_BATCH;
+    const virtualRef = useRef(false);
     useEffect(() => {
-        if (limit >= shown.length) return;
+        if (virtualRef.current || limit >= shown.length) return; // con la rejilla virtual no hacen falta tandas
         const id = requestAnimationFrame(() => setBatch({ key: listKey, limit: limit + BATCH }));
         return () => cancelAnimationFrame(id);
     }, [listKey, limit, shown.length]);
     const current = collections.find((c) => c.name === selected);
     const filtered = !!q || f.wV > 0 || f.dV > 0 || f.lV > 0;
+
+    // Vista de la rejilla: desplazamiento, alto visible y ancho (columnas). Se mide al hacer scroll y tras pintar.
+    const controller = useScrollController();
+    const gridRef = useRef<HTMLDivElement>(null);
+    const [view, setView] = useState({ key: listKey, top: 0, height: 0, width: 0, pitchW: 0, pitchH: 0 });
+    const measure = useCallback(() => {
+        const c = controller?.container;
+        const g = gridRef.current;
+        if (!c || !g) return;
+        // El juego escala los rem con la resolución: el paso de la rejilla se mide en una tarjeta real (en px). Sin
+        // tarjetas pintadas se conserva el último paso, pero el desplazamiento y el tamaño se leen siempre.
+        const card = g.querySelector(`.${styles.card}`) as HTMLElement | null;
+        const hasCard = !!card && card.offsetWidth > 0;
+        setView((v) => {
+            const next = {
+                key: listKey, top: c.scrollTop, height: c.clientHeight, width: g.offsetWidth,
+                pitchW: hasCard ? (card!.offsetWidth * CARD_W) / 80 : v.pitchW,
+                pitchH: hasCard ? (card!.offsetHeight * CARD_H) / 128 : v.pitchH,
+            };
+            return v.key === next.key && v.top === next.top && v.height === next.height && v.width === next.width && v.pitchW === next.pitchW && v.pitchH === next.pitchH ? v : next;
+        });
+    }, [controller, listKey]);
+    useEffect(() => {
+        // El panel tarda un fotograma en tener tamaño: se mide en el siguiente.
+        const id = requestAnimationFrame(measure);
+        return () => cancelAnimationFrame(id);
+    });
+    // Otra colección, filtro o búsqueda: arriba del todo.
+    useEffect(() => {
+        try { controller?.scrollTo(0, 0); } catch { /* el Scrollable aún no se ha enganchado */ }
+    }, [listKey, controller]);
+    // En el mismo render del cambio, la vista vieja no vale: se empieza desde arriba (si no, quedaba en blanco).
+    const top = view.key === listKey ? view.top : 0;
+    // Hasta medir una tarjeta (primer fotograma) se pinta la primera tanda, como antes.
+    const virtual = !!controller && view.width > 0 && view.height > 0 && view.pitchH > 0;
+    const cols = virtual ? Math.max(1, Math.floor((view.width + 1) / view.pitchW)) : 1;
+    const rows = Math.ceil(shown.length / cols);
+    const firstRow = virtual ? Math.max(0, Math.min(Math.floor(top / view.pitchH) - SPARE_ROWS, rows - 1 - 2 * SPARE_ROWS)) : 0;
+    const lastRow = virtual ? Math.min(rows, Math.ceil((top + view.height) / view.pitchH) + SPARE_ROWS) : rows;
+    virtualRef.current = virtual;
+    const visible = virtual ? shown.slice(firstRow * cols, lastRow * cols) : shown.slice(0, limit);
 
     return (
         <div className={styles.split}>
@@ -112,7 +166,7 @@ export const CollectionsTab = () => {
                     <IconButton name="rename" title="Rename collection" disabled={!current} onClick={() => setEditing("rename")} />
                     <IconButton name="trash" title="Delete collection" className={styles.iconBtnDanger} disabled={!current} onClick={() => setEditing("delete")} />
                 </div>
-                {status && <div className={status === "OK" ? styles.ok : styles.warn}>{status}</div>}
+                {status && status !== "OK" && <div className={styles.warn}>{status}</div>}
             </div>
 
             <div className={styles.main}>
@@ -131,9 +185,11 @@ export const CollectionsTab = () => {
                     <StepFilter label="Lot Depth" op={f.dOp} value={f.dV} onChange={(o, v) => setF({ ...f, dOp: o, dV: v })} />
                     <StepFilter label="Building Level" op={f.lOp} value={f.lV} onChange={(o, v) => setF({ ...f, lOp: o, lV: v })} />
                 </div>
-                <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable">
-                    <div className={styles.grid}>
-                        {shown.slice(0, limit).map(({ b, label }) => <Card key={b.id} b={b} label={label} />)}
+                <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable" controller={controller} onScroll={measure}>
+                    <div className={styles.grid} ref={gridRef}>
+                        {virtual && firstRow > 0 && visible.length > 0 && <div className={styles.gridSpacer} style={{ height: `${firstRow * view.pitchH}px` }} />}
+                        {visible.map(({ b, label }) => <Card key={b.id} b={b} label={label} />)}
+                        {virtual && lastRow < rows && <div className={styles.gridSpacer} style={{ height: `${(rows - lastRow) * view.pitchH}px` }} />}
                         {current && shown.length === 0 && (
                             <div className={styles.empty}>{buildings.length === 0 ? "Empty collection. Add buildings with Shift+click in Find It." : "Nothing matches these filters."}</div>
                         )}

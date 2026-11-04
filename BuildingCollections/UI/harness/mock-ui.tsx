@@ -15,7 +15,14 @@ export const Panel = (p: any) => (
     </div>
 );
 export const PanelSectionRow = (p: any) => <div className="mock-row"><span>{p.left}</span><div>{p.right}</div></div>;
-export const Scrollable = (p: any) => <div className={p.className} style={{ overflowY: "auto" }}>{p.children}</div>;
+export class ScrollController {
+    container: HTMLDivElement | null = null;
+    scrollTo(x: number, y: number) { this.container?.scrollTo(x, y); }
+}
+export const Scrollable = (p: any) => (
+    <div className={p.className} style={{ overflowY: "auto" }} onScroll={p.onScroll}
+        ref={(el) => { if (p.controller) p.controller.container = el; }}>{p.children}</div>
+);
 
 // Aproximación del Dropdown del juego (la apariencia real la pone el motor): toggle negro con borde azul y menú gris.
 const Ctx = createContext<{ open: boolean; setOpen: (v: boolean) => void }>({ open: false, setOpen: () => {} });
