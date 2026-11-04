@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import styles from "./panel.module.scss";
 import { actions, useBuildings, useCollections, useFindIt, useSelected, useStatus } from "./bindings";
 import { StepFilter } from "./widgets";
+import { Scrollable } from "cs2/ui";
 
 /** Nombre legible como el de Find It: "CCP5_ResidentialMediumLeft01_L1_2x2" -> "CCP5 Residential Medium Left01 L1 2x2". */
 export function prettyName(n: string): string {
@@ -34,11 +35,9 @@ export const CollectionsTab = () => {
     return (
         <div className={styles.split}>
             <div className={styles.side}>
-                <div className={styles.row}>
-                    <input className={styles.input} value={name} placeholder="New collection" onChange={(e) => setName(e.target.value)} />
-                    <button className={styles.btn} onClick={() => { actions.create(name); setName(""); }}>Create</button>
-                </div>
-                <div className={styles.list}>
+                <input className={styles.input} value={name} placeholder="New collection name" onChange={(e) => setName(e.target.value)} />
+                <button className={styles.btnPrimary} disabled={!name.trim()} onClick={() => { actions.create(name); setName(""); }}>Create collection</button>
+                <Scrollable className={styles.list} vertical trackVisibility="scrollable">
                     {collections.length === 0 && <div className={styles.muted}>No collections yet.</div>}
                     {collections.map((c) => (
                         <div key={c.name} className={c.name === selected ? styles.itemOn : styles.item}
@@ -46,26 +45,24 @@ export const CollectionsTab = () => {
                             <span>{c.name}</span><span className={styles.muted}>{c.count}</span>
                         </div>
                     ))}
-                </div>
-                <button className={styles.btn} disabled={!current || !findIt} onClick={() => actions.addAllFromFindIt()}>
-                    Add all Find It items
-                </button>
+                </Scrollable>
+                <button className={styles.btn} disabled={!current || !findIt} onClick={() => actions.addAllFromFindIt()}>Add all Find It items</button>
                 {!findIt && <div className={styles.warn}>Find It not detected.</div>}
-                <div className={styles.row}>
-                    {confirm === "" ? (
-                        <>
-                            <button className={styles.btn} disabled={!current} onClick={() => actions.clone()}>Clone</button>
-                            <button className={styles.btn} disabled={!current} onClick={() => setConfirm("clear")}>Empty</button>
-                            <button className={styles.btnDanger} disabled={!current} onClick={() => setConfirm("delete")}>Delete</button>
-                        </>
-                    ) : (
-                        <>
-                            <span className={styles.muted}>{confirm === "clear" ? "Empty it?" : "Delete it?"}</span>
+                <button className={styles.btn} disabled={!current} onClick={() => actions.clone()}>Clone collection</button>
+                {confirm === "" ? (
+                    <>
+                        <button className={styles.btn} disabled={!current} onClick={() => setConfirm("clear")}>Empty collection</button>
+                        <button className={styles.btnDanger} disabled={!current} onClick={() => setConfirm("delete")}>Delete collection</button>
+                    </>
+                ) : (
+                    <div className={styles.confirm}>
+                        <span>{confirm === "clear" ? `Remove all buildings from "${current?.name}"?` : `Delete "${current?.name}"?`}</span>
+                        <div className={styles.row}>
                             <button className={styles.btnDanger} onClick={() => { confirm === "clear" ? actions.clear() : actions.remove(); setConfirm(""); }}>Yes</button>
                             <button className={styles.btn} onClick={() => setConfirm("")}>No</button>
-                        </>
-                    )}
-                </div>
+                        </div>
+                    </div>
+                )}
                 {status && <div className={status === "OK" ? styles.ok : styles.warn}>{status}</div>}
             </div>
 
@@ -78,7 +75,8 @@ export const CollectionsTab = () => {
                 <StepFilter label="Lot width" op={f.wOp} value={f.wV} onChange={(o, v) => setF({ ...f, wOp: o, wV: v })} />
                 <StepFilter label="Lot depth" op={f.dOp} value={f.dV} onChange={(o, v) => setF({ ...f, dOp: o, dV: v })} />
                 <StepFilter label="Level" op={f.lOp} value={f.lV} onChange={(o, v) => setF({ ...f, lOp: o, lV: v })} />
-                <div className={styles.grid}>
+                <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable">
+                    <div className={styles.grid}>
                     {shown.map((b) => {
                         const name = prettyName(b.name);
                         const size = `${b.w}x${b.d}`;
@@ -95,7 +93,8 @@ export const CollectionsTab = () => {
                     {current && shown.length === 0 && (
                         <div className={styles.muted}>{buildings.length === 0 ? "Empty collection. Add buildings with Shift+click in Find It." : "Nothing matches these filters."}</div>
                     )}
-                </div>
+                    </div>
+                </Scrollable>
                 <div className={styles.row}>
                     <button className={styles.btnDanger} disabled={shown.length === 0}
                         onClick={() => actions.removeBuildings(shown.map((b) => b.id))}>

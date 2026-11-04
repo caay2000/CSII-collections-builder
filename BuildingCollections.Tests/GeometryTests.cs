@@ -106,3 +106,35 @@ namespace BuildingCollections.Tests
         }
     }
 }
+
+namespace BuildingCollections.Tests
+{
+    public class CornerMatchingTests
+    {
+        static BuildingInfo B(string n, int w, CornerKind c) => new BuildingInfo { PrefabName = n, LotWidth = w, LotDepth = 2, Level = 1, Corner = c };
+
+        [Fact]
+        public void Single_corner_never_gets_a_two_sided_building()
+        {
+            var both = B("both", 2, CornerKind.Left | CornerKind.Right);
+            var left = B("left", 2, CornerKind.Left);
+            var plain = new[] { B("p", 2, CornerKind.Front) };
+            for (int seed = 0; seed < 30; seed++)
+            {
+                var plan = GridPlanner.Plan(PlanGrid.AllFree(8, 3, true, false), plain, new[] { both, left }, 100, seed);
+                var first = plan.First(p => p.X == 0);
+                Assert.Equal("left", first.Building.PrefabName);
+                Assert.DoesNotContain(plan, p => p.Building.PrefabName == "both");
+            }
+        }
+
+        [Fact]
+        public void Two_sided_lot_of_exact_width_gets_the_two_sided_building()
+        {
+            var both = B("both", 4, CornerKind.Left | CornerKind.Right);
+            var plan = GridPlanner.Plan(PlanGrid.AllFree(4, 3, true, true), new[] { B("p", 2, CornerKind.Front) }, new[] { both }, 100, 1);
+            Assert.Single(plan);
+            Assert.Equal("both", plan[0].Building.PrefabName);
+        }
+    }
+}
