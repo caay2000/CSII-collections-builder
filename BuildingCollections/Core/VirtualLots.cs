@@ -80,7 +80,7 @@ namespace BuildingCollections.Core
                         bool open = true;
                         for (int y = 0; y < maxDepth; y++)
                         {
-                            open = open && CellFits(strip, x, y, outline, obstacles) && (clip == null || CellInside(strip, x, y, clip));
+                            open = open && (clip == null || CellInside(strip, x, y, clip)) && CellFits(strip, x, y, outline, obstacles);
                             grid.Free[x, y] = open; // un edificio necesita celdas seguidas desde la acera
                         }
                     }

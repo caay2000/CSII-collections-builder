@@ -27,7 +27,8 @@ namespace BuildingCollections.Core
             Trace(edges, click, out _, maxSteps);
 
         /// <summary>Igual, y además el recorrido: cada tramo de la manzana y si se recorre de Start a End.</summary>
-        public static List<Pt> Trace(IReadOnlyList<RoadEdge> edges, Pt click, out List<(int edge, bool forward)> path, int maxSteps = 400)
+        public static List<Pt> Trace(IReadOnlyList<RoadEdge> edges, Pt click, out List<(int edge, bool forward)> path, int maxSteps = 400,
+            Dictionary<int, List<int>> adjacency = null)
         {
             path = null;
             // Tramos más cercanos. Si el más cercano es un nodo compartido por varios tramos, se prueban todos (y
@@ -60,7 +61,7 @@ namespace BuildingCollections.Core
 
             near.Sort((a, b) => a.d.CompareTo(b.d));
             double limit = near[0].d + 0.5;
-            var byNode = Adjacency(edges);
+            var byNode = adjacency ?? Adjacency(edges);
             foreach (var c in near)
             {
                 if (c.d > limit)
@@ -83,7 +84,8 @@ namespace BuildingCollections.Core
             return null;
         }
 
-        static Dictionary<int, List<int>> Adjacency(IReadOnlyList<RoadEdge> edges)
+        /// <summary>Tramos por nodo. Para trazar muchas manzanas sobre el mismo grafo, se calcula una vez.</summary>
+        public static Dictionary<int, List<int>> Adjacency(IReadOnlyList<RoadEdge> edges)
         {
             var byNode = new Dictionary<int, List<int>>();
             for (int e = 0; e < edges.Count; e++)

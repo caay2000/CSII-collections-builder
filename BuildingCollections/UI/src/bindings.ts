@@ -6,8 +6,6 @@ export interface CollectionDto { name: string; tag: string; count: number }
 /** Un edificio de la colección seleccionada. Los datos salen del propio juego; pack solo si Find It está. */
 export interface BuildingDto {
     id: string; name: string; w: number; d: number; level: number; icon: string;
-    /** Árbol o planta: va en la decoración, no en las parcelas. */
-    decor?: boolean;
 }
 export interface BuilderDto {
     mode: "block" | "polygon";

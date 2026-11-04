@@ -268,13 +268,13 @@ namespace BuildingCollections.Systems
             {
                 if (PrefabCatalog.TryGet(name, out var e))
                 {
-                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, icon = e.Icon, decor = e.IsDecor });
+                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, icon = e.Icon });
                 }
                 else
                 {
                     // Aún sin cargar (assets que llegan tarde) o ya no instalado: se muestra pero no se borra.
                     missing++;
-                    list.Add(new { id = name, name = name + " (not loaded)", w = 0, d = 0, level = 0, icon = string.Empty, decor = false });
+                    list.Add(new { id = name, name = name + " (not loaded)", w = 0, d = 0, level = 0, icon = string.Empty });
                 }
             }
 

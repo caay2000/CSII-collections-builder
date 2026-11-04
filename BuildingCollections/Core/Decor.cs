@@ -16,7 +16,7 @@ namespace BuildingCollections.Core
         /// <param name="curbMargin">Distancia mínima a la acera (m).</param>
         /// <param name="clearance">Distancia mínima a un edificio (m).</param>
         public static List<Pt> Scatter(IReadOnlyList<Pt> outline, IReadOnlyList<Quad> blockers, IReadOnlyList<Pt> existing,
-            double spacing, double curbMargin, double clearance, int seed, int max = 2000)
+            double spacing, double curbMargin, double clearance, int seed, int max = 2000, IReadOnlyList<Pt> clip = null)
         {
             var result = new List<Pt>();
             if (outline.Count < 3 || spacing <= 0.5)
@@ -42,7 +42,7 @@ namespace BuildingCollections.Core
                 for (double x = minX + spacing / 2; x < maxX && result.Count < max; x += spacing)
                 {
                     var q = new Pt(x + (rng.NextDouble() * 2 - 1) * jitter, y + (rng.NextDouble() * 2 - 1) * jitter);
-                    if (!Polygon.Contains(outline, q) || DistanceToOutline(outline, q) < curbMargin)
+                    if (!Polygon.Contains(outline, q) || (clip != null && !Polygon.Contains(clip, q)) || DistanceToOutline(outline, q) < curbMargin)
                     {
                         continue;
                     }

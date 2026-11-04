@@ -18,7 +18,7 @@ export const BuilderTab = () => {
         return () => actions.setToolActive(false);
     }, []);
 
-    const candidates = buildings.filter((x) => !x.decor &&
+    const candidates = buildings.filter((x) =>
         matches(b.widthOp, b.widthValue, x.w) && matches(b.depthOp, b.depthValue, x.d) && matches(b.levelOp, b.levelValue, x.level));
     const canGenerate = plan.areaSelected && !!selected && candidates.length > 0;
     const density = Math.max(10, Math.min(100, Math.round(b.density / 10) * 10));
@@ -94,7 +94,7 @@ export const BuilderTab = () => {
                             )}
                         </div>
                         <div className={styles.summaryCol}>
-                            <span className={styles.big}>{`${candidates.length}`}<span className={styles.bigOf}>{` / ${buildings.filter((x) => !x.decor).length}`}</span></span>
+                            <span className={styles.big}>{`${candidates.length}`}<span className={styles.bigOf}>{` / ${buildings.length}`}</span></span>
                             <span className={styles.small}>buildings match</span>
                         </div>
                     </>

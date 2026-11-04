@@ -89,6 +89,11 @@ namespace BuildingCollections.Systems
 
         // Contorno del área seleccionada (para la decoración) y árboles que ya hay en ella.
         List<Pt> areaOutline;
+
+        // Zonas donde pueden ir árboles: el contorno por la acera de cada manzana (nunca la calzada) y, en modo
+        // polígono, el polígono que las recorta.
+        List<List<Pt>> decorAreas = new List<List<Pt>>();
+        List<Pt> decorClip;
         EntityQuery treeQuery;
         string mode = "block";
         float3 hoverPos;
@@ -218,6 +223,8 @@ namespace BuildingCollections.Systems
             areaFill.Clear();
             areaEdge.Clear();
             areaOutline = null;
+            decorAreas = new List<List<Pt>>();
+            decorClip = null;
             freeFrontCells = 0;
             definitionsDirty = true;
             Say("Selection cleared.");
@@ -313,11 +320,17 @@ namespace BuildingCollections.Systems
                 // los edificios (los planificados y los que ya hay), y sin pisar árboles existentes.
                 int buildingsPlanned = preview.Count;
                 int plants = 0;
-                if (decor != null && decor.Count > 0 && areaOutline != null)
+                if (decor != null && decor.Count > 0 && areaOutline != null && decorAreas.Count > 0)
                 {
                     var blockers = footprints.Select(f => f.quad).ToList();
                     blockers.AddRange(BuildingFootprints(areaOutline));
-                    var spots = Decor.Scatter(areaOutline, blockers, TreePoints(areaOutline), Decor.SpacingFor(decorDensity), 2.5, 2.0, seed);
+                    var existingTrees = TreePoints(areaOutline);
+                    var spots = new List<Pt>();
+                    foreach (var area in decorAreas)
+                    {
+                        spots.AddRange(Decor.Scatter(area, blockers, existingTrees, Decor.SpacingFor(decorDensity), 2.5, 2.0, seed + spots.Count, clip: decorClip));
+                    }
+
                     var rng = new System.Random(seed ^ 0x5bd1e995);
                     foreach (var q in spots)
                     {
@@ -489,9 +502,22 @@ namespace BuildingCollections.Systems
             {
                 foreach (var e in errors)
                 {
-                    if (EntityManager.HasComponent<Transform>(e))
+                    // Un objeto pegado a un edificio (atrezo, árbol del edificio) cuenta como su edificio.
+                    var root = e;
+                    for (int k = 0; k < 8 && EntityManager.HasComponent<Owner>(root); k++)
                     {
-                        bad.Add(EntityManager.GetComponentData<Transform>(e).m_Position);
+                        var owner = EntityManager.GetComponentData<Owner>(root).m_Owner;
+                        if (owner == Entity.Null || !EntityManager.Exists(owner))
+                        {
+                            break;
+                        }
+
+                        root = owner;
+                    }
+
+                    if (EntityManager.HasComponent<Transform>(root))
+                    {
+                        bad.Add(EntityManager.GetComponentData<Transform>(root).m_Position);
                     }
                 }
             }
@@ -499,8 +525,13 @@ namespace BuildingCollections.Systems
             int before = preview.Count;
             preview.RemoveAll(p =>
             {
-                var pos = p.IsDecor ? p.Pos : ZoneUtils.GetPosition(p.Block, p.Min, p.Max);
-                return bad.Any(b => math.distance(b.xz, pos.xz) < 2f);
+                if (p.IsDecor)
+                {
+                    return bad.Any(b => math.distance(b.xz, p.Pos.xz) < 1f);
+                }
+
+                var lot = ToQuad(ZoneUtils.CalculateCorners(p.Block, new ValidArea { m_Area = new int4(p.Min.x, p.Max.x, p.Min.y, p.Max.y) }));
+                return bad.Any(b => lot.Contains(new Pt(b.x, b.z)));
             });
             int removed = before - preview.Count;
             if (removed > 0)
@@ -702,6 +733,8 @@ namespace BuildingCollections.Systems
                 areaFill.Clear();
                 areaEdge.Clear();
                 areaOutline = null;
+            decorAreas = new List<List<Pt>>();
+            decorClip = null;
                 definitionsDirty = true;
                 SnapHover();
                 point = hoverPos;
@@ -982,7 +1015,14 @@ namespace BuildingCollections.Systems
 
             var obstacles = BuildingFootprints(outline);
             var strips = VirtualLots.Build(sides, obstacles, frontage: frontage);
-            return SelectStrips(strips, outline, $"{description}: {sides.Count} aceras, {obstacles.Count} edificios existentes");
+            if (!SelectStrips(strips, outline, $"{description}: {sides.Count} aceras, {obstacles.Count} edificios existentes"))
+            {
+                return false;
+            }
+
+            decorAreas = new List<List<Pt>> { outline };
+            decorClip = null;
+            return true;
         }
 
         /// <summary>
@@ -1000,28 +1040,39 @@ namespace BuildingCollections.Systems
             var center = new float2((float)((minX + maxX) / 2), (float)((minZ + maxZ) / 2));
             double radius = Math.Sqrt((maxX - minX) * (maxX - minX) + (maxZ - minZ) * (maxZ - minZ)) / 2 + 600;
             ReadRoadGraph(center, radius, out var edges, out var owners);
+            var adjacency = RoadFace.Adjacency(edges);
             var faces = new List<List<Pt>>();
+            var outlines = new List<List<Pt>>();
             var strips = new List<LotStrip>();
             var obstacles = BuildingFootprints(clip);
-            double step = Math.Max(12, Math.Sqrt((maxX - minX) * (maxZ - minZ) / 3000));
+            // Paso de 12 a 25 m (manzanas pequeñas no se saltan) y como mucho unas 1500 muestras.
+            double step = Math.Max(12, Math.Min(25, Math.Sqrt((maxX - minX) * (maxZ - minZ) / 1500)));
+            int samples = 0, giant = 0;
             int sideCount = 0;
             for (double z = minZ + step / 2; z < maxZ && faces.Count < 60; z += step)
             {
                 for (double x = minX + step / 2; x < maxX && faces.Count < 60; x += step)
                 {
                     var q = new Pt(x, z);
-                    if (!Polygon.Contains(clip, q) || faces.Any(f => Polygon.Contains(f, q)))
+                    if (samples >= 1500 || !Polygon.Contains(clip, q) || faces.Any(f => Polygon.Contains(f, q)))
                     {
                         continue;
                     }
 
-                    var face = RoadFace.Trace(edges, q, out var steps);
+                    samples++;
+                    var face = RoadFace.Trace(edges, q, out var steps, adjacency: adjacency);
                     if (face == null)
                     {
                         continue;
                     }
 
                     faces.Add(face);
+                    if (Perimeter(face) > 3000)
+                    {
+                        giant++; // una "manzana" enorme (campo dentro de una ronda): no se rellena
+                        continue;
+                    }
+
                     var sides = new List<List<Pt>>();
                     foreach (var (edge, forward) in steps)
                     {
@@ -1033,11 +1084,36 @@ namespace BuildingCollections.Systems
                     }
 
                     sideCount += sides.Count;
+                    outlines.Add(VirtualLots.Outline(sides));
                     strips.AddRange(VirtualLots.Build(sides, obstacles, clip: clip));
                 }
             }
 
-            return faces.Count > 0 && SelectStrips(strips, clip, $"{description}: {faces.Count} manzanas, {sideCount} aceras, {obstacles.Count} edificios existentes");
+            if (faces.Count >= 60 || samples >= 1500 || giant > 0)
+            {
+                Mod.Log.Warn($"[selección] polígono: {faces.Count} manzanas (tope 60), {samples} muestras (tope 1500), {giant} manzanas enormes ignoradas.");
+            }
+
+            if (faces.Count == 0 || !SelectStrips(strips, clip, $"{description}: {faces.Count} manzanas, {sideCount} aceras, {obstacles.Count} edificios existentes"))
+            {
+                return false;
+            }
+
+            decorAreas = outlines;
+            decorClip = clip;
+            return true;
+        }
+
+        static double Perimeter(List<Pt> poly)
+        {
+            double sum = 0;
+            for (int i = 0; i < poly.Count; i++)
+            {
+                var d = poly[(i + 1) % poly.Count] - poly[i];
+                sum += Math.Sqrt(Pt.Dot(d, d));
+            }
+
+            return sum;
         }
 
         /// <summary>Convierte las tiras en bloques equivalentes a los del juego y las deja seleccionadas.</summary>
@@ -1264,6 +1340,8 @@ namespace BuildingCollections.Systems
             areaFill.Clear();
             areaEdge.Clear();
             areaOutline = null;
+            decorAreas = new List<List<Pt>>();
+            decorClip = null;
             definitionsDirty = true;
 
             freeFrontCells = 0;

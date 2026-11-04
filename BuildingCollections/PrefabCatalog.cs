@@ -38,15 +38,8 @@ namespace BuildingCollections
 
         static bool IsUnwantedTree(string name)
         {
-            foreach (var bad in new[] { "Dead", "Stump", "Log", "Fallen", "Burnt", "Sapling" })
-            {
-                if (name.IndexOf(bad, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            // "Log" como palabra (troncos), no dentro de otra ("Logo").
+            return System.Text.RegularExpressions.Regex.IsMatch(name, @"Dead|Stump|Fallen|Burnt|Sapling|Log(?![a-z])");
         }
         static World queryWorld;
         static int lastCount = -1;
