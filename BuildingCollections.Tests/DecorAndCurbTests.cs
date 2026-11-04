@@ -39,7 +39,7 @@ namespace BuildingCollections.Tests
             Assert.True(CurbSnap.TrySnap(Curbs(), new Pt(33, 3), 6, out var hit));
             Assert.Equal(33, hit.Point.X, 6);
             Assert.Equal(0, hit.Point.Y, 6);
-            Assert.True(CurbSnap.TrySnap(Curbs(), new Pt(98, 2), 6, out var end));
+            Assert.True(CurbSnap.TrySnap(Curbs(), new Pt(98, 1), 6, out var end));
             Assert.Equal(100, end.Point.X, 6);
             Assert.False(CurbSnap.TrySnap(Curbs(), new Pt(50, 20), 6, out _));
         }
