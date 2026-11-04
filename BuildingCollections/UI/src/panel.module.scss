@@ -1,0 +1,72 @@
+$bg: rgba(24, 32, 44, 0.97);
+$line: rgba(255, 255, 255, 0.13);
+$accent: #3b82f6;
+$soft: rgba(255, 255, 255, 0.08);
+
+.panel, .panelWide {
+    position: fixed; left: 20rem; top: 90rem;
+    max-height: calc(100vh - 120rem);
+    display: flex; flex-direction: column;
+    pointer-events: auto;
+    background-color: $bg; border: 1rem solid $line; border-radius: 8rem;
+    color: #e8edf5; font-size: 13rem;
+}
+.panel { width: 430rem; }
+.panelWide { width: 700rem; }
+.header { display: flex; justify-content: space-between; align-items: center; padding: 8rem 12rem; border-bottom: 1rem solid $line; flex: none; }
+.title { font-weight: bold; font-size: 15rem; }
+.close { background: transparent; color: #e8edf5; border: none; font-size: 18rem; padding: 0 6rem; }
+.tabs { display: flex; flex: none; }
+.tab, .tabOn { flex: 1; padding: 8rem; background: transparent; color: #aab4c3; border: none; border-bottom: 2rem solid transparent; }
+.tabOn { color: #fff; border-bottom-color: $accent; }
+.body { padding: 10rem 12rem 12rem; overflow-y: auto; flex: 1; min-height: 0; }
+.col { display: flex; flex-direction: column; }
+.col > * { margin-bottom: 8rem; }
+.split { display: flex; flex-direction: row; }
+.side { width: 190rem; flex: none; margin-right: 12rem; display: flex; flex-direction: column; }
+.side > * { margin-bottom: 8rem; }
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.main > * { margin-bottom: 8rem; }
+.row { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; }
+.row > * { margin-right: 6rem; }
+.label { width: 78rem; flex: none; }
+.value { width: 36rem; text-align: right; }
+.title2 { font-weight: bold; font-size: 14rem; }
+.sec { font-size: 11rem; letter-spacing: 1rem; text-transform: uppercase; color: #60a5fa; text-align: center; }
+.input { flex: 1; min-width: 0; padding: 6rem 8rem; background: $soft; border: 1rem solid $line; border-radius: 4rem; color: #fff; }
+.list { max-height: 240rem; overflow-y: auto; border: 1rem solid $line; border-radius: 4rem; background: rgba(255, 255, 255, 0.04); }
+.item, .itemOn { display: flex; justify-content: space-between; padding: 6rem 8rem; border-bottom: 1rem solid $line; }
+.itemOn { background: rgba(59, 130, 246, 0.38); }
+.btn, .btnDanger, .btnBuild, .btnPrimary, .btnClear { padding: 7rem 12rem; background: rgba(255, 255, 255, 0.1); border: 1rem solid $line; border-radius: 4rem; color: #fff; }
+.btnDanger { background: rgba(220, 60, 60, 0.38); }
+.btnBuild { background: #22a559; border-color: #22a559; font-weight: bold; padding: 9rem; }
+.btnPrimary { background: $accent; border-color: $accent; font-weight: bold; padding: 9rem; }
+.btnClear { background: rgba(220, 60, 60, 0.45); border-color: rgba(220, 60, 60, 0.7); padding: 8rem; }
+button:disabled { opacity: 0.4; }
+.seg { display: flex; }
+.segBtnWide, .segOnWide { flex: 1; padding: 7rem; background: $soft; border: 1rem solid $line; color: #cbd5e1; }
+.segOnWide { background: $accent; border-color: $accent; color: #fff; }
+.step { display: flex; align-items: center; }
+.stepOp, .stepArrow { width: 28rem; height: 26rem; padding: 0; background: $soft; border: 1rem solid $line; color: #fff; }
+.stepOp { background: rgba(59, 130, 246, 0.45); margin-right: 4rem; border-radius: 4rem; }
+.stepArrow:first-of-type { border-radius: 4rem 0 0 4rem; }
+.stepArrow:last-child { border-radius: 0 4rem 4rem 0; }
+.stepValue { min-width: 56rem; height: 26rem; line-height: 26rem; text-align: center; background: rgba(0, 0, 0, 0.3); border-top: 1rem solid $line; border-bottom: 1rem solid $line; }
+.grid { display: flex; flex-wrap: wrap; max-height: calc(100vh - 470rem); min-height: 150rem; overflow-y: auto; }
+.card { position: relative; width: 98rem; margin: 0 6rem 6rem 0; padding: 5rem; background: rgba(255, 255, 255, 0.06); border: 1rem solid $line; border-radius: 6rem; text-align: center; font-size: 11rem; }
+.thumb { width: 64rem; height: 56rem; display: block; margin: 0 auto 4rem; }
+.cardName { max-height: 28rem; overflow: hidden; line-height: 14rem; }
+.lvl { position: absolute; top: 4rem; left: 4rem; background: rgba(0, 0, 0, 0.6); border-radius: 3rem; padding: 0 4rem; font-size: 10rem; }
+.remove { position: absolute; top: 3rem; right: 3rem; width: 20rem; height: 20rem; padding: 0; border: none; border-radius: 4rem; background: rgba(0, 0, 0, 0.65); color: #fff; opacity: 0; line-height: 18rem; }
+.card:hover .remove { opacity: 1; }
+.remove:hover { background: #e5484d; }
+.slider { position: relative; flex: 1; height: 22rem; margin-right: 8rem; }
+.sliderTrack { position: absolute; left: 0; right: 0; top: 9rem; height: 4rem; background: $soft; border-radius: 2rem; }
+.sliderFill { height: 4rem; background: $accent; border-radius: 2rem; }
+.sliderThumb { position: absolute; top: 3rem; width: 14rem; height: 14rem; margin-left: -7rem; background: #fff; border-radius: 7rem; }
+.status { font-size: 12rem; color: #aab4c3; }
+.status b { color: #fff; }
+.muted { color: #8b97a8; }
+.hint { color: #8b97a8; font-size: 12rem; }
+.ok { color: #6ee7a0; }
+.warn { color: #fbbf77; }

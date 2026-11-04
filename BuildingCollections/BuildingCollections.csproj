@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>BuildingCollections</AssemblyName>
+    <RootNamespace>BuildingCollections</RootNamespace>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <ManagedPath Condition="'$(ManagedPath)' == ''">/mnt/c/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Managed</ManagedPath>
+    <LocalModsPath Condition="'$(LocalModsPath)' == ''">/mnt/c/Users/caay2/AppData/LocalLow/Colossal Order/Cities Skylines II/Mods/BuildingCollections</LocalModsPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Game"><HintPath>$(ManagedPath)/Game.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Colossal.Core"><HintPath>$(ManagedPath)/Colossal.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Colossal.Logging"><HintPath>$(ManagedPath)/Colossal.Logging.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Colossal.IO.AssetDatabase"><HintPath>$(ManagedPath)/Colossal.IO.AssetDatabase.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Colossal.PSI.Common"><HintPath>$(ManagedPath)/Colossal.PSI.Common.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(ManagedPath)/Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Colossal.Localization"><HintPath>$(ManagedPath)/Colossal.Localization.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Colossal.UI"><HintPath>$(ManagedPath)/Colossal.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Colossal.UI.Binding"><HintPath>$(ManagedPath)/Colossal.UI.Binding.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.Mathematics"><HintPath>$(ManagedPath)/Unity.Mathematics.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.Collections"><HintPath>$(ManagedPath)/Unity.Collections.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.Entities"><HintPath>$(ManagedPath)/Unity.Entities.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Colossal.Mathematics"><HintPath>$(ManagedPath)/Colossal.Mathematics.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>$(ManagedPath)/Unity.InputSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedPath)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <!-- Copia el resultado a la carpeta de mods locales de Windows -->
+  <Target Name="DeployLocal" AfterTargets="Build" Condition="'$(Deploy)' == 'true'">
+    <ItemGroup><Out Include="$(OutDir)BuildingCollections.dll;$(OutDir)BuildingCollections.pdb;$(MSBuildProjectDirectory)/UI/icon.svg" /></ItemGroup>
+    <Copy SourceFiles="@(Out)" DestinationFolder="$(LocalModsPath)" />
+  </Target>
+</Project>

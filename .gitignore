@@ -1,0 +1,11 @@
+# Compilación
+bin/
+obj/
+node_modules/
+BuildingCollections/UI/harness/dist/
+*.user
+
+# Ficheros locales de trabajo (capturas, mapas, handoff entre sesiones)
+/*.png
+/enhanced/
+.claude-ctx
