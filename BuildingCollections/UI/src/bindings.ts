@@ -24,6 +24,10 @@ export interface BuilderDto {
     treeSet: string;
     /** Edades de los árboles: bits 1 joven, 2 adolescente, 4 adulto, 8 viejo. */
     treeAges: number;
+    /** Segunda colección de la mezcla ("" = sin mezcla). La primera es la seleccionada. */
+    mix: string;
+    /** Porcentaje de edificios de la primera colección (el resto, de la segunda), de 5 a 95. */
+    mixShare: number;
 }
 export interface PlanDto {
     areaSelected: boolean; previewing: boolean; lots: number; blocks: number; anarchy: boolean; anarchyAvailable: boolean;
@@ -34,7 +38,7 @@ export interface PlanDto {
 }
 
 export const DEFAULT_BUILDER: BuilderDto = {
-    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, trees: false, decorDensity: 50, overlap: 0.5, treeSet: "", treeAges: 4,
+    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, trees: false, decorDensity: 50, overlap: 0.5, treeSet: "", treeAges: 4, mix: "", mixShare: 50,
 };
 
 const panelOpen$ = bindValue<boolean>(G, "panelOpen", false);
@@ -42,6 +46,8 @@ const toolActive$ = bindValue<boolean>(G, "toolActive", false);
 const findIt$ = bindValue<boolean>(G, "findItAvailable", false);
 const collections$ = bindValue<string>(G, "collections", "[]");
 const buildings$ = bindValue<string>(G, "buildings", "[]");
+/** Edificios de la segunda colección de la mezcla ("[]" sin mezcla). */
+const mixBuildings$ = bindValue<string>(G, "mixBuildings", "[]");
 const selected$ = bindValue<string>(G, "selected", "");
 const status$ = bindValue<string>(G, "status", "");
 const builder$ = bindValue<string>(G, "builder", "{}");
@@ -65,6 +71,7 @@ function useJson<T>(raw: string, fallback: T): T {
 
 export const useCollections = (): CollectionDto[] => useJson(useValue(collections$), []);
 export const useBuildings = (): BuildingDto[] => useJson(useValue(buildings$), []);
+export const useMixBuildings = (): BuildingDto[] => useJson(useValue(mixBuildings$), []);
 export const useBuilder = (): BuilderDto => ({ ...DEFAULT_BUILDER, ...parse<Partial<BuilderDto>>(useValue(builder$), {}) });
 export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, anarchy: false, anarchyAvailable: false, filled: 0, front: 0, treeSets: [], ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
 

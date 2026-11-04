@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import styles from "./panel.module.scss";
-import { actions, BuilderDto, useBuilder, useBuildings, useCollections, usePlan, useSelected } from "./bindings";
+import { actions, BuilderDto, BuildingDto, useBuilder, useBuildings, useCollections, useMixBuildings, usePlan, useSelected } from "./bindings";
 import { matches } from "./collectionsTab";
-import { CheckRow, CollectionPicker, icon, StepFilter, Stepper } from "./widgets";
+import { CheckRow, CollectionPicker, icon, MixSlider, StepFilter, Stepper } from "./widgets";
 
 const TREE_SET_ICONS: Record<string, string> = {
     "YYTC-wild-deciduous-trees": "coui://uil/Standard/TreesDeciduous.svg",
@@ -41,16 +41,55 @@ export const BuilderTab = () => {
         return () => actions.setToolActive(false);
     }, []);
 
-    const candidates = buildings.filter((x) =>
-        matches(b.widthOp, b.widthValue, x.w) && matches(b.depthOp, b.depthValue, x.d) && matches(b.levelOp, b.levelValue, x.level));
-    const canGenerate = plan.areaSelected && !!selected && candidates.length > 0;
+    const mixBuildings = useMixBuildings();
+    const passes = (x: BuildingDto) =>
+        matches(b.widthOp, b.widthValue, x.w) && matches(b.depthOp, b.depthValue, x.d) && matches(b.levelOp, b.levelValue, x.level);
+    // La mezcla solo cuenta si la segunda colección existe y no es la misma que la primera.
+    const mix = b.mix && b.mix !== selected && collections.some((c) => c.name === b.mix) ? b.mix : "";
+    const candidates = buildings.filter(passes);
+    const mixCandidates = mix ? mixBuildings.filter(passes) : [];
+    const canGenerate = plan.areaSelected && !!selected && candidates.length + mixCandidates.length > 0;
+    // Elegir como primera la que estaba de segunda las intercambia (y el reparto se invierte con ellas).
+    const selectFirst = (n: string) => {
+        if (mix && n === mix) set({ mix: selected, mixShare: 100 - b.mixShare });
+        actions.select(n);
+    };
     const density = Math.max(10, Math.min(100, Math.round(b.density / 10) * 10));
 
     return (
         <>
-            <div className={styles.sec}>
-                <span className={styles.lbl}>Collection</span>
-                <CollectionPicker items={collections} selected={selected} onSelect={actions.select} />
+            <div className={styles.secCol}>
+                <div className={styles.row}>
+                    <span className={styles.lbl} style={{ flex: 1 }}>Collection</span>
+                    <div className={styles.mixPick}>
+                        {mix && <span className={styles.mixDotA} />}
+                        <CollectionPicker items={collections} selected={selected} onSelect={selectFirst} />
+                        {mix && <span className={styles.mixRemoveSpacer} />}
+                    </div>
+                </div>
+                {mix ? (
+                    <>
+                        <div className={styles.row}>
+                            <span className={styles.lbl} style={{ flex: 1 }}>Mixed with</span>
+                            <div className={styles.mixPick}>
+                                <span className={styles.mixDotB} />
+                                <CollectionPicker items={collections.filter((c) => c.name !== selected)} selected={mix}
+                                    onSelect={(n) => set({ mix: n })} />
+                                <button className={styles.mixRemove} title="Stop mixing: use only the first collection" onClick={() => set({ mix: "" })}>
+                                    <img src={icon("close")} />
+                                </button>
+                            </div>
+                        </div>
+                        <MixSlider left={selected} right={mix} share={b.mixShare} onChange={(v) => set({ mixShare: v })} />
+                    </>
+                ) : (
+                    selected && collections.length >= 2 && (
+                        <button className={styles.addMix} title="Fill the area with buildings from two collections, in the proportion you choose."
+                            onClick={() => set({ mix: collections.find((c) => c.name !== selected)!.name, mixShare: 50 })}>
+                            <img src={icon("plus")} />Add another collection
+                        </button>
+                    )
+                )}
             </div>
 
             <div className={styles.secCol}>
@@ -105,17 +144,30 @@ export const BuilderTab = () => {
                     <CheckRow label="Trees in leftover space" checked={b.trees} onChange={(v) => set({ trees: v })}
                         title="Base-game trees fill the leftover space (courtyards, gaps), away from sidewalks and buildings." />
                     {b.trees && plan.treeSets.length > 0 && (
-                        <div className={styles.filter} title="Tree Controller set the trees are picked from (All: every base-game tree).">
-                            <span className={styles.filterLabel}>Set</span>
-                            <button className={b.treeSet === "" ? styles.chipOn : styles.chip} title="All base-game trees" onClick={() => set({ treeSet: "" })}>
-                                <img src="coui://uil/Standard/StarAll.svg" />
-                            </button>
-                            {plan.treeSets.map((id) => (
-                                <button key={id} className={b.treeSet === id ? styles.chipOn : styles.chip} title={TREE_SET_NAMES[id] ?? id} onClick={() => set({ treeSet: id })}>
-                                    {TREE_SET_ICONS[id] ? <img src={TREE_SET_ICONS[id]} /> : id.slice(-1)}
+                        // Dos filas: arriba "todos" y los sets con nombre (con icono); abajo los personalizados (1-5).
+                        <>
+                            <div className={styles.filter} title="Tree Controller set the trees are picked from (All: every base-game tree).">
+                                <span className={styles.filterLabel}>Set</span>
+                                <button className={b.treeSet === "" ? styles.chipOn : styles.chip} title="All base-game trees" onClick={() => set({ treeSet: "" })}>
+                                    <img src="coui://uil/Standard/StarAll.svg" />
                                 </button>
-                            ))}
-                        </div>
+                                {plan.treeSets.filter((id) => TREE_SET_ICONS[id]).map((id) => (
+                                    <button key={id} className={b.treeSet === id ? styles.chipOn : styles.chip} title={TREE_SET_NAMES[id] ?? id} onClick={() => set({ treeSet: id })}>
+                                        <img src={TREE_SET_ICONS[id]} />
+                                    </button>
+                                ))}
+                            </div>
+                            {plan.treeSets.some((id) => !TREE_SET_ICONS[id]) && (
+                                <div className={styles.filter} title="Your custom Tree Controller sets.">
+                                    <span className={styles.filterLabel} />
+                                    {plan.treeSets.filter((id) => !TREE_SET_ICONS[id]).map((id) => (
+                                        <button key={id} className={b.treeSet === id ? styles.chipOn : styles.chip} title={TREE_SET_NAMES[id] ?? id} onClick={() => set({ treeSet: id })}>
+                                            {id.slice(-1)}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     )}
                     {b.trees && (
                         <div className={styles.filter} title="Tree ages to plant (at least one).">
@@ -160,8 +212,8 @@ export const BuilderTab = () => {
                             )}
                         </div>
                         <div className={styles.summaryCol}>
-                            <span className={styles.big}>{`${candidates.length}`}<span className={styles.bigOf}>{` / ${buildings.length}`}</span></span>
-                            <span className={styles.small}>buildings match</span>
+                            <span className={styles.big}>{`${candidates.length + mixCandidates.length}`}<span className={styles.bigOf}>{` / ${buildings.length + (mix ? mixBuildings.length : 0)}`}</span></span>
+                            <span className={styles.small}>{mix ? `buildings match · ${candidates.length} + ${mixCandidates.length}` : "buildings match"}</span>
                         </div>
                     </>
                 )}

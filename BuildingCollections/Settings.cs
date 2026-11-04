@@ -166,6 +166,16 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public int TreeAges { get; set; } = 4;
 
+        /// <summary>Segunda colección de la mezcla del constructor ("" = sin mezcla).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public string MixCollection { get; set; } = string.Empty;
+
+        /// <summary>Porcentaje de edificios de la primera colección en la mezcla (5 a 95).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public int MixShare { get; set; } = 50;
+
         /// <summary>Densidad de la decoración (10 a 100).</summary>
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
@@ -210,6 +220,8 @@ namespace BuildingCollections
             DecorDensity = 50;
             TreeSet = string.Empty;
             TreeAges = 4;
+            MixCollection = string.Empty;
+            MixShare = 50;
             Mode = "block";
         }
     }

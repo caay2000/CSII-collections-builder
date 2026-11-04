@@ -116,3 +116,50 @@ export const CollectionPicker = (p: { items: CollectionDto[]; selected: string; 
         </div>
     );
 };
+
+/**
+ * Reparto entre dos colecciones: a la izquierda la primera, a la derecha la segunda. Se arrastra el tirador (o se
+ * pulsa en la barra) en pasos de 5 %, del 5 al 95. Mientras se arrastra solo cambia el estado local; el valor se
+ * envía a C# al soltar, para no mandar un trigger por cada movimiento del ratón.
+ */
+export const MixSlider = (p: { left: string; right: string; share: number; onChange: (share: number) => void }) => {
+    const [drag, setDrag] = useState<number | null>(null);
+    const track = useRef<HTMLDivElement>(null);
+    const share = drag ?? p.share;
+    // Al soltar, el valor vuelve de C# un fotograma después: se mantiene el arrastrado hasta que llega (sin salto).
+    const dragging = useRef(false);
+    useEffect(() => { if (drag !== null && !dragging.current && p.share === drag) setDrag(null); }, [p.share, drag]);
+    const at = (clientX: number) => {
+        const r = track.current!.getBoundingClientRect();
+        const v = Math.round((100 * (clientX - r.left)) / r.width / 5) * 5;
+        return Math.max(5, Math.min(95, v));
+    };
+    const down = (e: React.MouseEvent) => {
+        let v = at(e.clientX);
+        dragging.current = true;
+        setDrag(v);
+        const move = (ev: MouseEvent) => { v = at(ev.clientX); setDrag(v); };
+        const up = () => {
+            window.removeEventListener("mousemove", move);
+            window.removeEventListener("mouseup", up);
+            dragging.current = false;
+            if (v !== p.share) p.onChange(v);
+            else setDrag(null);
+        };
+        window.addEventListener("mousemove", move);
+        window.addEventListener("mouseup", up);
+    };
+    return (
+        <div className={styles.mix}>
+            <div className={styles.mixLabels}>
+                <span className={styles.mixLeft}><span className={styles.mixPct}>{`${share}%`}</span>{p.left}</span>
+                <span className={styles.mixRight}>{p.right}<span className={styles.mixPct}>{`${100 - share}%`}</span></span>
+            </div>
+            <div className={styles.mixTrack} ref={track} onMouseDown={down}>
+                <div className={styles.mixFillLeft} style={{ width: `${share}%` }} />
+                <div className={styles.mixFillRight} style={{ width: `${100 - share}%` }} />
+                <div className={styles.mixThumb} style={{ left: `${share}%` }} />
+            </div>
+        </div>
+    );
+};

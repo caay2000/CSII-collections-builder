@@ -28,6 +28,8 @@ namespace BuildingCollections.Systems
         ValueBinding<bool> findItAvailable;
         ValueBinding<string> collections;
         ValueBinding<string> buildings;
+        ValueBinding<string> mixBuildings;
+        bool mixDirty = true;
         ValueBinding<string> selected;
         ValueBinding<string> status;
         ValueBinding<string> builderBinding;
@@ -64,6 +66,10 @@ namespace BuildingCollections.Systems
             /// <summary>Set de Tree Controller ("" = todos los árboles del juego base) y edades (bits de AgeMask).</summary>
             public string treeSet = string.Empty;
             public int treeAges = 4;
+
+            /// <summary>Mezcla: segunda colección ("" = ninguna) y porcentaje de la primera.</summary>
+            public string mix = string.Empty;
+            public int mixShare = 50;
         }
 
         string treeSetsJson = "[]";
@@ -80,6 +86,7 @@ namespace BuildingCollections.Systems
             AddBinding(findItAvailable = new ValueBinding<bool>(Group, "findItAvailable", false));
             AddBinding(collections = new ValueBinding<string>(Group, "collections", "[]"));
             AddBinding(buildings = new ValueBinding<string>(Group, "buildings", "[]"));
+            AddBinding(mixBuildings = new ValueBinding<string>(Group, "mixBuildings", "[]"));
             AddBinding(selected = new ValueBinding<string>(Group, "selected", string.Empty));
             AddBinding(status = new ValueBinding<string>(Group, "status", string.Empty));
             AddBinding(builderBinding = new ValueBinding<string>(Group, "builder", "{}"));
@@ -102,16 +109,24 @@ namespace BuildingCollections.Systems
             AddBinding(new TriggerBinding(Group, "clear", () => Safe(() => Report(CollectionService.Clear(selected.value)))));
             AddBinding(new TriggerBinding(Group, "delete", () => Safe(() =>
             {
-                Report(CollectionService.Delete(selected.value));
+                var deleted = selected.value;
+                var error = CollectionService.Delete(deleted);
+                Report(error);
+                if (error == null)
+                {
+                    FollowMix(deleted, string.Empty);
+                }
 
                 SetSelected(CollectionStore.Collections.FirstOrDefault()?.Name ?? string.Empty);
             })));
             AddBinding(new TriggerBinding<string>(Group, "rename", name => Safe(() =>
             {
-                var error = CollectionService.Rename(selected.value, name, out var newName);
+                var oldName = selected.value;
+                var error = CollectionService.Rename(oldName, name, out var newName);
                 Report(error);
                 if (error == null)
                 {
+                    FollowMix(oldName, newName);
 
                     SetSelected(newName);
                 }
@@ -265,6 +280,7 @@ namespace BuildingCollections.Systems
                 if (collectionsDirty)
                 {
                     collectionsDirty = false;
+                    mixDirty = true;
                     collections.Update(JsonConvert.SerializeObject(
                         CollectionStore.Collections.Select(c => new { name = c.Name, tag = c.Tag, count = c.Prefabs.Count })));
                 }
@@ -272,7 +288,14 @@ namespace BuildingCollections.Systems
                 if (buildingsDirty)
                 {
                     buildingsDirty = false;
+                    mixDirty = true;
                     buildings.Update(JsonConvert.SerializeObject(BuildingsOfSelected()));
+                }
+
+                if (mixDirty)
+                {
+                    mixDirty = false;
+                    mixBuildings.Update(JsonConvert.SerializeObject(MixBuildings()));
                 }
             }
             catch (Exception e)
@@ -282,6 +305,47 @@ namespace BuildingCollections.Systems
         }
 
         static string Js(bool b) => b ? "true" : "false";
+
+        /// <summary>La mezcla se guarda por nombre: si su colección cambia de nombre o se borra, se sigue o se quita.</summary>
+        void FollowMix(string oldName, string newName)
+        {
+            var s = Mod.Settings;
+            if (s != null && string.Equals(s.MixCollection, oldName, StringComparison.OrdinalIgnoreCase))
+            {
+                s.MixCollection = newName;
+                saveCountdown = 60;
+                mixDirty = true;
+                PushBuilder();
+            }
+        }
+
+        /// <summary>Segunda colección de la mezcla, si existe y no es la seleccionada.</summary>
+        BuildingCollection MixOf(BuildingCollectionsSettings s)
+        {
+            var m = string.IsNullOrEmpty(s?.MixCollection) ? null : CollectionStore.Find(s.MixCollection);
+            return m == null || string.Equals(m.Name, selected.value, StringComparison.OrdinalIgnoreCase) ? null : m;
+        }
+
+        /// <summary>Edificios cargados de la segunda colección: solo lo que el panel necesita para contar candidatos.</summary>
+        List<object> MixBuildings()
+        {
+            var list = new List<object>();
+            var m = MixOf(Mod.Settings);
+            if (m == null)
+            {
+                return list;
+            }
+
+            foreach (var name in m.Prefabs)
+            {
+                if (PrefabCatalog.TryGet(name, out var e))
+                {
+                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, icon = string.Empty });
+                }
+            }
+
+            return list;
+        }
 
         List<object> BuildingsOfSelected()
         {
@@ -447,6 +511,8 @@ namespace BuildingCollections.Systems
                 overlap = s.AnarchyOverlap,
                 treeSet = s.TreeSet ?? string.Empty,
                 treeAges = s.TreeAges,
+                mix = s.MixCollection ?? string.Empty,
+                mixShare = s.MixShare,
             }));
         }
 
@@ -470,6 +536,9 @@ namespace BuildingCollections.Systems
             s.AnarchyOverlap = (float)Math.Round(Math.Max(0f, Math.Min(BlockBuilderToolSystem.MaxOverlap, f.overlap)) * 2, MidpointRounding.AwayFromZero) / 2f;
             s.TreeSet = TreeControllerBridge.SetIds.Contains(f.treeSet) ? f.treeSet : string.Empty;
             s.TreeAges = (f.treeAges & 15) == 0 ? 4 : f.treeAges & 15;
+            s.MixCollection = CollectionStore.Find(f.mix ?? string.Empty)?.Name ?? string.Empty;
+            s.MixShare = Clamp((int)Math.Round(f.mixShare / 5.0, MidpointRounding.AwayFromZero) * 5, 5, 95);
+            mixDirty = true;
             builder.SetMode(s.Mode);
             saveCountdown = 60;
             PushBuilder();
@@ -487,16 +556,35 @@ namespace BuildingCollections.Systems
 
             PrefabCatalog.Refresh(World, DevConfig.Load().SwapCornerSides);
             var filter = s.ToFilter();
-            var candidates = c.Prefabs
+            List<CatalogEntry> Matching(BuildingCollection col) => col.Prefabs
                 .Select(n => PrefabCatalog.TryGet(n, out var e) ? e : null)
                 .Where(e => e != null && filter.Matches(e.Info))
                 .OrderBy(e => e.Info.PrefabName, StringComparer.Ordinal)
                 .ToList();
+            var candidates = Matching(c);
+
+            // Mezcla: cada edificio lleva su colección y la parte que le toca; el planificador elige primero la
+            // colección según esa parte. Un edificio que está en las dos cuenta como de la primera.
+            var mix = MixOf(s);
+            if (mix != null)
+            {
+                double share = s.MixShare / 100.0;
+                var firstNames = new HashSet<string>(candidates.Select(e => e.Info.PrefabName), StringComparer.OrdinalIgnoreCase);
+                var second = Matching(mix).Where(e => !firstNames.Contains(e.Info.PrefabName)).ToList();
+                candidates = candidates.Select(e => Tagged(e, 0, share))
+                    .Concat(second.Select(e => Tagged(e, 1, 1 - share))).ToList();
+                Mod.Log.Info($"[vista previa] mezcla: {c.Name} {s.MixShare}% ({firstNames.Count} edificios) + {mix.Name} {100 - s.MixShare}% ({second.Count}).");
+            }
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
             // Decoración: árboles del juego base en el espacio sobrante, o los de un set de Tree Controller.
             var decor = s.Trees ? TreeDecor(s.TreeSet) : new List<CatalogEntry>();
             builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps, decor, s.DecorDensity, s.TreeAges);
         }
+
+        static CatalogEntry Tagged(CatalogEntry e, int group, double share) => new CatalogEntry
+        {
+            Prefab = e.Prefab, Info = e.Info.InGroup(group, share), AccessType = e.AccessType, Icon = e.Icon, IsDecor = e.IsDecor,
+        };
 
         List<CatalogEntry> TreeDecor(string set)
         {

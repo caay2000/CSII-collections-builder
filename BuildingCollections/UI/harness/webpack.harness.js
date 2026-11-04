@@ -10,6 +10,7 @@ module.exports = {
             "cs2/api": path.join(__dirname, "mock-api.ts"),
             "cs2/ui": path.join(__dirname, "mock-ui.tsx"),
             "cs2/modding": path.join(__dirname, "mock-modding.ts"),
+            "cs2/input": path.join(__dirname, "mock-input.tsx"),
         },
         modules: [path.join(__dirname, "..", "node_modules")],
     },

@@ -173,3 +173,29 @@ button:disabled { opacity: 0.4; }
 .chipOn { @include gradient; }
 .chip img, .chipOn img { width: 20rem; height: 20rem; }
 .filterLabelAnarchy { flex: 1; font-size: 14rem; font-weight: bold; color: #fbbf77; }
+
+// Mezcla de dos colecciones: azul la primera, ámbar la segunda (mismo color en el desplegable y en la barra).
+$mixA: #55aef5;
+$mixB: #f0a64a;
+.addMix { align-self: flex-end; height: 28rem; padding: 0 10rem; display: flex; flex-direction: row; align-items: center; border: none; border-radius: 3rem; background-color: transparent; color: $title; font-size: 13rem; font-weight: bold; }
+.addMix:hover { background-color: rgba(124, 198, 255, 0.12); }
+.addMix img { width: 14rem; height: 14rem; margin-right: 6rem; }
+.mixPick { display: flex; flex-direction: row; align-items: center; }
+.mixDotA, .mixDotB { width: 10rem; height: 10rem; margin-right: 8rem; border-radius: 5rem; flex: none; }
+.mixDotA { background-color: $mixA; }
+.mixDotB { background-color: $mixB; }
+.mixRemove { width: 30rem; height: 30rem; margin-left: 4rem; padding: 8rem; flex: none; border: none; border-radius: 3rem; background-color: transparent; }
+.mixRemove:hover { background-color: rgba(255, 138, 128, 0.18); }
+.mixRemove img { width: 14rem; height: 14rem; }
+.mix { display: flex; flex-direction: column; }
+.mixLabels { display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 8rem; font-size: 13rem; color: $text2; }
+.mixLeft, .mixRight { display: flex; flex-direction: row; align-items: center; max-width: 50%; overflow: hidden; white-space: nowrap; }
+.mixLeft .mixPct { margin-right: 6rem; color: $mixA; }
+.mixRight .mixPct { margin-left: 6rem; color: $mixB; }
+.mixPct { font-size: 16rem; font-weight: 800; }
+.mixTrack { position: relative; height: 24rem; display: flex; flex-direction: row; align-items: center; cursor: pointer; }
+.mixFillLeft, .mixFillRight { height: 8rem; }
+.mixFillLeft { background-color: $mixA; border-radius: 4rem 0 0 4rem; }
+.mixFillRight { background-color: $mixB; border-radius: 0 4rem 4rem 0; }
+.mixThumb { position: absolute; top: 2rem; width: 20rem; height: 20rem; margin-left: -10rem; border: 3rem solid rgba(20, 28, 43, 1); border-radius: 10rem; background-color: #fff; }
+.mixRemoveSpacer { width: 34rem; flex: none; }
