@@ -76,9 +76,9 @@ button:disabled { opacity: 0.4; }
 .stepBtn img { width: 14rem; height: 14rem; }
 .stepOpHidden { visibility: hidden; }
 .stepValue { width: 64rem; height: 30rem; margin-left: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 3rem; background-color: $dark; font-size: 15rem; font-weight: bold; }
-.check { width: 30rem; height: 30rem; margin-right: 34rem; padding: 4rem; border: none; border-radius: 3rem; background-color: $dark; }
-.checkOn { @include gradient; }
-.check img { width: 22rem; height: 22rem; }
+.check { width: 30rem; height: 30rem; margin-right: 34rem; padding: 3rem; border: 2rem solid rgba(255, 255, 255, 0.35); border-radius: 3rem; background-color: $dark; }
+.checkOn { @include gradient; border-color: $primary; }
+.check img { width: 20rem; height: 20rem; }
 
 // ---------- Pestaña Collections ----------
 .split { flex: 1; min-height: 0; display: flex; flex-direction: row; }
@@ -103,7 +103,8 @@ button:disabled { opacity: 0.4; }
 
 .gridScroll { flex: 1; min-height: 0; }
 .grid { display: flex; flex-direction: row; flex-wrap: wrap; }
-.card { position: relative; width: 86rem; height: 128rem; margin: 0 6rem 6rem 0; padding: 6rem 4rem 8rem; display: flex; flex-direction: column; align-items: center; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.08); }
+// 5 columnas de 80 + 6 = 430: deja sitio a la barra de scroll de Scrollable dentro de los ~467 de ancho útil.
+.card { position: relative; width: 80rem; height: 128rem; margin: 0 6rem 6rem 0; padding: 6rem 4rem 8rem; display: flex; flex-direction: column; align-items: center; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.08); }
 .card:hover { background-color: rgba(255, 255, 255, 0.15); }
 .thumb { width: 64rem; height: 64rem; flex: none; margin-bottom: 4rem; }
 .sizeTag { position: absolute; left: 5rem; top: 5rem; padding: 1rem 5rem; border-radius: 2rem; background-color: rgba(0, 0, 0, 0.55); font-size: 11rem; font-weight: bold; color: $title; }

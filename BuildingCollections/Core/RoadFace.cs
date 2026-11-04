@@ -23,8 +23,13 @@ namespace BuildingCollections.Core
         /// Contorno de la manzana que contiene <paramref name="click"/>, o null si el clic no queda encerrado por
         /// calles (la cara recorrida no lo contiene) o el recorrido no se cierra en <paramref name="maxSteps"/> tramos.
         /// </summary>
-        public static List<Pt> Trace(IReadOnlyList<RoadEdge> edges, Pt click, int maxSteps = 400)
+        public static List<Pt> Trace(IReadOnlyList<RoadEdge> edges, Pt click, int maxSteps = 400) =>
+            Trace(edges, click, out _, maxSteps);
+
+        /// <summary>Igual, y además el recorrido: cada tramo de la manzana y si se recorre de Start a End.</summary>
+        public static List<Pt> Trace(IReadOnlyList<RoadEdge> edges, Pt click, out List<(int edge, bool forward)> path, int maxSteps = 400)
         {
+            path = null;
             // Tramos más cercanos. Si el más cercano es un nodo compartido por varios tramos, se prueban todos (y
             // en los dos sentidos) hasta dar con la cara que contiene el clic.
             var near = new List<(double d, int edge, bool forward)>();
@@ -63,10 +68,15 @@ namespace BuildingCollections.Core
                     break;
                 }
 
-                var poly = Walk(edges, byNode, c.edge, c.forward, click, maxSteps) ?? Walk(edges, byNode, c.edge, !c.forward, click, maxSteps);
-                if (poly != null)
+                foreach (bool fwd in new[] { c.forward, !c.forward })
                 {
-                    return poly;
+                    var steps = new List<(int, bool)>();
+                    var poly = Walk(edges, byNode, c.edge, fwd, click, maxSteps, steps);
+                    if (poly != null)
+                    {
+                        path = steps;
+                        return poly;
+                    }
                 }
             }
 
@@ -93,13 +103,14 @@ namespace BuildingCollections.Core
             return byNode;
         }
 
-        static List<Pt> Walk(IReadOnlyList<RoadEdge> edges, Dictionary<int, List<int>> byNode, int startEdge, bool startForward, Pt click, int maxSteps)
+        static List<Pt> Walk(IReadOnlyList<RoadEdge> edges, Dictionary<int, List<int>> byNode, int startEdge, bool startForward, Pt click, int maxSteps, List<(int, bool)> steps)
         {
             var poly = new List<Pt>();
             int edge = startEdge;
             bool forward = startForward;
             for (int step = 0; step < maxSteps; step++)
             {
+                steps.Add((edge, forward));
                 var pts = edges[edge].Points;
                 int n = pts.Count;
                 for (int i = poly.Count == 0 ? 0 : 1; i < n; i++)

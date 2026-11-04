@@ -38,6 +38,9 @@ namespace BuildingCollections.Systems
             public int4 Area;   // celdas válidas: x en [x, y), profundidad en [z, w)
             public bool[] Include;  // celdas elegidas (índice y * m_Size.x + x); null = todas (modo bloque)
             public List<(float3 a, float3 b)> Outline = new List<(float3, float3)>();
+
+            /// <summary>Parcelas propias (sin celdas de zona): la rejilla calculada al seleccionar. null = bloque del juego.</summary>
+            public PlanGrid Virtual;
         }
 
         sealed class Planned
@@ -56,6 +59,12 @@ namespace BuildingCollections.Systems
         EntityQuery tempBuildingQuery;
         EntityQuery definitionQuery;
         EntityQuery roadQuery;
+        EntityQuery buildingQuery;
+
+        // Área seleccionada como en Street Builder: relleno (franjas) y contorno, ya a la altura del terreno.
+        readonly List<(float3 a, float3 b)> areaFill = new List<(float3, float3)>();
+        readonly List<(float3 a, float3 b)> areaEdge = new List<(float3, float3)>();
+        const float FillStripe = 2f;
         OverlayRenderSystem overlay;
         CityConfigurationSystem city;
         BuiltGuardSystem guard;
@@ -102,6 +111,12 @@ namespace BuildingCollections.Systems
                 ComponentType.ReadOnly<Edge>(),
                 ComponentType.ReadOnly<Curve>(),
                 ComponentType.ReadOnly<Road>(),
+                ComponentType.Exclude<Deleted>(),
+                ComponentType.Exclude<Temp>());
+            buildingQuery = GetEntityQuery(
+                ComponentType.ReadOnly<Building>(),
+                ComponentType.ReadOnly<Transform>(),
+                ComponentType.ReadOnly<PrefabRef>(),
                 ComponentType.Exclude<Deleted>(),
                 ComponentType.Exclude<Temp>());
             overlay = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
@@ -165,6 +180,8 @@ namespace BuildingCollections.Systems
             polygon.Clear();
             selection.Clear();
             preview.Clear();
+            areaFill.Clear();
+            areaEdge.Clear();
             freeFrontCells = 0;
             definitionsDirty = true;
             Say("Selection cleared.");
@@ -193,28 +210,20 @@ namespace BuildingCollections.Systems
                 // Primero los bloques con más celdas propias (no compartidas): las calles largas antes que las laterales.
                 foreach (var s in selection.OrderByDescending(OwnedCells).ToList())
                 {
-                    if (!EntityManager.Exists(s.Entity) || EntityManager.HasComponent<Deleted>(s.Entity))
+                    PlanGrid grid;
+                    if (s.Virtual != null)
                     {
-                        selection.Remove(s);
-                        continue;
+                        grid = new PlanGrid
+                        {
+                            Width = s.Virtual.Width, Depth = s.Virtual.Depth, Free = (bool[,])s.Virtual.Free.Clone(),
+                            LeftCorner = s.Virtual.LeftCorner, RightCorner = s.Virtual.RightCorner,
+                        };
                     }
-
-                    // El bloque puede haber cambiado desde la selección (obras en la calle): se relee.
-                    s.Block = EntityManager.GetComponentData<Block>(s.Entity);
-                    s.Area = EntityManager.GetComponentData<ValidArea>(s.Entity).m_Area;
-                    if (s.Area.y <= s.Area.x || s.Area.w <= s.Area.z)
-                    {
-                        continue;
-                    }
-
-                    var cells = EntityManager.GetBuffer<Cell>(s.Entity, true);
-                    if (cells.Length < s.Block.m_Size.x * s.Block.m_Size.y || (s.Include != null && s.Include.Length != cells.Length))
+                    else if (!TryZoneGrid(s, out grid))
                     {
                         continue;
                     }
 
-                    s.Outline = BuildOutline(s, cells, m_TerrainSystem.GetHeightData());
-                    var grid = BuildGrid(s.Block, s.Area, cells, s.Include);
                     int masked = MaskFootprints(grid, s.Block, s.Area, footprints);
                     var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++, leaveGaps);
                     foreach (var p in plan)
@@ -233,7 +242,7 @@ namespace BuildingCollections.Systems
                         });
                     }
 
-                    log.AppendLine($"  bloque {s.Entity.Index}: rejilla {grid.Width}x{grid.Depth}, {grid.FreeCount()} libres ({masked} tapadas por otros bloques), esquinas L={grid.LeftCorner} R={grid.RightCorner} -> {string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [esquina]" : string.Empty)}"))}");
+                    log.AppendLine($"  {(s.Virtual != null ? "tira" : "bloque " + s.Entity.Index)}: rejilla {grid.Width}x{grid.Depth}, {grid.FreeCount()} libres ({masked} tapadas por otros bloques), esquinas L={grid.LeftCorner} R={grid.RightCorner} -> {string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [esquina]" : string.Empty)}"))}");
                 }
 
                 Mod.Log.Info(log.ToString().TrimEnd());
@@ -245,6 +254,34 @@ namespace BuildingCollections.Systems
                 preview.Clear();
                 Say("Preview failed (see log).");
             }
+        }
+
+        /// <summary>Rejilla de un bloque de zona del juego, releído (puede haber cambiado desde la selección).</summary>
+        bool TryZoneGrid(SelectedBlock s, out PlanGrid grid)
+        {
+            grid = null;
+            if (!EntityManager.Exists(s.Entity) || EntityManager.HasComponent<Deleted>(s.Entity))
+            {
+                selection.Remove(s);
+                return false;
+            }
+
+            s.Block = EntityManager.GetComponentData<Block>(s.Entity);
+            s.Area = EntityManager.GetComponentData<ValidArea>(s.Entity).m_Area;
+            if (s.Area.y <= s.Area.x || s.Area.w <= s.Area.z)
+            {
+                return false;
+            }
+
+            var cells = EntityManager.GetBuffer<Cell>(s.Entity, true);
+            if (cells.Length < s.Block.m_Size.x * s.Block.m_Size.y || (s.Include != null && s.Include.Length != cells.Length))
+            {
+                return false;
+            }
+
+            s.Outline = BuildOutline(s, cells, m_TerrainSystem.GetHeightData());
+            grid = BuildGrid(s.Block, s.Area, cells, s.Include);
+            return true;
         }
 
         public void RequestBuild() => buildRequested = true;
@@ -449,7 +486,12 @@ namespace BuildingCollections.Systems
             // clic no está encerrado por calles, se cae al método de celdas que se tocan.
             if (cfg.UseRoadFace)
             {
-                var face = TraceRoadFace(point.xz, cfg.RoadSearchRadius, out int roads);
+                var face = TraceRoadFace(point.xz, cfg.RoadSearchRadius, out int roads, out var path);
+                if (face != null && cfg.UseVirtualLots && SelectVirtual(face, path, $"manzana de calles ({path.Count} tramos), clic en ({point.x:F1}, {point.z:F1})"))
+                {
+                    return;
+                }
+
                 if (face != null)
                 {
                     if (SelectInside(face, $"manzana de calles ({face.Count} puntos, {roads} tramos cerca), clic en ({point.x:F1}, {point.z:F1})"))
@@ -512,6 +554,8 @@ namespace BuildingCollections.Systems
                 selection.Clear();
                 preview.Clear();
                 polygon.Clear();
+                areaFill.Clear();
+                areaEdge.Clear();
                 definitionsDirty = true;
             }
 
@@ -585,13 +629,16 @@ namespace BuildingCollections.Systems
             }
 
             SetSelection(chosen, $"{description}, {platter} de Platter ignorados");
+            SetArea(poly);
             return true;
         }
 
         /// <summary>Contorno (x, z) de la manzana de calles que contiene el punto, o null.</summary>
-        List<Pt> TraceRoadFace(float2 point, double radius, out int count)
+        List<Pt> TraceRoadFace(float2 point, double radius, out int count, out List<(Entity edge, bool forward)> path)
         {
+            path = null;
             var edges = new List<RoadEdge>();
+            var owners = new List<Entity>();
             var nodes = new Dictionary<Entity, int>();
             int Id(Entity n)
             {
@@ -638,11 +685,228 @@ namespace BuildingCollections.Systems
                     }
 
                     edges.Add(re);
+                    owners.Add(e);
                 }
             }
 
             count = edges.Count;
-            return RoadFace.Trace(edges, new Pt(point.x, point.y));
+            var face = RoadFace.Trace(edges, new Pt(point.x, point.y), out var steps);
+            if (face != null)
+            {
+                path = steps.Select(st => (owners[st.edge], st.forward)).ToList();
+            }
+
+            return face;
+        }
+
+        /// <summary>
+        /// Parcelas propias a lo largo de la acera de cada calle de la manzana, como Street Builder: no hacen falta
+        /// celdas de zona, así que se llenan también las diagonales y las esquinas. Evita los edificios existentes.
+        /// </summary>
+        bool SelectVirtual(List<Pt> centerFace, List<(Entity edge, bool forward)> path, string description)
+        {
+            var sides = new List<List<Pt>>();
+            foreach (var (edge, forward) in path)
+            {
+                var side = SidewalkSide(edge, forward, centerFace);
+                if (side != null && side.Count >= 2)
+                {
+                    sides.Add(side);
+                }
+            }
+
+            var outline = VirtualLots.Outline(sides);
+            if (outline.Count < 3)
+            {
+                return false;
+            }
+
+            var obstacles = BuildingFootprints(outline);
+            var strips = VirtualLots.Build(sides, obstacles);
+            var chosen = new List<SelectedBlock>();
+            var heights = m_TerrainSystem.GetHeightData();
+            foreach (var st in strips)
+            {
+                if (st.Grid.FreeCount() == 0)
+                {
+                    continue;
+                }
+
+                // Bloque equivalente al del juego: y = 0 en la acera, x = 0 en P0 (ver ZoneUtils.GetCellPosition).
+                var t = new float2((float)st.T.X, (float)st.T.Y);
+                var dir = new float2(t.y, -t.x);
+                var front = new float2((float)st.P0.X, (float)st.P0.Y) + t * (st.Width * 4f);
+                var center = front - dir * (st.Depth * 4f);
+                var pos = new float3(center.x, 0, center.y);
+                pos.y = TerrainUtils.SampleHeight(ref heights, pos);
+                chosen.Add(new SelectedBlock
+                {
+                    Entity = Entity.Null,
+                    Block = new Block { m_Position = pos, m_Direction = dir, m_Size = new int2(st.Width, st.Depth) },
+                    Area = new int4(0, st.Width, 0, st.Depth),
+                    Virtual = st.Grid,
+                });
+            }
+
+            if (chosen.Count == 0)
+            {
+                return false;
+            }
+
+            selection.Clear();
+            selection.AddRange(chosen);
+            preview.Clear();
+            definitionsDirty = true;
+            SetArea(outline);
+            freeFrontCells = 0;
+            var log = new StringBuilder($"[selección] {description}: {sides.Count} aceras, {strips.Count} tiras, {obstacles.Count} edificios existentes.\n");
+            foreach (var s in chosen)
+            {
+                for (int x = 0; x < s.Virtual.Width; x++)
+                {
+                    if (s.Virtual.Free[x, 0]) freeFrontCells++;
+                }
+
+                log.AppendLine($"  tira {s.Virtual.Width}x{s.Virtual.Depth} dir=({s.Block.m_Direction.x:F2},{s.Block.m_Direction.y:F2}) libres={s.Virtual.FreeCount()} esquinas L={s.Virtual.LeftCorner} R={s.Virtual.RightCorner}");
+            }
+
+            Mod.Log.Info(log.ToString().TrimEnd());
+            Say($"{chosen.Count} street fronts, {freeFrontCells} free roadside cells.");
+            return true;
+        }
+
+        /// <summary>
+        /// Borde de la calle (acera exterior) del lado de la manzana, en el sentido del recorrido. Se comprueba con
+        /// el contorno por el eje que el lado elegido cae dentro; si no, se usa el otro.
+        /// </summary>
+        List<Pt> SidewalkSide(Entity edge, bool forward, List<Pt> centerFace)
+        {
+            if (!EntityManager.HasComponent<EdgeGeometry>(edge))
+            {
+                return null;
+            }
+
+            var g = EntityManager.GetComponentData<EdgeGeometry>(edge);
+            List<Pt> Side(bool left, bool fwd)
+            {
+                var a = left ? g.m_Start.m_Left : g.m_Start.m_Right;
+                var b = left ? g.m_End.m_Left : g.m_End.m_Right;
+                var pts = Sample(a);
+                var rest = Sample(b);
+                pts.AddRange(rest.Skip(1));
+                if (!fwd)
+                {
+                    pts.Reverse();
+                }
+
+                return pts;
+            }
+
+            var assumed = Side(forward, forward);
+            var other = Side(!forward, forward);
+            if (Polygon.Contains(centerFace, assumed[assumed.Count / 2]))
+            {
+                return assumed;
+            }
+
+            return Polygon.Contains(centerFace, other[other.Count / 2]) ? other : assumed;
+        }
+
+        static List<Pt> Sample(Bezier4x3 c)
+        {
+            float len = MathUtils.Length(c.xz);
+            int n = math.clamp((int)math.ceil(len / 4f), 1, 64);
+            var pts = new List<Pt>(n + 1);
+            for (int k = 0; k <= n; k++)
+            {
+                var p = MathUtils.Position(c, k / (float)n);
+                pts.Add(new Pt(p.x, p.z));
+            }
+
+            return pts;
+        }
+
+        /// <summary>Huellas de los edificios existentes dentro de la caja del contorno.</summary>
+        List<Quad> BuildingFootprints(List<Pt> outline)
+        {
+            double minX = outline.Min(p => p.X) - 20, maxX = outline.Max(p => p.X) + 20;
+            double minZ = outline.Min(p => p.Y) - 20, maxZ = outline.Max(p => p.Y) + 20;
+            var result = new List<Quad>();
+            using (var entities = buildingQuery.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var e in entities)
+                {
+                    var tr = EntityManager.GetComponentData<Transform>(e);
+                    if (tr.m_Position.x < minX || tr.m_Position.x > maxX || tr.m_Position.z < minZ || tr.m_Position.z > maxZ)
+                    {
+                        continue;
+                    }
+
+                    var prefab = EntityManager.GetComponentData<PrefabRef>(e).m_Prefab;
+                    if (!EntityManager.HasComponent<ObjectGeometryData>(prefab))
+                    {
+                        continue;
+                    }
+
+                    var bounds = EntityManager.GetComponentData<ObjectGeometryData>(prefab).m_Bounds;
+                    float3 P(float x, float z) => tr.m_Position + math.rotate(tr.m_Rotation, new float3(x, 0, z));
+                    var a = P(bounds.min.x, bounds.min.z);
+                    var b = P(bounds.max.x, bounds.min.z);
+                    var c = P(bounds.max.x, bounds.max.z);
+                    var d = P(bounds.min.x, bounds.max.z);
+                    result.Add(new Quad(new Pt(a.x, a.z), new Pt(b.x, b.z), new Pt(c.x, c.z), new Pt(d.x, d.z)));
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>Prepara el dibujo del área: franjas paralelas que la rellenan y su contorno.</summary>
+        void SetArea(List<Pt> outline)
+        {
+            areaFill.Clear();
+            areaEdge.Clear();
+            if (outline == null || outline.Count < 3)
+            {
+                return;
+            }
+
+            var heights = m_TerrainSystem.GetHeightData();
+            float3 P(double x, double z)
+            {
+                var p = new float3((float)x, 0, (float)z);
+                p.y = TerrainUtils.SampleHeight(ref heights, p) + 0.3f;
+                return p;
+            }
+
+            for (int i = 0; i < outline.Count; i++)
+            {
+                var a = outline[i];
+                var b = outline[(i + 1) % outline.Count];
+                areaEdge.Add((P(a.X, a.Y), P(b.X, b.Y)));
+            }
+
+            double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
+            var zs = new List<double>();
+            for (double x = minX + FillStripe / 2; x < maxX; x += FillStripe)
+            {
+                zs.Clear();
+                for (int i = 0; i < outline.Count; i++)
+                {
+                    var a = outline[i];
+                    var b = outline[(i + 1) % outline.Count];
+                    if ((a.X <= x && b.X > x) || (b.X <= x && a.X > x))
+                    {
+                        zs.Add(a.Y + (x - a.X) / (b.X - a.X) * (b.Y - a.Y));
+                    }
+                }
+
+                zs.Sort();
+                for (int k = 0; k + 1 < zs.Count; k += 2)
+                {
+                    areaFill.Add((P(x, zs[k]), P(x, zs[k + 1])));
+                }
+            }
         }
 
         void SetSelection(IEnumerable<SelectedBlock> blocks, string description)
@@ -651,6 +915,8 @@ namespace BuildingCollections.Systems
             selection.Clear();
             selection.AddRange(blocks);
             preview.Clear();
+            areaFill.Clear();
+            areaEdge.Clear();
             definitionsDirty = true;
 
             freeFrontCells = 0;
@@ -725,6 +991,11 @@ namespace BuildingCollections.Systems
         /// <summary>Celdas visibles del bloque que no comparte con otro: indica cuánto "le pertenece" la zona.</summary>
         int OwnedCells(SelectedBlock s)
         {
+            if (s.Virtual != null)
+            {
+                return s.Virtual.Width * 100; // parcelas propias: las aceras más largas primero
+            }
+
             if (!EntityManager.Exists(s.Entity))
             {
                 return 0;
@@ -909,6 +1180,21 @@ namespace BuildingCollections.Systems
 
             var buffer = overlay.GetBuffer(out JobHandle deps);
             deps.Complete();
+            if (areaEdge.Count > 0)
+            {
+                var fill = new UnityEngine.Color(0.3f, 0.85f, 0.45f, Previewing ? 0.18f : 0.35f);
+                var edgeColor = new UnityEngine.Color(1f, 0.82f, 0.2f, 1f);
+                foreach (var (a, b) in areaFill)
+                {
+                    buffer.DrawLine(fill, fill, 0f, OverlayRenderSystem.StyleFlags.Projected, new Line3.Segment(a, b), FillStripe, new float2(0, 0));
+                }
+
+                foreach (var (a, b) in areaEdge)
+                {
+                    buffer.DrawLine(edgeColor, edgeColor, 0f, OverlayRenderSystem.StyleFlags.Projected, new Line3.Segment(a, b), 1.2f, new float2(1, 1));
+                }
+            }
+
             var color = Previewing ? new UnityEngine.Color(0.3f, 0.9f, 0.4f, 0.9f) : new UnityEngine.Color(1f, 0.8f, 0.2f, 0.9f);
             foreach (var s in selection)
             {
