@@ -19,9 +19,24 @@ namespace BuildingCollections
 
         public static int Count => queue.Count;
 
-        public static void Add(string prefab, string tag) => queue.Enqueue((true, prefab, tag));
+        /// <summary>Opción "Find It tags" de los ajustes: apagada, las colecciones no tocan las etiquetas de Find It.</summary>
+        public static bool Enabled => Mod.Settings?.FindItTags ?? true;
 
-        public static void Remove(string prefab, string tag) => queue.Enqueue((false, prefab, tag));
+        public static void Add(string prefab, string tag)
+        {
+            if (Enabled && !string.IsNullOrEmpty(tag)) queue.Enqueue((true, prefab, tag));
+        }
+
+        public static void Remove(string prefab, string tag)
+        {
+            if (Enabled && !string.IsNullOrEmpty(tag)) queue.Enqueue((false, prefab, tag));
+        }
+
+        /// <summary>Sin mirar la opción: solo para ponerlas o quitarlas todas al cambiarla.</summary>
+        internal static void Force(bool add, string prefab, string tag)
+        {
+            if (!string.IsNullOrEmpty(tag)) queue.Enqueue((add, prefab, tag));
+        }
 
         /// <summary>Procesa hasta <paramref name="max"/> cambios. Devuelve true si la cola acaba de vaciarse.</summary>
         public static bool Process(int max)
@@ -37,6 +52,9 @@ namespace BuildingCollections
                 var all = queue.ToList();
                 try
                 {
+                    // Ids de Find It recién leídos: la caché pudo hacerse antes de que Find It tuviera todos sus prefabs
+                    // (p. ej. al cambiar la opción en el menú principal) y un nombre que falta no la rehace.
+                    FindItBridge.RefreshIds();
                     if (FindItBridge.TryApplyBatch(all, out int notFound))
                     {
                         queue.Clear();

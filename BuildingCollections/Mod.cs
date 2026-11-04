@@ -26,6 +26,8 @@ namespace BuildingCollections
                 Settings.RegisterKeyBindings();
                 GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(Settings));
                 AssetDatabase.global.LoadSettings(nameof(BuildingCollections), Settings, new BuildingCollectionsSettings(this));
+                Settings.Loaded = true;
+                Log.Info($"Etiquetas de Find It: {(Settings.FindItTags ? "activadas" : "desactivadas")}.");
 
                 updateSystem.UpdateAt<BlockBuilderToolSystem>(SystemUpdatePhase.ToolUpdate);
                 updateSystem.UpdateAt<BuiltGuardSystem>(SystemUpdatePhase.ModificationEnd);

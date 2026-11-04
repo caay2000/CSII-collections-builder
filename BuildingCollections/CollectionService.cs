@@ -207,6 +207,22 @@ namespace BuildingCollections
             return null;
         }
 
+        /// <summary>La opción de etiquetas cambia: se ponen (encendida) o se quitan (apagada) las de todas las colecciones.</summary>
+        public static void SyncFindItTags(bool on)
+        {
+            int n = 0;
+            foreach (var c in CollectionStore.Collections)
+            {
+                foreach (var p in c.Prefabs)
+                {
+                    TagQueue.Force(on, p, c.Tag);
+                    n++;
+                }
+            }
+
+            Mod.Log.Info($"Etiquetas de Find It {(on ? "activadas" : "desactivadas")}: {n} {(on ? "por poner" : "por quitar")}.");
+        }
+
         public static string Delete(string collectionName)
         {
             var c = CollectionStore.Find(collectionName);
