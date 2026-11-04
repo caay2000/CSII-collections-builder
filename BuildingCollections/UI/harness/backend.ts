@@ -61,6 +61,7 @@ export function read(key: string): string {
         case "findItAvailable": return JSON.stringify(S.findIt);
         case "selected": return S.selected;
         case "status": return S.status;
+        case "builderMessage": return S.plan.previewing ? `Preview: ${S.plan.lots} buildings.` : S.plan.areaSelected ? "1 blocks selected, 18 free roadside cells." : "";
         case "collections": return JSON.stringify(S.cols.map((c): CollectionDto => ({ name: c.name, tag: c.name.replace(/\s+/g, "-"), count: c.ids.length })));
         case "buildings": return JSON.stringify((cur()?.ids ?? []).map((id) => ALL.find((b) => b.id === id)).filter(Boolean));
         case "mixBuildings": {
