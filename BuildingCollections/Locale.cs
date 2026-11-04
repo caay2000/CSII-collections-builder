@@ -34,7 +34,8 @@ namespace BuildingCollections
                 { s.GetOptionWarningLocaleID(nameof(BuildingCollectionsSettings.DeleteCollection)), "Delete this collection?" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.Status)), "Status" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.FindItTags)), "Tag collections in Find It" },
-                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.FindItTags)), "On: every building in a collection gets a Find It tag with the collection's name (#name), so you can filter by it in Find It. Off: Building Collections never touches Find It tags; turning it off removes the tags it added, turning it on adds them back." },
+                { s.GetOptionWarningLocaleID(nameof(BuildingCollectionsSettings.FindItTags)), "Turning this on tags all your collections in Find It right away: with many buildings the game may freeze for a moment." },
+                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.FindItTags)), "On: every building in a collection gets a Find It tag with the collection's name (#name), so you can filter by it in Find It. Turning it on tags all your collections right away: with many buildings the game may freeze for a moment while Find It saves its tags. Off: Building Collections doesn't touch Find It tags (tags already added stay)." },
 
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.WidthOp)), "Lot width: operator" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.WidthValue)), "Lot width: value" },
