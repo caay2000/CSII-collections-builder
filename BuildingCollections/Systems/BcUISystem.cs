@@ -537,7 +537,7 @@ namespace BuildingCollections.Systems
             s.LeaveGaps = f.leaveGaps;
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
-            s.AnarchyOverlap = (float)Math.Round(Math.Max(0f, Math.Min(BlockBuilderToolSystem.MaxOverlap, f.overlap)) * 2, MidpointRounding.AwayFromZero) / 2f;
+            s.AnarchyOverlap = f.overlap > 0 ? 0.5f : 0f; // casilla: 0,5 m o nada
             s.TreeSet = TreeControllerBridge.SetIds.Contains(f.treeSet) ? f.treeSet : string.Empty;
             s.TreeAges = (f.treeAges & 15) == 0 ? 4 : f.treeAges & 15;
             s.MixCollection = CollectionStore.Find(f.mix ?? string.Empty)?.Name ?? string.Empty;
