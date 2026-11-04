@@ -99,28 +99,55 @@ namespace BuildingCollections
         [SettingsUISection(Section, Collections)]
         public string Status => lastMessage;
 
-        bool findItTags = true;
+        bool findItTags;
 
         /// <summary>Los ajustes ya se han leído del fichero: a partir de aquí un cambio de FindItTags es del usuario.</summary>
         internal bool Loaded;
 
         /// <summary>
-        /// Etiquetar en Find It los edificios de cada colección (#nombre). Apagado, el mod no toca las etiquetas de Find
-        /// It; al cambiarlo se ponen o se quitan las de todas las colecciones (en bloque, un solo guardado).
+        /// Etiquetar en Find It los edificios de cada colección (#nombre). Apagada por defecto. Al encenderla se ponen
+        /// las de todas las colecciones (en bloque, un solo guardado de Find It; con muchas puede congelar el juego
+        /// un momento, por eso el aviso). Al apagarla no se quita nada: las que hay se quedan.
         /// </summary>
         [SettingsUISection(Section, Collections)]
+        [SettingsUIWarning(typeof(BuildingCollectionsSettings), nameof(TagWarning))]
         public bool FindItTags
         {
             get => findItTags;
             set
             {
-                bool changed = Loaded && value != findItTags;
+                bool turnedOn = Loaded && value && !findItTags;
                 findItTags = value;
-                if (changed)
+                if (turnedOn)
                 {
-                    CollectionService.SyncFindItTags(value);
+                    CollectionService.SyncFindItTags();
                 }
             }
+        }
+
+        /// <summary>Icono de aviso junto a la casilla mientras está apagada: encenderla etiqueta todas las colecciones.</summary>
+        public bool TagWarning() => !findItTags && CollectionStore.Collections.Count > 0;
+
+        /// <summary>Ya se decidió el valor inicial de FindItTags (migración de la versión en que siempre etiquetaba).</summary>
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Collections)]
+        public bool FindItTagsChosen { get; set; }
+
+        /// <summary>
+        /// Primera carga con esta opción: quien ya tenía colecciones las tenía etiquetadas (antes siempre se hacía), así
+        /// que se deja encendida; una instalación nueva empieza apagada. Sin etiquetar nada: solo fija el valor.
+        /// </summary>
+        internal void ChooseFindItTagsOnce()
+        {
+            if (FindItTagsChosen)
+            {
+                return;
+            }
+
+            findItTags = CollectionStore.Collections.Count > 0;
+            FindItTagsChosen = true;
+            ApplyAndSave();
+            Mod.Log.Info($"Etiquetas de Find It: primera vez con la opción, {(findItTags ? "encendida (ya había colecciones etiquetadas)" : "apagada")}.");
         }
 
         [SettingsUIKeyboardBinding(BindingKeyboard.B, ActivateAction, ctrl: true)]
@@ -235,7 +262,7 @@ namespace BuildingCollections
         {
             SelectedCollection = string.Empty;
             NewCollectionName = string.Empty;
-            FindItTags = true; // por la propiedad: si estaba apagada, "restablecer" vuelve a poner las etiquetas
+            findItTags = false; // restablecer la apaga sin quitar nada (como desmarcarla)
             WidthOp = DepthOp = LevelOp = CompareOp.Equal;
             WidthValue = DepthValue = LevelValue = 0;
             Density = 100;
