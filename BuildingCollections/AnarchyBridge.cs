@@ -15,9 +15,11 @@ namespace BuildingCollections
         const string SystemType = "Anarchy.Systems.Common.AnarchyUISystem";
 
         static object system;
+        static World systemWorld;
         static PropertyInfo enabledProperty;
-        static int attempts;
+        static int typeLookups;
         static bool registered;
+        static bool unsupported;
 
         /// <summary>Anarchy instalado y nuestra herramienta añadida a su lista.</summary>
         public static bool Available => registered;
@@ -43,19 +45,28 @@ namespace BuildingCollections
         /// </summary>
         public static void TryRegister(World world, string toolID)
         {
-            if (registered || attempts >= 20)
+            // Partida nueva (otro World): hay que volver a registrar en el sistema de ese mundo.
+            if (registered && systemWorld != world)
+            {
+                registered = false;
+                system = null;
+            }
+
+            if (registered || unsupported || world == null)
             {
                 return;
             }
 
-            attempts++;
             try
             {
+                // El tipo está o no está desde el principio (los ensamblados se cargan antes que el mundo): pocos
+                // intentos. El sistema, en cambio, puede crearse tarde: se sigue probando sin tope.
                 var type = AppDomain.CurrentDomain.GetAssemblies()
-                    .Select(a => a.GetType(SystemType, false))
+                    .Select(a => { try { return a.GetType(SystemType, false); } catch { return null; } })
                     .FirstOrDefault(t => t != null);
                 if (type == null)
                 {
+                    unsupported = ++typeLookups >= 3;
                     return;
                 }
 
@@ -70,17 +81,21 @@ namespace BuildingCollections
                 if (add == null || enabledProperty == null)
                 {
                     Mod.Log.Warn("Anarchy encontrado, pero sin TryAddTool / AnarchyEnabled: integración desactivada.");
-                    attempts = int.MaxValue;
+                    unsupported = true;
                     return;
                 }
 
-                add.Invoke(system, new object[] { toolID });
+                // TryAddTool devuelve false si la herramienta ya estaba en la lista: también vale.
+                var result = add.Invoke(system, new object[] { toolID });
                 registered = true;
-                Mod.Log.Info($"Anarchy: herramienta '{toolID}' registrada.");
+                systemWorld = world;
+                Mod.Log.Info($"Anarchy: herramienta '{toolID}' registrada ({(result is bool b && !b ? "ya estaba" : "añadida")}).");
             }
             catch (Exception e)
             {
-                Mod.Log.Warn("Anarchy: no se pudo registrar la herramienta: " + e.Message);
+                var inner = (e as TargetInvocationException)?.InnerException ?? e;
+                Mod.Log.Warn("Anarchy: no se pudo registrar la herramienta: " + inner.Message);
+                unsupported = true;
             }
         }
     }

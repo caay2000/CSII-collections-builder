@@ -473,7 +473,9 @@ namespace BuildingCollections.Systems
                 return inputDeps;
             }
 
-            if (cfg.RequireNoErrors && !AnarchyBridge.Enabled && !GetAllowApply())
+            // Sin excepción para Anarchy: Anarchy ya quita los errores que permite (solapes); los demás (agua, fuera
+            // del mapa...) tienen que seguir parando la construcción.
+            if (cfg.RequireNoErrors && !GetAllowApply())
             {
                 // Se quitan de la vista previa los que el juego marca en rojo (chocan con algo) y se pide otro Build.
                 int removed = RemoveErrored();
