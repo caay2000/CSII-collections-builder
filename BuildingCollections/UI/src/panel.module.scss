@@ -115,7 +115,8 @@ button:disabled { opacity: 0.4; }
 .pipOn { background-color: $levelOn; }
 .cardName { width: 100%; max-height: 42rem; overflow: hidden; font-size: 12rem; line-height: 14rem; font-weight: 600; text-align: center; color: #e6edf6; }
 .remove { position: absolute; right: 3rem; bottom: 3rem; width: 22rem; height: 22rem; padding: 5rem; border: none; border-radius: 3rem; background-color: rgba(200, 60, 50, 0.9); opacity: 0; }
-.remove img { width: 12rem; height: 12rem; }
+// Icono como fondo y no como <img>: con cientos de tarjetas son cientos de nodos menos.
+.remove { background-image: url("coui://buildingcollections/icons/remove.svg"); background-size: 12rem 12rem; background-position: center; background-repeat: no-repeat; }
 .card:hover .remove { opacity: 1; }
 .empty { padding: 12rem 4rem; color: $text2; font-size: 13rem; }
 

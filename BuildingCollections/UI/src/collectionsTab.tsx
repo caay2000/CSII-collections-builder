@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./panel.module.scss";
-import { actions, useBuildings, useCollections, useFindIt, useSelected, useStatus } from "./bindings";
+import { actions, BuildingDto, useBuildings, useCollections, useFindIt, useSelected, useStatus } from "./bindings";
 import { icon, IconButton, InlineInput, StepFilter } from "./widgets";
 import { Scrollable } from "cs2/ui";
 
@@ -15,6 +15,20 @@ export function matches(op: number, value: number, n: number): boolean {
 }
 
 type Editing = "" | "new" | "rename" | "delete" | "removeAll";
+
+/** Tarjeta de un edificio. memo: al pintar la tanda siguiente, las ya pintadas no se vuelven a renderizar. */
+const Card = memo(({ b, label }: { b: BuildingDto; label: string }) => (
+    <div className={styles.card} title={`${b.name} · level ${b.level}`}>
+        <img className={styles.thumb} src={b.icon} />
+        {b.w > 0 && <span className={styles.sizeTag}>{`${b.w}×${b.d}`}</span>}
+        <div className={styles.pips}>
+            {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= b.level ? styles.pipOn : styles.pip} />)}
+        </div>
+        <div className={styles.cardName}>{label}</div>
+        <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])} />
+    </div>
+// Al recibir la lista otra vez (quitar uno, catálogo refrescado) los objetos son nuevos: se compara por contenido.
+), (a, c) => a.label === c.label && a.b.id === c.b.id && a.b.icon === c.b.icon && a.b.level === c.b.level && a.b.w === c.b.w && a.b.d === c.b.d);
 
 // Pintar cientos de tarjetas con miniatura de golpe congela el panel 1-2 s: se pintan por tandas, una por fotograma.
 const FIRST_BATCH = 40;
@@ -31,11 +45,21 @@ export const CollectionsTab = () => {
     const [f, setF] = useState({ wOp: 0, wV: 0, dOp: 0, dV: 0, lOp: 0, lV: 0 });
     const cancel = useCallback(() => setEditing(""), []);
 
-    const shown = useMemo(
-        () => buildings.filter((b) =>
-            matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) &&
-            (b.name.toLowerCase().includes(q.toLowerCase()) || prettyName(b.name).toLowerCase().includes(q.toLowerCase()))),
-        [buildings, f, q]);
+    // Nombre visible y texto de búsqueda, una vez por lista (no en cada render ni en cada tecla).
+    const indexed = useMemo(() => buildings.map((b) => {
+        const pretty = prettyName(b.name);
+        return {
+            b,
+            // El tamaño y el nivel ya van en la tarjeta: se quitan del final del nombre.
+            label: pretty.replace(/(\s+(L\d|\d+x\d+))+$/, ""),
+            search: (b.name + "\u0000" + pretty).toLowerCase(),
+        };
+    }), [buildings]);
+    const shown = useMemo(() => {
+        const needle = q.toLowerCase();
+        return indexed.filter(({ b, search }) =>
+            matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) && search.includes(needle));
+    }, [indexed, f, q]);
     // El tope va ligado a la lista que se pinta: al cambiar de colección, filtro o búsqueda vuelve a la primera
     // tanda en ese mismo render (con un efecto, el primer render aún usaría el tope viejo y pintaría todo).
     const listKey = `${selected}\u0000${q}\u0000${JSON.stringify(f)}`;
@@ -109,23 +133,7 @@ export const CollectionsTab = () => {
                 </div>
                 <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable">
                     <div className={styles.grid}>
-                        {shown.slice(0, limit).map((b) => {
-                            // El tamaño y el nivel ya van en la tarjeta: se quitan del final del nombre.
-                            const name = prettyName(b.name).replace(/(\s+(L\d|\d+x\d+))+$/, "");
-                            return (
-                                <div key={b.id} className={styles.card} title={`${b.name} · level ${b.level}`}>
-                                    <img className={styles.thumb} src={b.icon} />
-                                    {b.w > 0 && <span className={styles.sizeTag}>{`${b.w}×${b.d}`}</span>}
-                                    <div className={styles.pips}>
-                                        {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= b.level ? styles.pipOn : styles.pip} />)}
-                                    </div>
-                                    <div className={styles.cardName}>{name}</div>
-                                    <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])}>
-                                        <img src={icon("remove")} />
-                                    </button>
-                                </div>
-                            );
-                        })}
+                        {shown.slice(0, limit).map(({ b, label }) => <Card key={b.id} b={b} label={label} />)}
                         {current && shown.length === 0 && (
                             <div className={styles.empty}>{buildings.length === 0 ? "Empty collection. Add buildings with Shift+click in Find It." : "Nothing matches these filters."}</div>
                         )}
@@ -154,7 +162,7 @@ export const CollectionsTab = () => {
                             </div>
                         </div>
                         <button className={styles.textDanger} disabled={shown.length === 0}
-                            onClick={() => filtered ? actions.removeBuildings(shown.map((b) => b.id)) : setEditing("removeAll")}>
+                            onClick={() => filtered ? actions.removeBuildings(shown.map(({ b }) => b.id)) : setEditing("removeAll")}>
                             {filtered ? `Remove ${shown.length} shown` : "Remove all"}
                         </button>
                     </div>

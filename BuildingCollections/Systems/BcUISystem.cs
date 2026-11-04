@@ -367,7 +367,7 @@ namespace BuildingCollections.Systems
             if (Mod.Settings != null)
             {
                 Mod.Settings.SelectedCollection = name;
-                Mod.Settings.ApplyAndSave();
+                saveCountdown = 60; // se guarda en diferido: escribir el fichero en el mismo clic frena el cambio
             }
         }
 

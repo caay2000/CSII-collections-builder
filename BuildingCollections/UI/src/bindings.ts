@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { bindValue, trigger, useValue } from "cs2/api";
 
 const G = "BuildingCollections";
@@ -57,8 +58,13 @@ export const useToolActive = () => useValue(toolActive$);
 export const useFindIt = () => useValue(findIt$);
 export const useSelected = () => useValue(selected$);
 export const useStatus = () => useValue(status$);
-export const useCollections = (): CollectionDto[] => parse(useValue(collections$), []);
-export const useBuildings = (): BuildingDto[] => parse(useValue(buildings$), []);
+/** JSON de un binding, parseado solo cuando cambia el texto (no en cada render): así la lista conserva su identidad. */
+function useJson<T>(raw: string, fallback: T): T {
+    return useMemo(() => parse(raw, fallback), [raw]);
+}
+
+export const useCollections = (): CollectionDto[] => useJson(useValue(collections$), []);
+export const useBuildings = (): BuildingDto[] => useJson(useValue(buildings$), []);
 export const useBuilder = (): BuilderDto => ({ ...DEFAULT_BUILDER, ...parse<Partial<BuilderDto>>(useValue(builder$), {}) });
 export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, anarchy: false, anarchyAvailable: false, filled: 0, front: 0, treeSets: [], ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
 
