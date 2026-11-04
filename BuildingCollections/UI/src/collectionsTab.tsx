@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./panel.module.scss";
 import { actions, useBuildings, useCollections, useFindIt, useSelected, useStatus } from "./bindings";
 import { icon, IconButton, InlineInput, StepFilter } from "./widgets";
@@ -16,6 +16,10 @@ export function matches(op: number, value: number, n: number): boolean {
 
 type Editing = "" | "new" | "rename" | "delete" | "removeAll";
 
+// Pintar cientos de tarjetas con miniatura de golpe congela el panel 1-2 s: se pintan por tandas, una por fotograma.
+const FIRST_BATCH = 40;
+const BATCH = 60;
+
 export const CollectionsTab = () => {
     const collections = useCollections();
     const selected = useSelected();
@@ -32,6 +36,16 @@ export const CollectionsTab = () => {
             matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) &&
             (b.name.toLowerCase().includes(q.toLowerCase()) || prettyName(b.name).toLowerCase().includes(q.toLowerCase()))),
         [buildings, f, q]);
+    // El tope va ligado a la lista que se pinta: al cambiar de colección, filtro o búsqueda vuelve a la primera
+    // tanda en ese mismo render (con un efecto, el primer render aún usaría el tope viejo y pintaría todo).
+    const listKey = `${selected}\u0000${q}\u0000${JSON.stringify(f)}`;
+    const [batch, setBatch] = useState({ key: listKey, limit: FIRST_BATCH });
+    const limit = batch.key === listKey ? batch.limit : FIRST_BATCH;
+    useEffect(() => {
+        if (limit >= shown.length) return;
+        const id = requestAnimationFrame(() => setBatch({ key: listKey, limit: limit + BATCH }));
+        return () => cancelAnimationFrame(id);
+    }, [listKey, limit, shown.length]);
     const current = collections.find((c) => c.name === selected);
     const filtered = !!q || f.wV > 0 || f.dV > 0 || f.lV > 0;
 
@@ -95,7 +109,7 @@ export const CollectionsTab = () => {
                 </div>
                 <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable">
                     <div className={styles.grid}>
-                        {shown.map((b) => {
+                        {shown.slice(0, limit).map((b) => {
                             // El tamaño y el nivel ya van en la tarjeta: se quitan del final del nombre.
                             const name = prettyName(b.name).replace(/(\s+(L\d|\d+x\d+))+$/, "");
                             return (
