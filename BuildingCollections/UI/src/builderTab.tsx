@@ -67,7 +67,7 @@ export const BuilderTab = () => {
                 <span className={styles.lbl}>Decor</span>
                 <CollectionPicker items={collections} selected={b.decor} noneLabel="No decor" onSelect={(n) => set({ decor: n })} />
             </div>
-            {b.decor && (
+            {collections.some((c) => c.name === b.decor) && (
                 <div className={styles.builderFilters}>
                     <div className={styles.filterBox}>
                         <div className={styles.filter} title="Trees and plants from this collection fill the leftover space (courtyards, gaps). Add them with Shift+click in Find It.">

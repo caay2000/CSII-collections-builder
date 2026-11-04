@@ -173,6 +173,13 @@ namespace BuildingCollections.Systems
             buildRequested = false;
             definitionsDirty = true;
 
+            // Las calles pueden haber cambiado mientras la herramienta no estaba activa: bordillos de nuevo.
+            if (polygon.Count == 0)
+            {
+                curbs = new List<List<Pt>>();
+                curbAge = int.MaxValue;
+            }
+
             // UpdateActions() de la clase base es private protected: un mod externo no puede sobrescribirlo,
             // así que hay que habilitar las acciones de entrada a mano o nunca llegan clic ni clic derecho.
             applyAction.shouldBeEnabled = true;
@@ -504,7 +511,7 @@ namespace BuildingCollections.Systems
                     y = TerrainUtils.SampleHeight(ref heights, front);
                 }
 
-                if (cfg.UsePlacementOffset && EntityManager.HasComponent<PlaceableObjectData>(p.Prefab))
+                if (!p.IsDecor && cfg.UsePlacementOffset && EntityManager.HasComponent<PlaceableObjectData>(p.Prefab))
                 {
                     var pod = EntityManager.GetComponentData<PlaceableObjectData>(p.Prefab);
                     if ((pod.m_Flags & (Game.Objects.PlacementFlags.Shoreline | Game.Objects.PlacementFlags.Floating)) == 0)
@@ -711,7 +718,7 @@ namespace BuildingCollections.Systems
         void SnapHover()
         {
             // Mientras se dibuja no se recalculan los bordillos: los vértices guardan su índice.
-            if (polygon.Count == 0 && (curbAge++ > 300 || math.distance(curbCenter, hoverPos.xz) > CurbRadius / 2))
+            if (polygon.Count == 0 && (curbAge++ > 1800 || math.distance(curbCenter, hoverPos.xz) > CurbRadius / 2))
             {
                 RebuildCurbs(hoverPos.xz);
             }

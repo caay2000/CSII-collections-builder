@@ -31,6 +31,9 @@ namespace BuildingCollections.Core
                 minY = Math.Min(minY, p.Y); maxY = Math.Max(maxY, p.Y);
             }
 
+            // Con el tope de puntos, una rejilla recorrida por filas dejaría vacía la parte de arriba: se abre la
+            // separación lo justo para que quepa toda el área.
+            spacing = Math.Max(spacing, Math.Sqrt((maxX - minX) * (maxY - minY) / max));
             var rng = new Random(seed);
             double jitter = spacing * 0.35;
             double minGap = spacing * 0.5;
@@ -128,8 +131,9 @@ namespace BuildingCollections.Core
                 }
             }
 
-            // Cerca del final de un bordillo (la esquina de la acera) se engancha al extremo exacto.
-            if (hit.Curb >= 0)
+            // Cerca del final de un bordillo (la esquina de la acera) se engancha al extremo exacto, solo si el cursor
+            // ya está casi encima del bordillo (si no, el punto saltaría lejos de donde se hizo clic).
+            if (hit.Curb >= 0 && hit.Distance < 2)
             {
                 var pts = curbs[hit.Curb];
                 foreach (var end in new[] { 0, pts.Count - 1 })

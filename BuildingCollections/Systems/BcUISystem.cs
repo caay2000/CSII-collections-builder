@@ -90,15 +90,32 @@ namespace BuildingCollections.Systems
             AddBinding(new TriggerBinding(Group, "clear", () => Safe(() => Report(CollectionService.Clear(selected.value)))));
             AddBinding(new TriggerBinding(Group, "delete", () => Safe(() =>
             {
+                string deleted = selected.value;
                 Report(CollectionService.Delete(selected.value));
+                if (Mod.Settings != null && string.Equals(Mod.Settings.DecorCollection, deleted, StringComparison.OrdinalIgnoreCase))
+                {
+                    Mod.Settings.DecorCollection = string.Empty;
+                    saveCountdown = 60;
+                    PushBuilder();
+                }
+
                 SetSelected(CollectionStore.Collections.FirstOrDefault()?.Name ?? string.Empty);
             })));
             AddBinding(new TriggerBinding<string>(Group, "rename", name => Safe(() =>
             {
+                string oldName = selected.value;
                 var error = CollectionService.Rename(selected.value, name, out var newName);
                 Report(error);
                 if (error == null)
                 {
+                    // La colección de decoración se guarda por nombre: sigue a la colección renombrada.
+                    if (Mod.Settings != null && string.Equals(Mod.Settings.DecorCollection, oldName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Mod.Settings.DecorCollection = newName;
+                        saveCountdown = 60;
+                        PushBuilder();
+                    }
+
                     SetSelected(newName);
                 }
             })));
