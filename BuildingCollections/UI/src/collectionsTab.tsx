@@ -2,6 +2,12 @@ import React, { useMemo, useState } from "react";
 import styles from "./panel.module.scss";
 import { actions, useBuildings, useCollections, useFindIt, useSelected, useStatus } from "./bindings";
 import { StepFilter } from "./widgets";
+import { Scrollable } from "cs2/ui";
+
+/** Nombre legible como el de Find It: "CCP5_ResidentialMediumLeft01_L1_2x2" -> "CCP5 Residential Medium Left01 L1 2x2". */
+export function prettyName(n: string): string {
+    return n.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+/g, " ").trim();
+}
 
 export function matches(op: number, value: number, n: number): boolean {
     if (!value) return true;
@@ -22,18 +28,17 @@ export const CollectionsTab = () => {
     const shown = useMemo(
         () => buildings.filter((b) =>
             matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) &&
-            b.name.toLowerCase().includes(q.toLowerCase())),
+            (b.name.toLowerCase().includes(q.toLowerCase()) || prettyName(b.name).toLowerCase().includes(q.toLowerCase()))),
         [buildings, f, q]);
     const current = collections.find((c) => c.name === selected);
 
     return (
         <div className={styles.split}>
             <div className={styles.side}>
-                <div className={styles.row}>
-                    <input className={styles.input} value={name} placeholder="New collection" onChange={(e) => setName(e.target.value)} />
-                    <button className={styles.btn} onClick={() => { actions.create(name); setName(""); }}>Create</button>
-                </div>
-                <div className={styles.list}>
+                <span className={styles.fieldLabel}>New collection</span>
+                <input className={styles.inputBox} value={name} placeholder="Name" onChange={(e) => setName(e.target.value)} />
+                <button className={styles.btnPrimary} disabled={!name.trim()} onClick={() => { actions.create(name); setName(""); }}>Create collection</button>
+                <Scrollable className={styles.list} vertical trackVisibility="scrollable">
                     {collections.length === 0 && <div className={styles.muted}>No collections yet.</div>}
                     {collections.map((c) => (
                         <div key={c.name} className={c.name === selected ? styles.itemOn : styles.item}
@@ -41,25 +46,24 @@ export const CollectionsTab = () => {
                             <span>{c.name}</span><span className={styles.muted}>{c.count}</span>
                         </div>
                     ))}
-                </div>
-                <button className={styles.btn} disabled={!current || !findIt} onClick={() => actions.addAllFromFindIt()}>
-                    Add all Find It items
-                </button>
+                </Scrollable>
+                <button className={styles.btn} disabled={!current || !findIt} onClick={() => actions.addAllFromFindIt()}>Add all Find It items</button>
                 {!findIt && <div className={styles.warn}>Find It not detected.</div>}
-                <div className={styles.row}>
-                    {confirm === "" ? (
-                        <>
-                            <button className={styles.btn} disabled={!current} onClick={() => setConfirm("clear")}>Empty</button>
-                            <button className={styles.btnDanger} disabled={!current} onClick={() => setConfirm("delete")}>Delete</button>
-                        </>
-                    ) : (
-                        <>
-                            <span className={styles.muted}>{confirm === "clear" ? "Empty it?" : "Delete it?"}</span>
+                <button className={styles.btn} disabled={!current} onClick={() => actions.clone()}>Clone collection</button>
+                {confirm === "" ? (
+                    <>
+                        <button className={styles.btn} disabled={!current} onClick={() => setConfirm("clear")}>Empty collection</button>
+                        <button className={styles.btnDanger} disabled={!current} onClick={() => setConfirm("delete")}>Delete collection</button>
+                    </>
+                ) : (
+                    <div className={styles.confirm}>
+                        <span>{confirm === "clear" ? `Remove all buildings from "${current?.name}"?` : `Delete "${current?.name}"?`}</span>
+                        <div className={styles.row}>
                             <button className={styles.btnDanger} onClick={() => { confirm === "clear" ? actions.clear() : actions.remove(); setConfirm(""); }}>Yes</button>
                             <button className={styles.btn} onClick={() => setConfirm("")}>No</button>
-                        </>
-                    )}
-                </div>
+                        </div>
+                    </div>
+                )}
                 {status && <div className={status === "OK" ? styles.ok : styles.warn}>{status}</div>}
             </div>
 
@@ -68,24 +72,34 @@ export const CollectionsTab = () => {
                     <span className={styles.title2}>{current ? current.name : "No collection"}</span>
                     <span className={styles.muted}>{current ? `${shown.length} of ${buildings.length} shown` : ""}</span>
                 </div>
-                <input className={styles.input} placeholder="Search in collection" value={q} onChange={(e) => setQ(e.target.value)} />
+                <div className={styles.row}>
+                    <span className={styles.label}>Search</span>
+                    <input className={styles.input} placeholder="Name" value={q} onChange={(e) => setQ(e.target.value)} />
+                </div>
                 <StepFilter label="Lot width" op={f.wOp} value={f.wV} onChange={(o, v) => setF({ ...f, wOp: o, wV: v })} />
                 <StepFilter label="Lot depth" op={f.dOp} value={f.dV} onChange={(o, v) => setF({ ...f, dOp: o, dV: v })} />
                 <StepFilter label="Level" op={f.lOp} value={f.lV} onChange={(o, v) => setF({ ...f, lOp: o, lV: v })} />
-                <div className={styles.grid}>
-                    {shown.map((b) => (
-                        <div key={b.id} className={styles.card} title={`${b.name}\n${b.w}x${b.d} · level ${b.level}`}>
-                            <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])}>×</button>
-                            <span className={styles.lvl}>L{b.level}</span>
-                            <img className={styles.thumb} src={b.icon} />
-                            <div className={styles.cardName}>{b.name}</div>
-                            <div className={styles.muted}>{b.w}x{b.d}</div>
-                        </div>
-                    ))}
+                <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable">
+                    <div className={styles.grid}>
+                    {shown.map((b) => {
+                        const size = b.w > 0 ? `${b.w}x${b.d}` : "";
+                        const head = [size, b.level > 0 ? `L${b.level}` : ""].filter((x) => x).join(" · ");
+                        // El tamaño y el nivel ya van en la primera línea: se quitan del final del nombre.
+                        const name = prettyName(b.name).replace(/(\s+(L\d|\d+x\d+))+$/, "");
+                        return (
+                            <div key={b.id} className={styles.card} title={`${b.name} · level ${b.level}`}>
+                                <img className={styles.thumb} src={b.icon} />
+                                <div className={styles.cardHead}>{head}</div>
+                                <div className={styles.cardName}>{name}</div>
+                                <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])}>×</button>
+                            </div>
+                        );
+                    })}
                     {current && shown.length === 0 && (
                         <div className={styles.muted}>{buildings.length === 0 ? "Empty collection. Add buildings with Shift+click in Find It." : "Nothing matches these filters."}</div>
                     )}
-                </div>
+                    </div>
+                </Scrollable>
                 <div className={styles.row}>
                     <button className={styles.btnDanger} disabled={shown.length === 0}
                         onClick={() => actions.removeBuildings(shown.map((b) => b.id))}>

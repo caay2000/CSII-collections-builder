@@ -50,6 +50,7 @@ export const actions = {
     create: (name: string) => trigger(G, "create", name),
     clear: () => trigger(G, "clear"),
     remove: () => trigger(G, "delete"),
+    clone: () => trigger(G, "clone"),
     removeBuildings: (ids: string[]) => trigger(G, "removeBuildings", JSON.stringify(ids)),
     addAllFromFindIt: () => trigger(G, "addAll"),
     setBuilder: (b: BuilderDto) => trigger(G, "setBuilder", JSON.stringify(b)),

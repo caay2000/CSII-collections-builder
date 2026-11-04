@@ -39,6 +39,9 @@ namespace BuildingCollections.Systems
         int messageSerial;
         int frame;
         int seedCounter;
+        int saveCountdown = -1;
+        bool wantTool;   // la pestaña Builder está abierta y quiere la herramienta
+        ToolBaseSystem lastTool;
 
         sealed class BuilderDto
         {
@@ -64,10 +67,11 @@ namespace BuildingCollections.Systems
             AddBinding(builderBinding = new ValueBinding<string>(Group, "builder", "{}"));
             AddBinding(plan = new ValueBinding<string>(Group, "plan", "{}"));
 
-            AddBinding(new TriggerBinding<bool>(Group, "setPanelOpen", SetPanelOpen));
+            AddBinding(new TriggerBinding<bool>(Group, "setPanelOpen", v => Safe(() => SetPanelOpen(v))));
             AddBinding(new TriggerBinding<string>(Group, "select", name => Safe(() => SetSelected(name))));
             AddBinding(new TriggerBinding<string>(Group, "create", name => Safe(() =>
             {
+                name = (name ?? string.Empty).Trim();
                 var error = CollectionService.Create(name);
                 Report(error);
                 if (error == null)
@@ -82,13 +86,22 @@ namespace BuildingCollections.Systems
                 Report(CollectionService.Delete(selected.value));
                 SetSelected(CollectionStore.Collections.FirstOrDefault()?.Name ?? string.Empty);
             })));
+            AddBinding(new TriggerBinding(Group, "clone", () => Safe(() =>
+            {
+                var error = CollectionService.Clone(selected.value, out var newName);
+                Report(error);
+                if (error == null)
+                {
+                    SetSelected(newName);
+                }
+            })));
             AddBinding(new TriggerBinding<string>(Group, "removeBuildings", json => Safe(() =>
                 Report(CollectionService.RemoveBuildings(selected.value, JsonConvert.DeserializeObject<List<string>>(json) ?? new List<string>())))));
             AddBinding(new TriggerBinding<string>(Group, "setBuilder", json => Safe(() => ApplyBuilder(json))));
             AddBinding(new TriggerBinding<bool>(Group, "setToolActive", v => Safe(() => SetToolActive(v))));
-            AddBinding(new TriggerBinding(Group, "generatePreview", () => Safe(GeneratePreview)));
+            AddBinding(new TriggerBinding(Group, "generatePreview", () => Safe(() => IfToolActive(GeneratePreview))));
             AddBinding(new TriggerBinding(Group, "clearSelection", () => Safe(builder.ClearSelection)));
-            AddBinding(new TriggerBinding(Group, "build", () => Safe(builder.RequestBuild)));
+            AddBinding(new TriggerBinding(Group, "build", () => Safe(() => IfToolActive(builder.RequestBuild))));
 
             toolSystem.EventPrefabChanged += OnPrefabChanged;
 
@@ -100,6 +113,11 @@ namespace BuildingCollections.Systems
 
         protected override void OnDestroy()
         {
+            if (saveCountdown >= 0)
+            {
+                Mod.Settings?.ApplyAndSave();
+            }
+
             if (toolSystem != null)
             {
                 toolSystem.EventPrefabChanged -= OnPrefabChanged;
@@ -113,6 +131,23 @@ namespace BuildingCollections.Systems
             base.OnUpdate();
             try
             {
+                // Si el usuario usó otra herramienta (p. ej. una carretera) y volvió a la normal con la pestaña Builder
+                // abierta, se reactiva la nuestra: si no, la pestaña se quedaba sin responder hasta cerrarla.
+                // Solo al volver de otra herramienta: si el usuario sale de la nuestra a la normal (Esc), se respeta.
+                var active = toolSystem.activeTool;
+                if (wantTool && panelOpen.value && active == defaultTool && lastTool != null && lastTool != defaultTool && lastTool != builder)
+                {
+                    toolSystem.activeTool = builder;
+                    active = builder;
+                }
+
+                if (lastTool == builder && active == defaultTool)
+                {
+                    wantTool = false; // salió de la nuestra a propósito (Esc): no se reactiva hasta volver a la pestaña
+                }
+
+                lastTool = active;
+
                 toolActive.Update(toolSystem.activeTool == builder);
                 plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots}}}");
 
@@ -132,6 +167,27 @@ namespace BuildingCollections.Systems
                         catalogVersion = PrefabCatalog.Version;
                         buildingsDirty = true;
                     }
+                }
+
+                // Etiquetas de Find It repartidas entre fotogramas (cada una guarda el fichero de Find It).
+                if (TagQueue.Count > 0)
+                {
+                    int before = TagQueue.Count;
+                    if (TagQueue.Process(6))
+                    {
+                        Mod.Log.Info("Etiquetas de Find It actualizadas.");
+                        status.Update("OK");
+                    }
+                    else if (before / 25 != TagQueue.Count / 25)
+                    {
+                        status.Update($"Updating Find It tags... {TagQueue.Count} left");
+                    }
+                }
+
+                // Guardado de ajustes agrupado: el deslizador manda muchos cambios seguidos.
+                if (saveCountdown >= 0 && --saveCountdown < 0)
+                {
+                    Mod.Settings?.ApplyAndSave();
                 }
 
                 if (collectionsDirty)
@@ -206,6 +262,7 @@ namespace BuildingCollections.Systems
 
         void SetToolActive(bool active)
         {
+            wantTool = active;
             if (active)
             {
                 toolSystem.activeTool = builder;
@@ -215,6 +272,18 @@ namespace BuildingCollections.Systems
                 // Solo se quita si es la nuestra: si el usuario cogió otra herramienta, se respeta.
                 toolSystem.activeTool = defaultTool;
             }
+        }
+
+        /// <summary>Vista previa y Build solo con la herramienta activa (si no, el juego no tiene dónde aplicarlos).</summary>
+        void IfToolActive(Action action)
+        {
+            if (toolSystem.activeTool != builder)
+            {
+                status.Update("Open the Builder tab to use the block tool.");
+                return;
+            }
+
+            action();
         }
 
         void SetSelected(string name)
@@ -316,8 +385,9 @@ namespace BuildingCollections.Systems
             s.WidthOp = ToOp(f.widthOp); s.WidthValue = Clamp(f.widthValue, 0, 5);
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
-            s.Density = Clamp(f.density, 1, 100);
-            s.ApplyAndSave();
+            s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
+            builder.SetMode(s.Mode);
+            saveCountdown = 60;
             PushBuilder();
         }
 

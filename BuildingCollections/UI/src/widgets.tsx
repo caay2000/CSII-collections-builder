@@ -1,12 +1,6 @@
 import React, { useState } from "react";
-import * as ui from "cs2/ui";
 import styles from "./panel.module.scss";
 import { CollectionDto } from "./bindings";
-
-// Los tipos de cs2/ui declaran DropdownItem solo como interfaz; en ejecución es un componente.
-const Dropdown = ui.Dropdown;
-const DropdownToggle = ui.DropdownToggle;
-const DropdownItem: React.ComponentType<any> = (ui as any).DropdownItem;
 
 export const OPS = ["=", "≠", ">", "<"];
 
@@ -31,13 +25,14 @@ export const StepFilter = (p: {
 };
 
 /** Deslizador propio: el motor de la UI no soporta <input type="range">. */
-export const Slider = (p: { min: number; max: number; value: number; onChange: (v: number) => void }) => {
+export const Slider = (p: { min: number; max: number; step?: number; value: number; onChange: (v: number) => void }) => {
     const [drag, setDrag] = useState(false);
     const pct = ((p.value - p.min) / (p.max - p.min)) * 100;
     const set = (e: React.MouseEvent<HTMLDivElement>) => {
         const r = e.currentTarget.getBoundingClientRect();
         const t = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-        p.onChange(Math.round(p.min + t * (p.max - p.min)));
+        const step = p.step ?? 1;
+        p.onChange(Math.round((p.min + t * (p.max - p.min)) / step) * step);
     };
     return (
         <div className={styles.slider}
@@ -51,21 +46,27 @@ export const Slider = (p: { min: number; max: number; value: number; onChange: (
     );
 };
 
-/** Desplegable nativo del juego (el mismo de los ajustes): flota sobre el panel, hace scroll y se cierra solo. */
+/** Desplegable propio con el estilo del panel (el nativo del juego salía blanco y fuera de tono). Se abre en línea. */
 export const CollectionPicker = (p: { items: CollectionDto[]; selected: string; onSelect: (n: string) => void }) => {
+    const [open, setOpen] = useState(false);
     const cur = p.items.find((c) => c.name === p.selected);
     return (
-        <Dropdown
-            content={
-                <>
+        <div className={styles.dd}>
+            <button className={styles.ddToggle} onClick={() => setOpen(!open)}>
+                <span className={styles.ddLabel}>{cur ? cur.name : "Choose a collection"}</span>
+                <span className={styles.muted}>{cur ? `${cur.count}  ${open ? "∧" : "∨"}` : (open ? "∧" : "∨")}</span>
+            </button>
+            {open && (
+                <div className={styles.ddList}>
+                    {p.items.length === 0 && <div className={styles.muted}>No collections yet.</div>}
                     {p.items.map((c) => (
-                        <DropdownItem key={c.name} value={c.name} selected={c.name === p.selected} closeOnSelect onChange={p.onSelect}>
-                            {c.name} ({c.count})
-                        </DropdownItem>
+                        <div key={c.name} className={c.name === p.selected ? styles.itemOn : styles.item}
+                            onClick={() => { p.onSelect(c.name); setOpen(false); }}>
+                            <span>{c.name}</span><span className={styles.muted}>{`${c.count}`}</span>
+                        </div>
                     ))}
-                </>
-            }>
-            <DropdownToggle>{cur ? `${cur.name} (${cur.count})` : "Choose a collection"}</DropdownToggle>
-        </Dropdown>
+                </div>
+            )}
+        </div>
     );
 };

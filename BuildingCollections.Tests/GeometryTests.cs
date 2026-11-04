@@ -73,3 +73,68 @@ namespace BuildingCollections.Tests
         }
     }
 }
+
+namespace BuildingCollections.Tests
+{
+    public class PolygonAndCellGroupingTests
+    {
+        static Pt[] Cells(double x0, double y0, int w, int d) =>
+            Enumerable.Range(0, w * d).Select(i => new Pt(x0 + 4 + 8 * (i % w), y0 + 4 + 8 * (i / w))).ToArray();
+
+        [Fact]
+        public void Concave_polygon_contains()
+        {
+            // "L": el hueco de arriba a la derecha queda fuera.
+            var poly = new[] { new Pt(0, 0), new Pt(20, 0), new Pt(20, 10), new Pt(10, 10), new Pt(10, 20), new Pt(0, 20) };
+            Assert.True(Polygon.Contains(poly, new Pt(5, 15)));
+            Assert.True(Polygon.Contains(poly, new Pt(15, 5)));
+            Assert.False(Polygon.Contains(poly, new Pt(15, 15)));
+        }
+
+        [Fact]
+        public void Cell_flood_joins_adjacent_blocks_and_skips_across_road()
+        {
+            var blocks = new[]
+            {
+                Cells(0, 0, 6, 6),      // 0
+                Cells(48, 0, 4, 6),     // 1 contiguo (centros a 8 m)
+                Cells(0, 48 + 16, 6, 6),// 2 al otro lado de una calle de 16 m
+                Cells(81, 0, 2, 2),     // 3 contiguo a 1 con 1 m de cuña (centros a 9 m)
+            };
+            var g = BlockGrouping.FloodByCells(blocks, 0, 11).OrderBy(i => i).ToArray();
+            Assert.Equal(new[] { 0, 1, 3 }, g);
+        }
+    }
+}
+
+namespace BuildingCollections.Tests
+{
+    public class CornerMatchingTests
+    {
+        static BuildingInfo B(string n, int w, CornerKind c) => new BuildingInfo { PrefabName = n, LotWidth = w, LotDepth = 2, Level = 1, Corner = c };
+
+        [Fact]
+        public void Single_corner_never_gets_a_two_sided_building()
+        {
+            var both = B("both", 2, CornerKind.Left | CornerKind.Right);
+            var left = B("left", 2, CornerKind.Left);
+            var plain = new[] { B("p", 2, CornerKind.Front) };
+            for (int seed = 0; seed < 30; seed++)
+            {
+                var plan = GridPlanner.Plan(PlanGrid.AllFree(8, 3, true, false), plain, new[] { both, left }, 100, seed);
+                var first = plan.First(p => p.X == 0);
+                Assert.Equal("left", first.Building.PrefabName);
+                Assert.DoesNotContain(plan, p => p.Building.PrefabName == "both");
+            }
+        }
+
+        [Fact]
+        public void Two_sided_lot_of_exact_width_gets_the_two_sided_building()
+        {
+            var both = B("both", 4, CornerKind.Left | CornerKind.Right);
+            var plan = GridPlanner.Plan(PlanGrid.AllFree(4, 3, true, true), new[] { B("p", 2, CornerKind.Front) }, new[] { both }, 100, 1);
+            Assert.Single(plan);
+            Assert.Equal("both", plan[0].Building.PrefabName);
+        }
+    }
+}

@@ -82,7 +82,7 @@ namespace BuildingCollections.Systems
                     pending.RemoveAt(i);
                     tagged++;
                 }
-                else if (frames > 120)
+                else if (frames > 900)
                 {
                     pending.RemoveAt(i);
                     lost++;

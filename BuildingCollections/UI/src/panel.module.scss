@@ -11,9 +11,9 @@ $soft: rgba(255, 255, 255, 0.08);
     background-color: $bg; border: 1rem solid $line; border-radius: 8rem;
     color: #e8edf5; font-size: 13rem;
 }
-.panel { width: 430rem; }
-.panelWide { width: 700rem; }
-.header { display: flex; justify-content: space-between; align-items: center; padding: 8rem 12rem; border-bottom: 1rem solid $line; flex: none; }
+.panel, .panelWide { width: 700rem; }
+.panelWide { max-height: 70vh; }
+.header { cursor: move; display: flex; justify-content: space-between; align-items: center; padding: 8rem 12rem; border-bottom: 1rem solid $line; flex: none; }
 .title { font-weight: bold; font-size: 15rem; }
 .close { background: transparent; color: #e8edf5; border: none; font-size: 18rem; padding: 0 6rem; }
 .tabs { display: flex; flex: none; }
@@ -31,10 +31,10 @@ $soft: rgba(255, 255, 255, 0.08);
 .row > * { margin-right: 6rem; }
 .label { width: 78rem; flex: none; }
 .value { width: 36rem; text-align: right; }
-.title2 { font-weight: bold; font-size: 14rem; }
+.title2 { font-weight: bold; font-size: 24rem; }
 .sec { font-size: 11rem; letter-spacing: 1rem; text-transform: uppercase; color: #60a5fa; text-align: center; }
 .input { flex: 1; min-width: 0; padding: 6rem 8rem; background: $soft; border: 1rem solid $line; border-radius: 4rem; color: #fff; }
-.list { max-height: 240rem; overflow-y: auto; border: 1rem solid $line; border-radius: 4rem; background: rgba(255, 255, 255, 0.04); }
+.list { max-height: 240rem; border: 1rem solid $line; border-radius: 4rem; background: rgba(255, 255, 255, 0.04); }
 .item, .itemOn { display: flex; justify-content: space-between; padding: 6rem 8rem; border-bottom: 1rem solid $line; }
 .itemOn { background: rgba(59, 130, 246, 0.38); }
 .btn, .btnDanger, .btnBuild, .btnPrimary, .btnClear { padding: 7rem 12rem; background: rgba(255, 255, 255, 0.1); border: 1rem solid $line; border-radius: 4rem; color: #fff; }
@@ -51,20 +51,31 @@ button:disabled { opacity: 0.4; }
 .stepOp { background: rgba(59, 130, 246, 0.45); margin-right: 4rem; border-radius: 4rem; }
 .stepArrow:first-of-type { border-radius: 4rem 0 0 4rem; }
 .stepArrow:last-child { border-radius: 0 4rem 4rem 0; }
-.stepValue { min-width: 56rem; height: 26rem; line-height: 26rem; text-align: center; background: rgba(0, 0, 0, 0.3); border-top: 1rem solid $line; border-bottom: 1rem solid $line; }
-.grid { display: flex; flex-wrap: wrap; max-height: calc(100vh - 470rem); min-height: 150rem; overflow-y: auto; }
-.card { position: relative; width: 98rem; margin: 0 6rem 6rem 0; padding: 5rem; background: rgba(255, 255, 255, 0.06); border: 1rem solid $line; border-radius: 6rem; text-align: center; font-size: 11rem; }
-.thumb { width: 64rem; height: 56rem; display: block; margin: 0 auto 4rem; }
-.cardName { max-height: 28rem; overflow: hidden; line-height: 14rem; }
-.lvl { position: absolute; top: 4rem; left: 4rem; background: rgba(0, 0, 0, 0.6); border-radius: 3rem; padding: 0 4rem; font-size: 10rem; }
+.stepValue { display: flex; align-items: center; justify-content: center; min-width: 56rem; height: 26rem; text-align: center; background: rgba(0, 0, 0, 0.3); border-top: 1rem solid $line; border-bottom: 1rem solid $line; }
+.gridScroll { max-height: calc(70vh - 330rem); min-height: 150rem; }
+.grid { display: flex; flex-direction: row; flex-wrap: wrap; }
+.card { position: relative; width: 81rem; height: 135rem; margin: 0 6rem 6rem 0; padding: 6rem 4rem 4rem; background: rgba(110, 130, 150, 0.22); border-radius: 4rem; display: flex; flex-direction: column; align-items: center; }
+.card:hover { background: rgba(140, 165, 190, 0.35); }
+.thumb { width: 62rem; height: 62rem; flex: none; margin-bottom: 5rem; }
+.cardHead { font-size: 11rem; font-weight: bold; color: #93c5fd; margin-bottom: 2rem; }
+.cardName { width: 100%; max-height: 39rem; overflow: hidden; font-size: 10rem; line-height: 13rem; text-align: center; color: #f1f5f9; }
+.lvl { position: absolute; top: 4rem; left: 4rem; background: rgba(0, 0, 0, 0.55); border-radius: 3rem; padding: 0 4rem; font-size: 10rem; }
 .remove { position: absolute; top: 3rem; right: 3rem; width: 20rem; height: 20rem; padding: 0; border: none; border-radius: 4rem; background: rgba(0, 0, 0, 0.65); color: #fff; opacity: 0; line-height: 18rem; }
 .card:hover .remove { opacity: 1; }
 .remove:hover { background: #e5484d; }
+.dd { display: flex; flex-direction: column; }
+.ddToggle { display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 7rem 10rem; background: $soft; border: 1rem solid $line; border-radius: 4rem; color: #fff; }
+.ddLabel { flex: 1; text-align: left; }
+.ddList { max-height: 200rem; overflow-y: auto; margin-top: 2rem; border: 1rem solid $line; border-radius: 4rem; background: rgba(0, 0, 0, 0.35); }
+.confirm { display: flex; flex-direction: column; padding: 8rem; border: 1rem solid rgba(220, 60, 60, 0.6); border-radius: 4rem; background: rgba(220, 60, 60, 0.12); }
+.confirm > * { margin-bottom: 6rem; }
+.fieldLabel { font-size: 12rem; color: #aab4c3; margin-bottom: 3rem; }
+.inputBox { flex: none; height: 30rem; padding: 6rem 8rem; background: $soft; border: 1rem solid $line; border-radius: 4rem; color: #fff; }
 .slider { position: relative; flex: 1; height: 22rem; margin-right: 8rem; }
 .sliderTrack { position: absolute; left: 0; right: 0; top: 9rem; height: 4rem; background: $soft; border-radius: 2rem; }
 .sliderFill { height: 4rem; background: $accent; border-radius: 2rem; }
 .sliderThumb { position: absolute; top: 3rem; width: 14rem; height: 14rem; margin-left: -7rem; background: #fff; border-radius: 7rem; }
-.status { font-size: 12rem; color: #aab4c3; }
+.status { font-size: 12rem; color: #aab4c3; display: flex; flex-direction: row; flex-wrap: wrap; align-items: baseline; white-space: pre-wrap; }
 .status b { color: #fff; }
 .muted { color: #8b97a8; }
 .hint { color: #8b97a8; font-size: 12rem; }

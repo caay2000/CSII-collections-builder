@@ -80,13 +80,19 @@ namespace BuildingCollections.Core
             var rng = new Random(seed);
             var used = (bool[,])grid.Free.Clone();   // true = celda aún disponible
 
-            // 1) esquinas primero, para que el relleno del medio no las ocupe.
-            if (grid.RightCorner)
+            // 1) esquinas primero, para que el relleno del medio no las ocupe. Como el juego (ZoneSpawnSystem), el
+            //    acceso del edificio debe coincidir exactamente con las calles de la parcela: con calle a los dos lados
+            //    y un edificio "izquierda y derecha" que ocupe todo el ancho, ese; si no, uno por cada esquina.
+            if (grid.LeftCorner && grid.RightCorner && TryBoth(grid, used, corners, rng, result))
+            {
+                // relleno completo con un único edificio de dos esquinas
+            }
+            else if (grid.RightCorner)
             {
                 TryCorner(grid, used, corners, plain, CornerKind.Right, true, rng, result);
             }
 
-            if (grid.LeftCorner)
+            if (grid.LeftCorner && !(grid.RightCorner && result.Count == 1 && result[0].Building.LotWidth == grid.Width))
             {
                 TryCorner(grid, used, corners, plain, CornerKind.Left, false, rng, result);
             }
@@ -143,8 +149,8 @@ namespace BuildingCollections.Core
         static void TryCorner(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<BuildingInfo> plain,
             CornerKind side, bool atRight, Random rng, List<Placement> result)
         {
-            // Primero un esquinero que admita ese lado; si no hay, uno normal (decisión del spec).
-            var pool = corners.Where(b => (b.Corner & side) != 0).ToList();
+            // Primero un esquinero cuyo acceso lateral sea exactamente ese lado; si no hay, uno normal (decisión del spec).
+            var pool = corners.Where(b => (b.Corner & (CornerKind.Left | CornerKind.Right)) == side).ToList();
             bool isCorner = pool.Count > 0;
             if (!isCorner)
             {
@@ -170,6 +176,22 @@ namespace BuildingCollections.Core
             int px = atRight ? grid.Width - pick.LotWidth : 0;
             Occupy(used, px, 0, pick);
             result.Add(new Placement { X = px, Y = 0, Building = pick, IsCorner = isCorner });
+        }
+
+        /// <summary>Calle a izquierda y derecha: un edificio "izquierda y derecha" que llene exactamente el ancho.</summary>
+        static bool TryBoth(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> corners, Random rng, List<Placement> result)
+        {
+            var both = CornerKind.Left | CornerKind.Right;
+            var fitting = corners.Where(b => (b.Corner & both) == both && b.LotWidth == grid.Width && Fits(used, grid, 0, 0, b)).ToList();
+            if (fitting.Count == 0)
+            {
+                return false;
+            }
+
+            var pick = fitting[rng.Next(fitting.Count)];
+            Occupy(used, 0, 0, pick);
+            result.Add(new Placement { X = 0, Y = 0, Building = pick, IsCorner = true });
+            return true;
         }
 
         static bool Fits(bool[,] used, PlanGrid grid, int x, int y, BuildingInfo b)

@@ -109,7 +109,29 @@ namespace BuildingCollections
 
         static Dictionary<string, int> idCache;
 
-        /// <summary>Id de Find It de un prefab por nombre. La caché se rehace si el nombre no está (Find It indexa tarde).</summary>
+        /// <summary>Rehace la caché nombre → id de Find It (recorre todos sus prefabs: llamar una vez por operación).</summary>
+        public static void RefreshIds()
+        {
+            var cache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                if (IsAvailable)
+                {
+                    foreach (var kv in GetAllByName())
+                    {
+                        cache[kv.Key] = kv.Value.Id;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Mod.Log.Warn($"Find It: no se pudo leer la lista de prefabs: {e.Message}");
+            }
+
+            idCache = cache;
+        }
+
+        /// <summary>Id de Find It de un prefab por nombre. Si la caché no existe se crea; un nombre ausente no la rehace.</summary>
         public static bool TryGetId(string name, out int id)
         {
             id = 0;
@@ -118,9 +140,9 @@ namespace BuildingCollections
                 return false;
             }
 
-            if (idCache == null || !idCache.ContainsKey(name))
+            if (idCache == null)
             {
-                idCache = GetAllByName().ToDictionary(kv => kv.Key, kv => kv.Value.Id, StringComparer.OrdinalIgnoreCase);
+                RefreshIds();
             }
 
             return idCache.TryGetValue(name, out id);

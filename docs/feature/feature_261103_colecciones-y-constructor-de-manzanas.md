@@ -321,6 +321,45 @@ lado C# o del flujo de trabajo.
 - Queda para el arranque 2: el modo polígono (hoy usa la selección de manzana) y quitar las opciones
   temporales de `Settings.cs`.
 
+### Arranque 1 (2026-11-04, playset Development): resultados
+- **Arranque**: menú en 11 min (antes 26,7).
+  - Hay 4,3 min sin escribir en ningún log antes de registrar Paradox Mods, y 3,5 min tras cargar los prefabs.
+    En total el juego lee **137 GB** del disco (`.cache` ocupa 81 GB, con 948 paquetes descargados, aunque solo
+    10 estén activos).
+  - Hipótesis sin demostrar: el juego recorre los paquetes descargados, no los activos. Para comprobarlo hay que
+    arrancar con menos suscripciones.
+  - Los mods del playset cargan en menos de 2 s.
+- **Funciona en el juego**:
+  - Colecciones: crear, borrar, quitar edificios, "Remove shown" y Shift+clic.
+  - Builder: selección de manzana con resaltado, vista previa, New combination y Build.
+  - Protección contra `Condemned` sin Plop the Growables (21 de 21 en pie). Durante un instante se ve el icono de
+    abandono; con PtG no ocurre, porque sustituye `ZoneCheckSystem`.
+  - Recarga en caliente de la UI.
+- **Corregido después** (C#, pendiente del arranque 2):
+  - Selección por celdas visibles (`FloodByCells`, umbral 8 m + `BlockTouchTolerance`) y contorno real.
+  - Modo polígono.
+  - Celdas `Shared` aprovechadas, con huellas de lo planificado y 5 puntos de prueba por celda.
+  - Esquinas con acceso exacto, como `ZoneSpawnSystem`: un edificio "izquierda y derecha" solo cuando hay calle a
+    los dos lados y llena el ancho.
+  - Etiquetas de Find It en cola (`TagQueue`) y caché de ids una vez por operación: el borrado tardaba 10-20 s.
+  - Clonar colección y densidad de 10 en 10.
+  - Reactivar la herramienta al volver de otra (por ejemplo, tras construir una carretera).
+  - Un clic fuera de una celda de zona no selecciona nada (`ClickSnapDistance = -1.5`).
+- **UI** (ya desplegada en caliente):
+  - Tarjetas al estilo de Find It: tamaño y nivel en la primera línea y nombre legible debajo.
+  - Desplegable propio; el nativo salía blanco.
+  - Botones de colección apilados y etiquetas visibles en los campos (Gameface no pinta el `placeholder`).
+  - `Scrollable` de `cs2/ui` para que se vea la barra de scroll.
+  - Panel arrastrable, de ancho fijo (700) y con la pestaña Collections a como máximo el 70% de alto.
+  - Recuerda la última pestaña.
+- **`dev.json` del usuario**: ya existía con valores antiguos, que mandan sobre los del código. Se ha puesto a mano
+  `BlockTouchTolerance = 4` y `ClickSnapDistance = -1.5`.
+- **Pendiente**:
+  - Arranque 2, para probar todo lo de C#.
+  - Rediseño de la UI con Claude Design (el usuario lo propone para otro día; quizá Builder en dos columnas).
+  - Redimensionar el panel: descartado de momento.
+  - Arranque 3 con el playset completo (PtG, Extra Assets Importer, MapExt2).
+
 ## Plan de implementación (revisado en la sesión 3)
 Reglas de código: `docs/implementation_rules.md`. Referencias: `ZoneSpawnSystem` del juego (solo lectura) para
 colocar, LineTool-CS2 (Apache) para el ciclo de vista previa y aplicar, y Plop the Growables (Apache) para

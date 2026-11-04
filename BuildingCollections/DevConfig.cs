@@ -12,11 +12,17 @@ namespace BuildingCollections
     /// </summary>
     public sealed class DevConfig
     {
-        /// <summary>Distancia máxima (m) entre contornos para que dos bloques sean de la misma manzana.</summary>
-        public double BlockTouchTolerance = 2.0;
+        /// <summary>
+        /// Holgura (m) sobre los 8 m entre centros de celdas contiguas para que dos bloques sean de la misma manzana.
+        /// Debe ser menor que el ancho de la calle más estrecha (una calle en medio los separa 16 m o más).
+        /// </summary>
+        public double BlockTouchTolerance = 4.0;
 
-        /// <summary>Distancia máxima (m) del clic a un bloque si el clic no cae dentro de ninguno.</summary>
-        public double ClickSnapDistance = 6.0;
+        /// <summary>Margen (m) fuera de la celda en el que se acepta el clic. 0 = tiene que caer dentro de una celda.</summary>
+        public double ClickSnapDistance = 0;
+
+        /// <summary>Radio (m) alrededor del clic en el que se buscan bloques. Una manzana más grande queda cortada.</summary>
+        public double SearchRadius = 400.0;
 
         /// <summary>Intercambia izquierda y derecha al leer m_AccessType, por si el criterio del juego es el contrario.</summary>
         public bool SwapCornerSides = false;
