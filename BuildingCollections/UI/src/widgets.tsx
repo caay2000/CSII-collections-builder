@@ -77,9 +77,9 @@ export const Stepper = (p: { value: string; onDown: () => void; onUp: () => void
 );
 
 /** Fila con casilla a la derecha, alineada con el valor de los filtros. */
-export const CheckRow = (p: { label: string; checked: boolean; title?: string; onChange: (v: boolean) => void }) => (
+export const CheckRow = (p: { label: string; checked: boolean; title?: string; accent?: boolean; onChange: (v: boolean) => void }) => (
     <div className={styles.filter} title={p.title}>
-        <span className={styles.filterLabel}>{p.label}</span>
+        <span className={p.accent ? styles.filterLabelAnarchy : styles.filterLabel}>{p.label}</span>
         <button className={p.checked ? `${styles.check} ${styles.checkOn}` : styles.check} onClick={() => p.onChange(!p.checked)}>
             {p.checked && <img src={icon("check")} />}
         </button>

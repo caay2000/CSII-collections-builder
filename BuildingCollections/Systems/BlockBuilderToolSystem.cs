@@ -52,8 +52,15 @@ namespace BuildingCollections.Systems
             public int2 Max;
             public bool Corner;
 
+            /// <summary>Tira o bloque al que pertenece.</summary>
+            public SelectedBlock Owner;
+
+            /// <summary>Desplazamiento (m) a lo largo de la fachada, para cerrar el hueco con el edificio de al lado.</summary>
+            public float Shift;
+
             /// <summary>Planta de la decoración: se coloca en Pos / Rot, no en una parcela.</summary>
             public bool IsDecor;
+            public byte Age = (byte)Game.Tools.AgeMask.Mature;
             public float3 Pos;
             public quaternion Rot;
         }
@@ -110,6 +117,11 @@ namespace BuildingCollections.Systems
 
         /// <summary>Parcelas: edificios de la vista previa, o celdas frontales libres si aún no hay vista previa.</summary>
         public int Lots => Previewing ? preview.Count(p => !p.IsDecor) : freeFrontCells;
+
+        /// <summary>Vista previa: celdas a la calle ocupadas y las que había libres (para comparar con la densidad).</summary>
+        public int FrontFilled { get; private set; }
+
+        public int FrontTotal { get; private set; }
 
         /// <summary>Bloques de zona seleccionados.</summary>
         public int Blocks => selection.Count;
@@ -226,17 +238,19 @@ namespace BuildingCollections.Systems
             decorAreas = new List<List<Pt>>();
             decorClip = null;
             freeFrontCells = 0;
+            FrontFilled = FrontTotal = 0;
             definitionsDirty = true;
             Say("Selection cleared.");
         }
 
         /// <summary>Calcula una combinación nueva con la semilla dada y pide al juego la vista previa.</summary>
         public void GeneratePreview(IReadOnlyList<CatalogEntry> candidates, int density, int seed, bool leaveGaps,
-            IReadOnlyList<CatalogEntry> decor = null, int decorDensity = 50)
+            IReadOnlyList<CatalogEntry> decor = null, int decorDensity = 50, int ageMask = 4)
         {
             try
             {
                 preview.Clear();
+                FrontFilled = FrontTotal = 0;
                 definitionsDirty = true;
                 var cfg = DevConfig.Load();
                 var usable = candidates.Where(c => c.Info.Corner != CornerKind.None && c.Info.LotWidth > 0 && c.Info.LotDepth > 0).ToList();
@@ -253,8 +267,12 @@ namespace BuildingCollections.Systems
                 // de calles distintas; sin él, ninguno (0,05 m solo para que dos que se tocan no cuenten).
                 bool anarchy = AnarchyBridge.Enabled;
                 // 0 en las opciones = sin solape, igual que sin Anarchy (0,05 m de margen para que tocarse no cuente).
-                float overlap = anarchy ? math.clamp(Mod.Settings?.AnarchyOverlap ?? 0.5f, 0.05f, 2f) : 0.05f;
+                float overlap = anarchy ? math.clamp(Mod.Settings?.AnarchyOverlap ?? 0.5f, StrictOverlap, MaxOverlap) : StrictOverlap;
                 log.Append($"  solape admitido {overlap:F2} m{(anarchy ? " (Anarchy)" : string.Empty)}.\n");
+
+                // Lo que ya está construido no se pisa nunca, ni con Anarchy: se relee ahora (la selección puede ser de
+                // antes de un Build) y se tapan sus celdas sin margen de solape.
+                var existing = areaOutline != null ? BuildingFootprints(areaOutline) : new List<Quad>();
                 var footprints = new List<(Quad quad, SelectedBlock owner)>();
                 Quad Footprint(SelectedBlock s, Placement p)
                 {
@@ -283,6 +301,7 @@ namespace BuildingCollections.Systems
                         continue;
                     }
 
+                    MaskFootprints(grid, s.Block, s.Area, existing, StrictOverlap);
                     grids.Add((s, grid));
                 }
 
@@ -298,9 +317,15 @@ namespace BuildingCollections.Systems
                 }
 
                 // Pasada 2: relleno, respetando las esquinas propias y las huellas de los demás.
+                int frontTotal = 0;
                 foreach (var (s, grid) in grids)
                 {
                     int masked = MaskFootprints(grid, s.Block, s.Area, Others(s), overlap);
+                    for (int x = 0; x < grid.Width; x++)
+                    {
+                        frontTotal += grid.Free[x, 0] ? 1 : 0;
+                    }
+
                     var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++, leaveGaps, cornerPlans[s]);
                     footprints.RemoveAll(f => f.owner == s);
                     foreach (var p in plan)
@@ -316,11 +341,32 @@ namespace BuildingCollections.Systems
                             Min = min,
                             Max = max,
                             Corner = p.IsCorner,
+                            Owner = s,
                         });
                     }
 
                     log.AppendLine($"  {(s.Virtual != null ? "tira" : "bloque " + s.Entity.Index)}: rejilla {grid.Width}x{grid.Depth}, {grid.FreeCount()} libres ({masked} tapadas por otros bloques), esquinas L={grid.LeftCorner} R={grid.RightCorner} -> {string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [esquina]" : string.Empty)}"))}");
                 }
+
+                // Cada calle se rellena con edificios de 8 m en 8 m: al final suele quedar un trozo de celda hasta el
+                // esquinero de la calle de al lado. Con Anarchy se cierra ensanchando uno y apretando la cadena.
+                int justified = 0;
+                var gapRng = new System.Random(seed ^ 0x2545f491);
+                foreach (var (s, grid) in grids)
+                {
+                    justified += CloseEndGaps(s, existing, overlap, plain, prefabs, gapRng, log);
+                }
+
+                if (justified > 0)
+                {
+                    footprints = preview.Where(p => !p.IsDecor).Select(p => (LotQuad(p, p.Shift, 0f), p.Owner)).ToList();
+                }
+
+                // Fachada ocupada: celdas a la calle con edificio, de las que había libres (cada ensanche suma una
+                // celda que antes no contaba, un trozo junto al de al lado).
+                FrontTotal = frontTotal + justified;
+                FrontFilled = CountFront();
+                log.AppendLine($"  fachada: {FrontFilled} de {FrontTotal} celdas a la calle ocupadas.");
 
                 // Decoración del espacio sobrante (patio, huecos): plantas de la colección elegida, lejos de la acera y de
                 // los edificios (los planificados y los que ya hay), y sin pisar árboles existentes.
@@ -329,30 +375,45 @@ namespace BuildingCollections.Systems
                 if (decor != null && decor.Count > 0 && areaOutline != null && decorAreas.Count > 0)
                 {
                     var blockers = footprints.Select(f => f.quad).ToList();
-                    blockers.AddRange(BuildingFootprints(areaOutline));
+                    blockers.AddRange(existing);
                     var existingTrees = TreePoints(areaOutline);
+
+                    // El juego comprueba el choque con la copa del árbol: cada planta necesita su radio libre hasta
+                    // el edificio más cercano, o salen en rojo los dos.
+                    var radii = decor.Select(d => PlantRadius(d.Prefab)).ToList();
+                    const double PlantMargin = 0.5;
                     var spots = new List<Pt>();
                     foreach (var area in decorAreas)
                     {
-                        spots.AddRange(Decor.Scatter(area, blockers, existingTrees, Decor.SpacingFor(decorDensity), 2.5, 2.0, seed + spots.Count, clip: decorClip));
+                        spots.AddRange(Decor.Scatter(area, blockers, existingTrees, Decor.SpacingFor(decorDensity), 2.5,
+                            radii.Min() + PlantMargin, seed + spots.Count, clip: decorClip));
                     }
 
                     var rng = new System.Random(seed ^ 0x5bd1e995);
+                    int tooBig = 0;
                     foreach (var q in spots)
                     {
-                        var pick = decor[rng.Next(decor.Count)];
+                        int k = Decor.PickFitting(q, blockers, radii, PlantMargin, rng);
+                        if (k < 0)
+                        {
+                            tooBig++;
+                            continue;
+                        }
+
+                        var pick = decor[k];
                         preview.Add(new Planned
                         {
                             Name = pick.Info.PrefabName,
                             Prefab = pick.Prefab,
                             IsDecor = true,
+                            Age = (byte)((ageMask & 15) == 0 ? 4 : ageMask & 15),
                             Pos = new float3((float)q.X, 0, (float)q.Y),
                             Rot = quaternion.RotateY((float)(rng.NextDouble() * Math.PI * 2)),
                         });
                     }
 
-                    plants = spots.Count;
-                    log.AppendLine($"  decoración: {plants} plantas de {decor.Count} tipos, densidad {decorDensity}%.");
+                    plants = spots.Count - tooBig;
+                    log.AppendLine($"  decoración: {plants} plantas de {decor.Count} tipos, densidad {decorDensity}%; {tooBig} puntos sin sitio para ninguna; radios {radii.Min():F1}-{radii.Max():F1} m.");
                 }
 
                 Mod.Log.Info(log.ToString().TrimEnd());
@@ -480,6 +541,7 @@ namespace BuildingCollections.Systems
             {
                 // Se quitan de la vista previa los que el juego marca en rojo (chocan con algo) y se pide otro Build.
                 int removed = RemoveErrored();
+                FrontFilled = CountFront();
                 Mod.Log.Info($"[build] Cancelado: hay entidades con error ({m_ErrorQuery.CalculateEntityCount()}); quitados {removed} de la vista previa.");
                 Say(removed > 0 ? $"Removed {removed} items that collide with something (red). Press Build again." : "Some items in the preview have errors (red). Try Reshuffle.");
                 definitionsDirty = removed > 0;
@@ -495,8 +557,11 @@ namespace BuildingCollections.Systems
 
             guard.Track(temps, cfg.ReportAfterFrames);
             Mod.Log.Info($"[build] Aplicando: {preview.Count} planificados, {temps.Count} edificios temporales.");
-            Say($"Built {temps.Count} buildings.");
-            preview.Clear();
+            // La zona construida deja de estar seleccionada: así no queda duda de qué está hecho, y una vista previa
+            // nueva no se calcula sobre la rejilla de antes del Build.
+            int filled = CountFront(), total = FrontTotal;
+            ClearSelection();
+            Say(total > 0 ? $"Built {temps.Count} buildings: {filled} of {total} street-front cells filled ({100 * filled / total}%)." : $"Built {temps.Count} buildings.");
             definitionsDirty = true; // el siguiente fotograma borra las definiciones ya aplicadas
             applyMode = ApplyMode.Apply;
             return inputDeps;
@@ -530,21 +595,46 @@ namespace BuildingCollections.Systems
                 }
             }
 
-            int before = preview.Count;
-            preview.RemoveAll(p =>
+            // Un árbol que toca un edificio deja en rojo a los dos: se quita el árbol y el edificio se queda. Un
+            // edificio en rojo solo se quita si no tiene ninguna planta cerca que lo explique (si el error era otro,
+            // seguirá en rojo en el siguiente Build y se quitará entonces).
+            var drop = new HashSet<Planned>();
+            int buildingsKept = 0;
+            var plants = preview.Where(p => p.IsDecor).ToList();
+            foreach (var p in plants)
             {
-                if (p.IsDecor)
+                if (bad.Any(b => math.distance(b.xz, p.Pos.xz) < 1f))
                 {
-                    return bad.Any(b => math.distance(b.xz, p.Pos.xz) < 1f);
+                    drop.Add(p);
+                }
+            }
+
+            foreach (var p in preview.Where(p => !p.IsDecor))
+            {
+                var lot = LotQuad(p, p.Shift, 0f);
+                if (!bad.Any(b => lot.Contains(new Pt(b.x, b.z))))
+                {
+                    continue;
                 }
 
-                var lot = ToQuad(ZoneUtils.CalculateCorners(p.Block, new ValidArea { m_Area = new int4(p.Min.x, p.Max.x, p.Min.y, p.Max.y) }));
-                return bad.Any(b => lot.Contains(new Pt(b.x, b.z)));
-            });
-            int removed = before - preview.Count;
+                var culprits = plants.Where(t => lot.DistanceTo(new Pt(t.Pos.x, t.Pos.z)) < PlantRadius(t.Prefab) + 1.0).ToList();
+                if (culprits.Count > 0)
+                {
+                    drop.UnionWith(culprits);
+                    buildingsKept++;
+                }
+                else
+                {
+                    drop.Add(p);
+                }
+            }
+
+            preview.RemoveAll(drop.Contains);
+            int removed = drop.Count;
             if (removed > 0)
             {
-                Mod.Log.Info($"[build] Quitados por error: {removed} ({string.Join(", ", bad.Take(8).Select(b => $"({b.x:F0},{b.z:F0})"))}).");
+                Mod.Log.Info($"[build] Quitados por error: {drop.Count(p => !p.IsDecor)} edificios y {drop.Count(p => p.IsDecor)} plantas; " +
+                    $"{buildingsKept} edificios en rojo se quedan al quitar las plantas que los tocaban ({string.Join(", ", bad.Take(8).Select(b => $"({b.x:F0},{b.z:F0})"))}).");
             }
 
             return removed;
@@ -578,7 +668,8 @@ namespace BuildingCollections.Systems
                 }
                 else
                 {
-                    t = new Transform(ZoneUtils.GetPosition(p.Block, p.Min, p.Max), ZoneUtils.GetRotation(p.Block));
+                    var axis = FrontAxis(p.Block) * p.Shift;
+                    t = new Transform(ZoneUtils.GetPosition(p.Block, p.Min, p.Max) + new float3(axis.x, 0, axis.y), ZoneUtils.GetRotation(p.Block));
                     float3 front = BuildingUtils.CalculateFrontPosition(t, p.Max.y - p.Min.y);
                     y = TerrainUtils.SampleHeight(ref heights, front);
                 }
@@ -598,7 +689,7 @@ namespace BuildingCollections.Systems
                 handle = CreateDefinitions(
                     p.Prefab, Entity.Null, Entity.Null, Entity.Null, Entity.Null, Entity.Null, city.defaultTheme, points,
                     default(NativeReference<AttachmentData>), false, city.leftHandTraffic, false, false,
-                    0f, 0f, 0f, 0f, 0f, RandomSeed.Next(), Snap.None, Game.Tools.AgeMask.Mature, false, default(PlacementOverrides), handle);
+                    0f, 0f, 0f, 0f, 0f, RandomSeed.Next(), Snap.None, (Game.Tools.AgeMask)p.Age, false, default(PlacementOverrides), handle);
                 points.Dispose(handle);
             }
 
@@ -1228,6 +1319,23 @@ namespace BuildingCollections.Systems
             return pts;
         }
 
+        /// <summary>
+        /// Radio en planta con el que el juego comprueba si una planta choca (la copa, no el tronco): si es circular,
+        /// la mitad de su tamaño; si no, lo más lejos que llega su caja desde el centro.
+        /// </summary>
+        double PlantRadius(Entity prefab)
+        {
+            if (!EntityManager.HasComponent<ObjectGeometryData>(prefab))
+            {
+                return 2.0;
+            }
+
+            var g = EntityManager.GetComponentData<ObjectGeometryData>(prefab);
+            float box = math.cmax(math.max(math.abs(g.m_Bounds.min.xz), math.abs(g.m_Bounds.max.xz)));
+            float r = (g.m_Flags & Game.Objects.GeometryFlags.Circular) != 0 ? math.max(g.m_Size.x * 0.5f, box) : box;
+            return math.clamp(r, 0.5f, 10f);
+        }
+
         /// <summary>Huellas de los edificios existentes dentro de la caja del contorno.</summary>
         List<Quad> BuildingFootprints(List<Pt> outline)
         {
@@ -1448,6 +1556,202 @@ namespace BuildingCollections.Systems
         }
 
         /// <summary>Marca como ocupadas las celdas cuyo centro cae dentro de un edificio ya planificado en otro bloque.</summary>
+        /// <summary>Margen sin solape: dos edificios que solo se tocan no cuentan como solapados.</summary>
+        const float StrictOverlap = 0.05f;
+
+        /// <summary>Tope del solape configurable con Anarchy.</summary>
+        public const float MaxOverlap = 3.5f; // por debajo de media celda (4 m): una celda metida más desaparece
+
+        /// <summary>Eje de la fachada (dirección de x creciente en las celdas del bloque).</summary>
+        static float2 FrontAxis(Block b) =>
+            math.normalizesafe(ZoneUtils.GetCellPosition(b, new int2(1, 0)).xz - ZoneUtils.GetCellPosition(b, new int2(0, 0)).xz);
+
+        /// <summary>Celdas a la calle ocupadas por los edificios de la vista previa.</summary>
+        int CountFront() => preview.Where(p => !p.IsDecor && p.Owner != null && p.Min.y == p.Owner.Area.z).Sum(p => p.Max.x - p.Min.x);
+
+        /// <summary>Huella en el suelo de un edificio planificado, corrida "shift" m por la fachada y metida "inset" m.</summary>
+        static Quad LotQuad(Planned p, float shift, float inset) => LotQuad(p.Block, p.Min, p.Max, shift, inset);
+
+        static Quad LotQuad(Block block, int2 min, int2 max, float shift, float inset)
+        {
+            var q = ZoneUtils.CalculateCorners(block, new ValidArea { m_Area = new int4(min.x, max.x, min.y, max.y) });
+            var axis = FrontAxis(block);
+            var depth = new float2(-axis.y, axis.x);
+            var off = axis * shift;
+            var c = (q.a + q.b + q.c + q.d) * 0.25f;
+            Pt P(float2 v)
+            {
+                var d = v - c;
+                float da = math.dot(d, axis), db = math.dot(d, depth);
+                var w = c + off + axis * (da - math.sign(da) * inset) + depth * (db - math.sign(db) * inset);
+                return new Pt(w.x, w.y);
+            }
+
+            return new Quad(P(q.a), P(q.b), P(q.c), P(q.d));
+        }
+
+        /// <summary>
+        /// Junta el final de cada calle con lo que tiene delante (el esquinero de la calle de al lado, o un edificio
+        /// que ya estaba). Las parcelas van de 8 en 8 m y la calle casi nunca mide un múltiplo de 8: queda un trozo
+        /// de celda. Sin solape no hay forma de llenarlo (se deja un único hueco, nunca rendijas repartidas). Con
+        /// Anarchy, se ensancha una celda un edificio de la cadena del final y la cadena se aprieta: el solape que
+        /// falta se reparte entre todas sus juntas, cada una por debajo del máximo elegido.
+        /// </summary>
+        int CloseEndGaps(SelectedBlock s, List<Quad> existing, float overlap, List<BuildingInfo> plain,
+            Dictionary<string, Entity> prefabs, System.Random rng, StringBuilder log)
+        {
+            if (s.Virtual == null || areaOutline == null)
+            {
+                return 0;
+            }
+
+            var mine = preview.Where(p => !p.IsDecor && p.Owner == s).OrderBy(p => p.Min.x).ToList();
+            if (mine.Count == 0)
+            {
+                return 0;
+            }
+
+            int widened = 0;
+            widened += CloseGap(s, mine, existing, overlap, plain, prefabs, rng, +1, log);
+            widened += CloseGap(s, mine, existing, overlap, plain, prefabs, rng, -1, log);
+            return widened;
+        }
+
+        int CloseGap(SelectedBlock s, List<Planned> mine, List<Quad> existing, float overlap, List<BuildingInfo> plain,
+            Dictionary<string, Entity> prefabs, System.Random rng, int dir, StringBuilder log)
+        {
+            // Cadena desde el extremo: edificios seguidos (sin hueco entre ellos), sin el esquinero (va pegado al bordillo).
+            var chain = new List<Planned>();
+            for (int i = dir > 0 ? mine.Count - 1 : 0; i >= 0 && i < mine.Count; i -= dir)
+            {
+                var p = mine[i];
+                // Ya tocado desde el otro extremo (una calle sin esquinero puede tener una sola cadena): no se toca.
+                if (p.Corner || p.Shift != 0 || (chain.Count > 0 && (dir > 0 ? p.Max.x != chain[chain.Count - 1].Min.x : p.Min.x != chain[chain.Count - 1].Max.x)))
+                {
+                    break;
+                }
+
+                chain.Add(p);
+            }
+
+            if (chain.Count == 0)
+            {
+                return 0;
+            }
+
+            var otherQuads = preview.Where(p => !p.IsDecor && !chain.Contains(p)).Select(p => LotQuad(p, p.Shift, 0f)).ToList();
+            var axis = FrontAxis(s.Block);
+
+            // Un edificio (en min-max, corrido "shift") cabe: no se sale de la manzana por delante en el sentido en que
+            // avanza, y no pisa a nadie más de "inset" m. Con lo ya construido igual, a propósito: solo se aprieta con
+            // Anarchy, y la junta del final puede pisar lo que había lo mismo que las demás (perJoint, bajo el máximo).
+            bool Fits(int2 min, int2 max, float shift, float inset)
+            {
+                var strict = LotQuad(s.Block, min, max, shift, inset);
+                if (existing.Any(e => Quad.Distance(e, strict) <= 0) || otherQuads.Any(o => Quad.Distance(o, strict) <= 0))
+                {
+                    return false;
+                }
+
+                var probe = LotQuad(s.Block, min, max, shift, 0.5f);
+                var center = new Pt(probe.P.Average(v => v.X), probe.P.Average(v => v.Y));
+                foreach (var c in probe.P)
+                {
+                    var d = c - center;
+                    if ((d.X * axis.x + d.Y * axis.y) * dir > 0 && !Polygon.Contains(areaOutline, c))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            // Hueco: hasta dónde llegaría el del extremo sin tocar nada.
+            var end = chain[0];
+            const float Step = 0.1f;
+            float gap = 0;
+            while (gap + Step < ZoneUtils.CELL_SIZE && Fits(end.Min, end.Max, dir * (gap + Step), StrictOverlap))
+            {
+                gap += Step;
+            }
+
+            // Menos de 0,3 m: ya está pegado. Una celda entera libre: es un hueco que ha decidido la densidad (o
+            // "dejar huecos"), no el sobrante de la calle; no se toca.
+            if (gap < 0.3f || gap >= ZoneUtils.CELL_SIZE - Step - 1e-3f)
+            {
+                return 0;
+            }
+
+            float missing = ZoneUtils.CELL_SIZE - gap;
+            int joints = chain.Count + 1;
+            float perJoint = missing / joints;
+            if (overlap <= StrictOverlap || perJoint > overlap)
+            {
+                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")}: cerrarlo pide {perJoint:F2} m de solape en cada una de {joints} juntas{(overlap <= StrictOverlap ? " (sin solape)" : $" (máximo {overlap:F1} m)")}; se deja.");
+                return 0;
+            }
+
+            // Se prueba a ensanchar una celda cada edificio de la cadena (al azar), con uno de la colección del mismo
+            // fondo (o, si no hay, menos profundo), y a apretar la cadena: el k-ésimo desde el extremo retrocede
+            // missing * (n - k) / (n + 1), así cada junta (también con lo de delante y lo de detrás) pisa perJoint.
+            int n = chain.Count;
+            foreach (int k in Enumerable.Range(0, n).OrderBy(_ => rng.Next()))
+            {
+                var cur = chain[k];
+                int w = cur.Max.x - cur.Min.x, dep = cur.Max.y - cur.Min.y;
+                // Nunca más profundo: por detrás podría salirse de una manzana estrecha.
+                var options = plain.Where(b => b.LotWidth == w + 1 && b.LotDepth <= dep && prefabs.ContainsKey(b.PrefabName))
+                    .OrderBy(b => b.LotDepth == dep ? 0 : 1).ThenBy(_ => rng.Next()).ToList();
+                foreach (var b in options)
+                {
+                    var mins = new int2[n];
+                    var maxs = new int2[n];
+                    var shifts = new float[n];
+                    for (int j = 0; j < n; j++)
+                    {
+                        var p = chain[j];
+                        int move = j < k ? dir : 0; // los que están entre el ensanchado y el extremo se corren una celda
+                        mins[j] = new int2(p.Min.x + move, p.Min.y);
+                        maxs[j] = new int2(p.Max.x + move, p.Max.y);
+                        if (j == k)
+                        {
+                            if (dir > 0) { maxs[j] = new int2(p.Max.x + 1, p.Min.y + b.LotDepth); }
+                            else { mins[j] = new int2(p.Min.x - 1, p.Min.y); maxs[j] = new int2(p.Max.x, p.Min.y + b.LotDepth); }
+                        }
+
+                        shifts[j] = -dir * missing * (n - j) / joints;
+                    }
+
+                    bool ok = true;
+                    for (int j = 0; j < n && ok; j++)
+                    {
+                        ok = Fits(mins[j], maxs[j], shifts[j], perJoint + StrictOverlap);
+                    }
+
+                    if (!ok)
+                    {
+                        continue;
+                    }
+
+                    log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} cerrado: {cur.Name} -> {b.PrefabName} ({w}->{w + 1} de ancho), {n} edificios apretados, {perJoint:F2} m de solape por junta.");
+                    cur.Name = b.PrefabName;
+                    cur.Prefab = prefabs[b.PrefabName];
+                    for (int j = 0; j < n; j++)
+                    {
+                        chain[j].Min = mins[j];
+                        chain[j].Max = maxs[j];
+                        chain[j].Shift = shifts[j];
+                    }
+
+                    return 1;
+                }
+            }
+
+            log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")}: ningún edificio de la colección una celda más ancho cabe; se deja.");
+            return 0;
+        }
+
         static int MaskFootprints(PlanGrid grid, Block block, int4 area, List<Quad> footprints, float overlap)
         {
             if (footprints.Count == 0)

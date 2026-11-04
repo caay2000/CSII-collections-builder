@@ -17,11 +17,23 @@ export interface BuilderDto {
     /** Árboles del juego base en el espacio sobrante. */
     trees: boolean;
     decorDensity: number;
+    /** Solape máximo (m) entre edificios nuevos con Anarchy, de 0 a 3,5. */
+    overlap: number;
+    /** Set de Tree Controller ("" = todos los árboles del juego base). */
+    treeSet: string;
+    /** Edades de los árboles: bits 1 joven, 2 adolescente, 4 adulto, 8 viejo. */
+    treeAges: number;
 }
-export interface PlanDto { areaSelected: boolean; previewing: boolean; lots: number; blocks: number; anarchy: boolean }
+export interface PlanDto {
+    areaSelected: boolean; previewing: boolean; lots: number; blocks: number; anarchy: boolean; anarchyAvailable: boolean;
+    /** Vista previa: celdas a la calle ocupadas / libres. */
+    filled: number; front: number;
+    /** Sets de Tree Controller con árboles (vacío si el mod no está). */
+    treeSets: string[];
+}
 
 export const DEFAULT_BUILDER: BuilderDto = {
-    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, trees: false, decorDensity: 50,
+    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, trees: false, decorDensity: 50, overlap: 0.5, treeSet: "", treeAges: 4,
 };
 
 const panelOpen$ = bindValue<boolean>(G, "panelOpen", false);
@@ -48,7 +60,7 @@ export const useStatus = () => useValue(status$);
 export const useCollections = (): CollectionDto[] => parse(useValue(collections$), []);
 export const useBuildings = (): BuildingDto[] => parse(useValue(buildings$), []);
 export const useBuilder = (): BuilderDto => ({ ...DEFAULT_BUILDER, ...parse<Partial<BuilderDto>>(useValue(builder$), {}) });
-export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, anarchy: false, ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
+export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, anarchy: false, anarchyAvailable: false, filled: 0, front: 0, treeSets: [], ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
 
 export const actions = {
     setPanelOpen: (v: boolean) => trigger(G, "setPanelOpen", v),
@@ -65,4 +77,6 @@ export const actions = {
     generatePreview: () => trigger(G, "generatePreview"),
     clearSelection: () => trigger(G, "clearSelection"),
     build: () => trigger(G, "build"),
+    /** Interruptor del propio Anarchy (su TriggerBinding "Anarchy.AnarchyToggled"): el mismo que su botón. */
+    toggleAnarchy: () => trigger("Anarchy", "AnarchyToggled"),
 };

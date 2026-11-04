@@ -83,6 +83,32 @@ namespace BuildingCollections.Core
             return result;
         }
 
+        /// <summary>
+        /// Elige qué planta va en un punto: una al azar entre las que caben sin tocar ningún edificio (su radio más
+        /// <paramref name="margin"/> no llega a la huella más cercana). Un árbol que toca un edificio sale en rojo y,
+        /// con él, el edificio: mejor un árbol más pequeño o ninguno. Devuelve el índice en <paramref name="radii"/>,
+        /// o -1 si no cabe ninguna.
+        /// </summary>
+        public static int PickFitting(Pt q, IReadOnlyList<Quad> blockers, IReadOnlyList<double> radii, double margin, Random rng)
+        {
+            double room = double.MaxValue;
+            foreach (var b in blockers)
+            {
+                room = Math.Min(room, b.DistanceTo(q));
+            }
+
+            var fits = new List<int>();
+            for (int i = 0; i < radii.Count; i++)
+            {
+                if (radii[i] + margin <= room)
+                {
+                    fits.Add(i);
+                }
+            }
+
+            return fits.Count == 0 ? -1 : fits[rng.Next(fits.Count)];
+        }
+
         /// <summary>Separación de la rejilla para una densidad (10 a 100 %): 5 m al 100 %, más ancha cuanto menor.</summary>
         public static double SpacingFor(int density) => 5.0 / Math.Sqrt(Math.Max(10, Math.Min(100, density)) / 100.0);
 

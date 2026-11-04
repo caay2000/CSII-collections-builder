@@ -70,8 +70,6 @@ export const CollectionsTab = () => {
                     </div>
                 )}
                 <div className={styles.toolbar}>
-                    <IconButton name="add-all" title={findIt ? "Add all items shown in Find It" : "Find It not detected"}
-                        disabled={!current || !findIt} onClick={() => actions.addAllFromFindIt()} />
                     <IconButton name="copy" title="Duplicate collection" disabled={!current} onClick={() => { setEditing(""); actions.clone(); }} />
                     <IconButton name="rename" title="Rename collection" disabled={!current} onClick={() => setEditing("rename")} />
                     <IconButton name="trash" title="Delete collection" className={styles.iconBtnDanger} disabled={!current} onClick={() => setEditing("delete")} />
@@ -130,9 +128,16 @@ export const CollectionsTab = () => {
                     </div>
                 ) : (
                     <div className={styles.footer}>
-                        <div className={styles.footerHint}>
-                            <span className={styles.kbd}>Shift</span>
-                            <span>+ click in Find It adds to this collection</span>
+                        <div className={styles.footerAdd}>
+                            <button className={styles.addAll} disabled={!current || !findIt}
+                                title={findIt ? "Adds every building Find It is showing now (its current search and filters)" : "Find It not detected"}
+                                onClick={() => actions.addAllFromFindIt()}>
+                                <img src={icon("add-all")} />Add all shown in Find It
+                            </button>
+                            <div className={styles.footerHint}>
+                                <span className={styles.kbd}>Shift</span>
+                                <span>+ click in Find It adds one building</span>
+                            </div>
                         </div>
                         <button className={styles.textDanger} disabled={shown.length === 0}
                             onClick={() => filtered ? actions.removeBuildings(shown.map((b) => b.id)) : setEditing("removeAll")}>

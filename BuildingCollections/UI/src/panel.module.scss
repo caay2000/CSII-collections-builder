@@ -59,7 +59,9 @@ button:disabled { opacity: 0.4; }
 .iconBtnSmall { width: 28rem; height: 28rem; }
 .iconBtnSmall img { width: 16rem; height: 16rem; }
 
-.inlineInput { height: 32rem; padding: 0 8rem; border: 1rem solid $primary; border-radius: 3rem; background-color: rgba(0, 0, 0, 0.35); color: #fff; font-size: 13rem; }
+// Gameface no centra en vertical el texto de un <input>: altura de línea igual a la altura interior, y el mismo
+// sangrado que los nombres de la lista para que el texto quede en la misma columna.
+.inlineInput { width: 100%; height: 36rem; line-height: 34rem; padding: 0 10rem; margin: 0; border: 1rem solid $primary; border-radius: 3rem; background-color: rgba(0, 0, 0, 0.35); color: #fff; font-size: 14rem; font-weight: 600; }
 
 .confirm { display: flex; flex-direction: column; padding: 8rem; border: 1rem solid rgba(255, 138, 128, 0.5); border-radius: 4rem; background-color: rgba(220, 60, 60, 0.12); font-size: 13rem; }
 .confirmBtns { display: flex; flex-direction: row; margin-top: 6rem; }
@@ -118,7 +120,11 @@ button:disabled { opacity: 0.4; }
 .empty { padding: 12rem 4rem; color: $text2; font-size: 13rem; }
 
 .footer { display: flex; flex-direction: row; align-items: center; padding-top: 8rem; border-top: 1rem solid $line; margin-bottom: 0; }
-.footerHint { flex: 1; display: flex; flex-direction: row; align-items: center; font-size: 13rem; color: $text2; }
+.footerAdd { flex: 1; display: flex; flex-direction: column; align-items: flex-start; }
+.addAll { height: 30rem; padding: 0 10rem; margin-bottom: 6rem; display: flex; flex-direction: row; align-items: center; border: none; border-radius: 3rem; background-color: rgba(255, 255, 255, 0.1); color: #fff; font-size: 13rem; font-weight: bold; }
+.addAll:hover { background-color: rgba(255, 255, 255, 0.18); }
+.addAll img { width: 16rem; height: 16rem; margin-right: 6rem; }
+.footerHint { display: flex; flex-direction: row; align-items: center; font-size: 13rem; color: $text2; }
 .kbd { padding: 1rem 6rem; margin-right: 6rem; border: 1rem solid rgba(255, 255, 255, 0.3); border-radius: 3rem; font-size: 12rem; font-weight: bold; color: #fff; }
 .textDanger { height: 30rem; padding: 0 12rem; border: none; background-color: transparent; color: $danger; font-size: 13rem; font-weight: bold; }
 .textDanger:hover { background-color: rgba(255, 138, 128, 0.12); }
@@ -161,4 +167,8 @@ button:disabled { opacity: 0.4; }
 .ddCount { margin: 0 8rem; font-size: 13rem; color: $text2; }
 .ddToggle img { width: 14rem; height: 14rem; }
 .ddList { position: absolute; left: 0; top: 38rem; width: 220rem; max-height: 240rem; overflow-y: auto; z-index: 10; padding: 2rem; border: 1rem solid $panelLine; border-radius: 3rem; background-color: rgba(14, 20, 32, 0.98); }
-.anarchyHint { margin: -4rem 16rem 10rem; font-size: 12rem; color: #fbbf77; }
+.chip, .chipOn { width: 30rem; height: 30rem; margin-left: 4rem; padding: 4rem; flex: none; display: flex; align-items: center; justify-content: center; border: none; border-radius: 3rem; background-color: $dark; color: #fff; font-size: 14rem; font-weight: 800; }
+.chip:hover { background-color: rgba(255, 255, 255, 0.18); }
+.chipOn { @include gradient; }
+.chip img, .chipOn img { width: 20rem; height: 20rem; }
+.filterLabelAnarchy { flex: 1; font-size: 14rem; font-weight: bold; color: #fbbf77; }

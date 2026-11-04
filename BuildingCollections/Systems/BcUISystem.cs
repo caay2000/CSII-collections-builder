@@ -57,7 +57,16 @@ namespace BuildingCollections.Systems
             public bool leaveGaps;
             public bool trees;
             public int decorDensity = 50;
+
+            /// <summary>Solape máximo (m) entre edificios nuevos con Anarchy.</summary>
+            public float overlap = 0.5f;
+
+            /// <summary>Set de Tree Controller ("" = todos los árboles del juego base) y edades (bits de AgeMask).</summary>
+            public string treeSet = string.Empty;
+            public int treeAges = 4;
         }
+
+        string treeSetsJson = "[]";
 
         protected override void OnCreate()
         {
@@ -204,7 +213,7 @@ namespace BuildingCollections.Systems
 
                 toolActive.Update(toolSystem.activeTool == builder);
 
-                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)}}}");
+                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)},\"anarchyAvailable\":{Js(AnarchyBridge.Available)},\"filled\":{builder.FrontFilled},\"front\":{builder.FrontTotal},\"treeSets\":{treeSetsJson}}}");
 
                 if (builder.MessageSerial != messageSerial)
                 {
@@ -217,6 +226,8 @@ namespace BuildingCollections.Systems
                 if (anarchyTick++ % 120 == 0)
                 {
                     AnarchyBridge.TryRegister(World, builder.toolID);
+                    var sets = TreeControllerBridge.Sets(World);
+                    treeSetsJson = JsonConvert.SerializeObject(TreeControllerBridge.SetIds.Where(sets.ContainsKey).ToArray());
                 }
 
                 if (panelOpen.value && (++frame % 120 == 0 || catalogVersion < 0))
@@ -433,6 +444,9 @@ namespace BuildingCollections.Systems
                 leaveGaps = s.LeaveGaps,
                 trees = s.Trees,
                 decorDensity = s.DecorDensity,
+                overlap = s.AnarchyOverlap,
+                treeSet = s.TreeSet ?? string.Empty,
+                treeAges = s.TreeAges,
             }));
         }
 
@@ -453,6 +467,9 @@ namespace BuildingCollections.Systems
             s.LeaveGaps = f.leaveGaps;
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
+            s.AnarchyOverlap = (float)Math.Round(Math.Max(0f, Math.Min(BlockBuilderToolSystem.MaxOverlap, f.overlap)) * 2, MidpointRounding.AwayFromZero) / 2f;
+            s.TreeSet = TreeControllerBridge.SetIds.Contains(f.treeSet) ? f.treeSet : string.Empty;
+            s.TreeAges = (f.treeAges & 15) == 0 ? 4 : f.treeAges & 15;
             builder.SetMode(s.Mode);
             saveCountdown = 60;
             PushBuilder();
@@ -476,9 +493,30 @@ namespace BuildingCollections.Systems
                 .OrderBy(e => e.Info.PrefabName, StringComparer.Ordinal)
                 .ToList();
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
-            // Decoración: árboles del juego base en el espacio sobrante.
-            var decor = s.Trees ? PrefabCatalog.Trees.ToList() : new List<CatalogEntry>();
-            builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps, decor, s.DecorDensity);
+            // Decoración: árboles del juego base en el espacio sobrante, o los de un set de Tree Controller.
+            var decor = s.Trees ? TreeDecor(s.TreeSet) : new List<CatalogEntry>();
+            builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps, decor, s.DecorDensity, s.TreeAges);
+        }
+
+        List<CatalogEntry> TreeDecor(string set)
+        {
+            if (string.IsNullOrEmpty(set) || !TreeControllerBridge.Sets(World).TryGetValue(set, out var names))
+            {
+                return PrefabCatalog.Trees.ToList();
+            }
+
+            var prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            var result = new List<CatalogEntry>();
+            foreach (var name in names.Distinct())
+            {
+                if (prefabSystem.TryGetPrefab(new PrefabID("StaticObjectPrefab", name), out PrefabBase prefab) && prefab != null)
+                {
+                    result.Add(new CatalogEntry { Prefab = prefabSystem.GetEntity(prefab), IsDecor = true, Info = new BuildingInfo { PrefabName = name } });
+                }
+            }
+
+            Mod.Log.Info($"[árboles] set {set} de Tree Controller: {result.Count} de {names.Length} prefabs encontrados.");
+            return result.Count > 0 ? result : PrefabCatalog.Trees.ToList();
         }
 
         static CompareOp ToOp(int v) => v >= 0 && v <= 3 ? (CompareOp)v : CompareOp.Equal;

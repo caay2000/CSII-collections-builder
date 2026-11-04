@@ -166,7 +166,10 @@ namespace BuildingCollections.Core
 
             if (obstacles.Count > 0)
             {
-                var cell = new Quad(corners[0], corners[1], corners[2], corners[3]);
+                // Contra lo ya construido, la celda casi entera (no la metida 0,5 m): nunca se pisa un edificio existente.
+                double e = Cell / 2 - 0.05;
+                var cell = new Quad(LotStrip.Add(c, s.T, -e, s.N, -e), LotStrip.Add(c, s.T, e, s.N, -e),
+                    LotStrip.Add(c, s.T, e, s.N, e), LotStrip.Add(c, s.T, -e, s.N, e));
                 foreach (var o in obstacles)
                 {
                     if (o.MaxX >= cell.MinX && o.MinX <= cell.MaxX && o.MaxY >= cell.MinY && o.MinY <= cell.MaxY && Quad.Distance(o, cell) <= 0)

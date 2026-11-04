@@ -20,6 +20,25 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void PickFitting_only_picks_plants_whose_crown_clears_the_buildings()
+        {
+            var house = new Quad(new Pt(0, 0), new Pt(10, 0), new Pt(10, 10), new Pt(0, 10));
+            var radii = new List<double> { 1.0, 5.0 };
+            var rng = new System.Random(1);
+
+            // A 3 m del edificio solo cabe el pequeño; a 8 m cualquiera; pegado, ninguno.
+            for (int i = 0; i < 20; i++)
+            {
+                Assert.Equal(0, Decor.PickFitting(new Pt(13, 5), new[] { house }, radii, 0.5, rng));
+            }
+
+            var far = Enumerable.Range(0, 50).Select(_ => Decor.PickFitting(new Pt(18, 5), new[] { house }, radii, 0.5, rng)).ToList();
+            Assert.Contains(0, far);
+            Assert.Contains(1, far);
+            Assert.Equal(-1, Decor.PickFitting(new Pt(10.5, 5), new[] { house }, radii, 0.5, rng));
+        }
+
+        [Fact]
         public void Lower_density_means_fewer_points()
         {
             var outline = Rect(100, 100);
