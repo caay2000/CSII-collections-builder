@@ -51,6 +51,7 @@ namespace BuildingCollections.Systems
         readonly List<Planned> preview = new List<Planned>();
         EntityQuery blockQuery;
         EntityQuery tempBuildingQuery;
+        EntityQuery definitionQuery;
         OverlayRenderSystem overlay;
         CityConfigurationSystem city;
         BuiltGuardSystem guard;
@@ -85,6 +86,7 @@ namespace BuildingCollections.Systems
                 ComponentType.ReadOnly<Building>(),
                 ComponentType.Exclude<Deleted>(),
                 ComponentType.Exclude<Owner>());
+            definitionQuery = GetDefinitionQuery();
             overlay = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
             city = World.GetOrCreateSystemManaged<CityConfigurationSystem>();
             guard = World.GetOrCreateSystemManaged<BuiltGuardSystem>();
@@ -106,6 +108,11 @@ namespace BuildingCollections.Systems
             base.OnStartRunning();
             requireZones = true;
             applyMode = ApplyMode.None;
+
+            // Como las herramientas del juego: un primer fotograma Clear borra restos Temp de otras herramientas, y
+            // no se ejecuta un Build pedido mientras la herramienta no estaba activa.
+            buildRequested = false;
+            definitionsDirty = true;
 
             // UpdateActions() de la clase base es private protected: un mod externo no puede sobrescribirlo,
             // así que hay que habilitar las acciones de entrada a mano o nunca llegan clic ni clic derecho.
@@ -155,7 +162,20 @@ namespace BuildingCollections.Systems
                         continue;
                     }
 
+                    // El bloque puede haber cambiado desde la selección (obras en la calle): se relee.
+                    s.Block = EntityManager.GetComponentData<Block>(s.Entity);
+                    s.Area = EntityManager.GetComponentData<ValidArea>(s.Entity).m_Area;
+                    if (s.Area.y <= s.Area.x || s.Area.w <= s.Area.z)
+                    {
+                        continue;
+                    }
+
                     var cells = EntityManager.GetBuffer<Cell>(s.Entity, true);
+                    if (cells.Length < s.Block.m_Size.x * s.Block.m_Size.y)
+                    {
+                        continue;
+                    }
+
                     var grid = BuildGrid(s.Block, s.Area, cells);
                     var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++);
                     foreach (var p in plan)
@@ -261,6 +281,8 @@ namespace BuildingCollections.Systems
 
         JobHandle CreatePreviewDefinitions(JobHandle inputDeps)
         {
+            // Como ObjectToolSystem.UpdateDefinitions: se borran las definiciones anteriores antes de crear las nuevas.
+            inputDeps = DestroyDefinitions(definitionQuery, m_ToolOutputBarrier, inputDeps);
             if (preview.Count == 0)
             {
                 return inputDeps;
@@ -318,6 +340,13 @@ namespace BuildingCollections.Systems
             {
                 foreach (var e in entities)
                 {
+                    // Prefiltro barato: solo bloques cerca del clic (una manzana enorme sigue cabiendo en el radio).
+                    var pos = EntityManager.GetComponentData<Block>(e).m_Position;
+                    if (math.distancesq(pos.xz, point.xz) > cfg.SearchRadius * cfg.SearchRadius)
+                    {
+                        continue;
+                    }
+
                     var area = EntityManager.GetComponentData<ValidArea>(e).m_Area;
                     if (area.y <= area.x || area.w <= area.z)
                     {
@@ -437,9 +466,9 @@ namespace BuildingCollections.Systems
                 }
             }
 
-            var road = CellFlags.RoadLeft | CellFlags.RoadRight;
-            grid.LeftCorner = (cells[area.z * size + area.x].m_State & road) != 0;
-            grid.RightCorner = (cells[area.z * size + area.y - 1].m_State & road) != 0;
+            // Igual que LotSizeJobs: esquina izquierda = RoadLeft en la primera celda, derecha = RoadRight en la última.
+            grid.LeftCorner = (cells[area.z * size + area.x].m_State & CellFlags.RoadLeft) != 0;
+            grid.RightCorner = (cells[area.z * size + area.y - 1].m_State & CellFlags.RoadRight) != 0;
             return grid;
         }
 

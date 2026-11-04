@@ -18,6 +18,9 @@ namespace BuildingCollections
         /// <summary>Distancia máxima (m) del clic a un bloque si el clic no cae dentro de ninguno.</summary>
         public double ClickSnapDistance = 6.0;
 
+        /// <summary>Radio (m) alrededor del clic en el que se buscan bloques. Una manzana más grande queda cortada.</summary>
+        public double SearchRadius = 400.0;
+
         /// <summary>Intercambia izquierda y derecha al leer m_AccessType, por si el criterio del juego es el contrario.</summary>
         public bool SwapCornerSides = false;
 

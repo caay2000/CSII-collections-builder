@@ -39,6 +39,7 @@ namespace BuildingCollections.Systems
         int messageSerial;
         int frame;
         int seedCounter;
+        int saveCountdown = -1;
 
         sealed class BuilderDto
         {
@@ -64,10 +65,11 @@ namespace BuildingCollections.Systems
             AddBinding(builderBinding = new ValueBinding<string>(Group, "builder", "{}"));
             AddBinding(plan = new ValueBinding<string>(Group, "plan", "{}"));
 
-            AddBinding(new TriggerBinding<bool>(Group, "setPanelOpen", SetPanelOpen));
+            AddBinding(new TriggerBinding<bool>(Group, "setPanelOpen", v => Safe(() => SetPanelOpen(v))));
             AddBinding(new TriggerBinding<string>(Group, "select", name => Safe(() => SetSelected(name))));
             AddBinding(new TriggerBinding<string>(Group, "create", name => Safe(() =>
             {
+                name = (name ?? string.Empty).Trim();
                 var error = CollectionService.Create(name);
                 Report(error);
                 if (error == null)
@@ -86,9 +88,9 @@ namespace BuildingCollections.Systems
                 Report(CollectionService.RemoveBuildings(selected.value, JsonConvert.DeserializeObject<List<string>>(json) ?? new List<string>())))));
             AddBinding(new TriggerBinding<string>(Group, "setBuilder", json => Safe(() => ApplyBuilder(json))));
             AddBinding(new TriggerBinding<bool>(Group, "setToolActive", v => Safe(() => SetToolActive(v))));
-            AddBinding(new TriggerBinding(Group, "generatePreview", () => Safe(GeneratePreview)));
+            AddBinding(new TriggerBinding(Group, "generatePreview", () => Safe(() => IfToolActive(GeneratePreview))));
             AddBinding(new TriggerBinding(Group, "clearSelection", () => Safe(builder.ClearSelection)));
-            AddBinding(new TriggerBinding(Group, "build", () => Safe(builder.RequestBuild)));
+            AddBinding(new TriggerBinding(Group, "build", () => Safe(() => IfToolActive(builder.RequestBuild))));
 
             toolSystem.EventPrefabChanged += OnPrefabChanged;
 
@@ -132,6 +134,12 @@ namespace BuildingCollections.Systems
                         catalogVersion = PrefabCatalog.Version;
                         buildingsDirty = true;
                     }
+                }
+
+                // Guardado de ajustes agrupado: el deslizador manda muchos cambios seguidos.
+                if (saveCountdown >= 0 && --saveCountdown < 0)
+                {
+                    Mod.Settings?.ApplyAndSave();
                 }
 
                 if (collectionsDirty)
@@ -215,6 +223,18 @@ namespace BuildingCollections.Systems
                 // Solo se quita si es la nuestra: si el usuario cogió otra herramienta, se respeta.
                 toolSystem.activeTool = defaultTool;
             }
+        }
+
+        /// <summary>Vista previa y Build solo con la herramienta activa (si no, el juego no tiene dónde aplicarlos).</summary>
+        void IfToolActive(Action action)
+        {
+            if (toolSystem.activeTool != builder)
+            {
+                status.Update("Open the Builder tab to use the block tool.");
+                return;
+            }
+
+            action();
         }
 
         void SetSelected(string name)
@@ -317,7 +337,7 @@ namespace BuildingCollections.Systems
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
             s.Density = Clamp(f.density, 1, 100);
-            s.ApplyAndSave();
+            saveCountdown = 60;
             PushBuilder();
         }
 
