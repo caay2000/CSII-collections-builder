@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BuildingCollections.Core
 {
@@ -35,7 +36,7 @@ namespace BuildingCollections.Core
         public const double Cell = 8.0;
 
         public static List<LotStrip> Build(IReadOnlyList<List<Pt>> sides, IReadOnlyList<Quad> obstacles, int maxDepth = 6,
-            double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 1.5)
+            double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 0.75)
         {
             var strips = new List<LotStrip>();
             var outline = Outline(sides);
@@ -46,7 +47,10 @@ namespace BuildingCollections.Core
 
             foreach (var side in Merge(sides, mergeAngleDeg, cornerAngleDeg))
             {
-                var chunks = Chunks(side.Points, straightTolerance);
+                // Tramos de al menos una celda: un tramo corto al principio no debe quitarle la esquina al siguiente.
+                var chunks = Chunks(side.Points, straightTolerance)
+                    .Where(c => (int)Math.Floor((Dist(side.Points[c.from], side.Points[c.to]) + 0.5) / Cell) >= 1)
+                    .ToList();
                 for (int k = 0; k < chunks.Count; k++)
                 {
                     var a = side.Points[chunks[k].from];
@@ -54,10 +58,6 @@ namespace BuildingCollections.Core
                     var d = b - a;
                     double len = Math.Sqrt(Pt.Dot(d, d));
                     int width = (int)Math.Floor((len + 0.5) / Cell);
-                    if (width < 1)
-                    {
-                        continue;
-                    }
 
                     var t = new Pt(d.X / len, d.Y / len);
                     bool first = k == 0, last = k == chunks.Count - 1;

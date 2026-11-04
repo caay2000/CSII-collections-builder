@@ -205,9 +205,18 @@ namespace BuildingCollections.Systems
 
                 // Huellas (en el suelo) de lo ya planificado: las celdas compartidas entre bloques que queden libres
                 // detrás de un edificio poco profundo se aprovechan desde la otra calle, sin solaparse.
-                var footprints = new List<Quad>();
+                var footprints = new List<(Quad quad, SelectedBlock owner)>();
+                Quad Footprint(SelectedBlock s, Placement p)
+                {
+                    var min = new int2(s.Area.x + p.X, s.Area.z + p.Y);
+                    var max = min + new int2(p.Building.LotWidth, p.Building.LotDepth);
+                    return ToQuad(ZoneUtils.CalculateCorners(s.Block, new ValidArea { m_Area = new int4(min.x, max.x, min.y, max.y) }));
+                }
+
+                List<Quad> Others(SelectedBlock s) => footprints.Where(f => f.owner != s).Select(f => f.quad).ToList();
 
                 // Primero los bloques con más celdas propias (no compartidas): las calles largas antes que las laterales.
+                var grids = new List<(SelectedBlock s, PlanGrid grid)>();
                 foreach (var s in selection.OrderByDescending(OwnedCells).ToList())
                 {
                     PlanGrid grid;
@@ -224,13 +233,31 @@ namespace BuildingCollections.Systems
                         continue;
                     }
 
-                    int masked = MaskFootprints(grid, s.Block, s.Area, footprints);
-                    var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++, leaveGaps);
+                    grids.Add((s, grid));
+                }
+
+                // Pasada 1: cada bloque reserva sus esquinas antes de que nadie rellene. Dos bloques que se tocan en una
+                // esquina se la disputan; sin esto, el relleno del primero le quitaba la esquina al segundo.
+                var cornerPlans = new Dictionary<SelectedBlock, List<Placement>>();
+                foreach (var (s, grid) in grids)
+                {
+                    MaskFootprints(grid, s.Block, s.Area, Others(s));
+                    var cp = GridPlanner.PlanCorners(grid, plain, corners, seed + 7919 * index++);
+                    cornerPlans[s] = cp;
+                    footprints.AddRange(cp.Select(p => (Footprint(s, p), s)));
+                }
+
+                // Pasada 2: relleno, respetando las esquinas propias y las huellas de los demás.
+                foreach (var (s, grid) in grids)
+                {
+                    int masked = MaskFootprints(grid, s.Block, s.Area, Others(s));
+                    var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++, leaveGaps, cornerPlans[s]);
+                    footprints.RemoveAll(f => f.owner == s);
                     foreach (var p in plan)
                     {
                         var min = new int2(s.Area.x + p.X, s.Area.z + p.Y);
                         var max = min + new int2(p.Building.LotWidth, p.Building.LotDepth);
-                        footprints.Add(ToQuad(ZoneUtils.CalculateCorners(s.Block, new ValidArea { m_Area = new int4(min.x, max.x, min.y, max.y) })));
+                        footprints.Add((Footprint(s, p), s));
                         preview.Add(new Planned
                         {
                             Name = p.Building.PrefabName,
@@ -802,14 +829,12 @@ namespace BuildingCollections.Systems
                 return pts;
             }
 
+            // Tres muestras por lado: con una sola, en tramos cortos o recorridos dos veces (calle sin salida) caía
+            // justo en el borde del contorno y el resultado era al azar. Solo se cambia de lado si el otro gana claro.
+            int Inside(List<Pt> pts) => new[] { pts.Count / 4, pts.Count / 2, 3 * pts.Count / 4 }.Count(i => Polygon.Contains(centerFace, pts[i]));
             var assumed = Side(forward, forward);
             var other = Side(!forward, forward);
-            if (Polygon.Contains(centerFace, assumed[assumed.Count / 2]))
-            {
-                return assumed;
-            }
-
-            return Polygon.Contains(centerFace, other[other.Count / 2]) ? other : assumed;
+            return Inside(assumed) < 2 && Inside(other) >= 2 ? other : assumed;
         }
 
         static List<Pt> Sample(Bezier4x3 c)
@@ -829,15 +854,18 @@ namespace BuildingCollections.Systems
         /// <summary>Huellas de los edificios existentes dentro de la caja del contorno.</summary>
         List<Quad> BuildingFootprints(List<Pt> outline)
         {
-            double minX = outline.Min(p => p.X) - 20, maxX = outline.Max(p => p.X) + 20;
-            double minZ = outline.Min(p => p.Y) - 20, maxZ = outline.Max(p => p.Y) + 20;
+            // Se filtra por la caja de la huella, no por el centro: un edificio grande puede tener el centro lejos y
+            // aun así meterse en la manzana.
+            double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
+            double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
+            const double Reach = 300; // ningún edificio tiene el centro más lejos que esto de su borde
             var result = new List<Quad>();
             using (var entities = buildingQuery.ToEntityArray(Allocator.Temp))
             {
                 foreach (var e in entities)
                 {
                     var tr = EntityManager.GetComponentData<Transform>(e);
-                    if (tr.m_Position.x < minX || tr.m_Position.x > maxX || tr.m_Position.z < minZ || tr.m_Position.z > maxZ)
+                    if (tr.m_Position.x < minX - Reach || tr.m_Position.x > maxX + Reach || tr.m_Position.z < minZ - Reach || tr.m_Position.z > maxZ + Reach)
                     {
                         continue;
                     }
@@ -854,7 +882,11 @@ namespace BuildingCollections.Systems
                     var b = P(bounds.max.x, bounds.min.z);
                     var c = P(bounds.max.x, bounds.max.z);
                     var d = P(bounds.min.x, bounds.max.z);
-                    result.Add(new Quad(new Pt(a.x, a.z), new Pt(b.x, b.z), new Pt(c.x, c.z), new Pt(d.x, d.z)));
+                    var q = new Quad(new Pt(a.x, a.z), new Pt(b.x, b.z), new Pt(c.x, c.z), new Pt(d.x, d.z));
+                    if (q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
+                    {
+                        result.Add(q);
+                    }
                 }
             }
 

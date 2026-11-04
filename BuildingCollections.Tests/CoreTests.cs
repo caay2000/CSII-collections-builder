@@ -173,6 +173,18 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void Corners_planned_first_are_kept_by_the_fill()
+        {
+            var g = PlanGrid.AllFree(10, 3, true, true);
+            var cp = GridPlanner.PlanCorners(g, Plain, Corners, 2);
+            Assert.Contains(cp, p => p.IsCorner && p.X == 0);
+            var plan = GridPlanner.Plan(g, Plain, Corners, 100, 2, false, cp);
+            AssertNoOverlapAndInside(g, plan);
+            Assert.All(cp, c => Assert.Contains(c, plan));
+            Assert.Equal(10, plan.Sum(p => p.Building.LotWidth));
+        }
+
+        [Fact]
         public void Zero_density_places_nothing() =>
             Assert.Empty(GridPlanner.Plan(PlanGrid.AllFree(10, 3, true, true), Plain, Corners, 0, 1));
 

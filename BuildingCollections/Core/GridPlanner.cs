@@ -69,7 +69,8 @@ namespace BuildingCollections.Core
         /// de la fachada libre (fila frontal) que se cubre. Sin <paramref name="leaveGaps"/>, el relleno cubre el
         /// máximo de fachada posible con los anchos disponibles. El resultado depende solo de las entradas y de la semilla.
         /// </summary>
-        public static List<Placement> Plan(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, int density, int seed, bool leaveGaps = false)
+        public static List<Placement> Plan(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, int density, int seed,
+            bool leaveGaps = false, IReadOnlyList<Placement> preplaced = null)
         {
             var result = new List<Placement>();
             if (grid.Width <= 0 || grid.Depth <= 0 || density <= 0)
@@ -81,21 +82,19 @@ namespace BuildingCollections.Core
             var rng = new Random(seed);
             var used = (bool[,])grid.Free.Clone();   // true = celda aún disponible
 
-            // 1) esquinas primero, para que el relleno del medio no las ocupe. Como el juego (ZoneSpawnSystem), el
-            //    acceso del edificio debe coincidir exactamente con las calles de la parcela: con calle a los dos lados
-            //    y un edificio "izquierda y derecha" que ocupe todo el ancho, ese; si no, uno por cada esquina.
-            if (grid.LeftCorner && grid.RightCorner && TryBoth(grid, used, corners, rng, result))
+            // 1) esquinas primero, para que el relleno del medio no las ocupe. Si ya vienen decididas (una primera
+            //    pasada que reparte las esquinas entre tiras que se tocan), se respetan.
+            if (preplaced != null)
             {
-                // relleno completo con un único edificio de dos esquinas
+                foreach (var p in preplaced)
+                {
+                    Occupy(used, p.X, p.Y, p.Building);
+                    result.Add(p);
+                }
             }
-            else if (grid.RightCorner)
+            else
             {
-                TryCorner(grid, used, corners, plain, CornerKind.Right, true, rng, result);
-            }
-
-            if (grid.LeftCorner && !(grid.RightCorner && result.Count == 1 && result[0].Building.LotWidth == grid.Width))
-            {
-                TryCorner(grid, used, corners, plain, CornerKind.Left, false, rng, result);
+                Corners(grid, used, plain, corners, rng, result);
             }
 
             // 2) relleno del medio. Sin huecos: en cada tramo libre de la fila frontal se elige al azar una de las
@@ -128,6 +127,45 @@ namespace BuildingCollections.Core
             }
 
             return result.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
+        }
+
+        /// <summary>
+        /// Solo las esquinas, sobre la rejilla tal como está. Sirve para una primera pasada en la que todas las tiras
+        /// reservan sus esquinas antes de rellenar ninguna: dos tiras que se tocan en una esquina se la disputan, y
+        /// así el relleno de una no le quita la esquina a la otra.
+        /// </summary>
+        public static List<Placement> PlanCorners(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, int seed)
+        {
+            var result = new List<Placement>();
+            if (grid.Width > 0 && grid.Depth > 0)
+            {
+                Corners(grid, (bool[,])grid.Free.Clone(), plain, corners, new Random(seed), result);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Como el juego (ZoneSpawnSystem), el acceso del edificio debe coincidir exactamente con las calles de la
+        /// parcela: con calle a los dos lados y un edificio "izquierda y derecha" que ocupe todo el ancho, ese; si no,
+        /// uno por cada esquina.
+        /// </summary>
+        static void Corners(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, Random rng, List<Placement> result)
+        {
+            if (grid.LeftCorner && grid.RightCorner && TryBoth(grid, used, corners, rng, result))
+            {
+                return; // relleno completo con un único edificio de dos esquinas
+            }
+
+            if (grid.RightCorner)
+            {
+                TryCorner(grid, used, corners, plain, CornerKind.Right, true, rng, result);
+            }
+
+            if (grid.LeftCorner)
+            {
+                TryCorner(grid, used, corners, plain, CornerKind.Left, false, rng, result);
+            }
         }
 
         static int FrontFree(PlanGrid grid)
