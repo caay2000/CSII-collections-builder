@@ -457,8 +457,11 @@ namespace BuildingCollections.Systems
 
             if (cfg.RequireNoErrors && !GetAllowApply())
             {
-                Mod.Log.Info($"[build] Cancelado: hay entidades con error ({m_ErrorQuery.CalculateEntityCount()}).");
-                Say("Some buildings in the preview have errors (red). Try a new combination.");
+                // Se quitan de la vista previa los que el juego marca en rojo (chocan con algo) y se pide otro Build.
+                int removed = RemoveErrored();
+                Mod.Log.Info($"[build] Cancelado: hay entidades con error ({m_ErrorQuery.CalculateEntityCount()}); quitados {removed} de la vista previa.");
+                Say(removed > 0 ? $"Removed {removed} items that collide with something (red). Press Build again." : "Some items in the preview have errors (red). Try Reshuffle.");
+                definitionsDirty = removed > 0;
                 applyMode = ApplyMode.None;
                 return inputDeps;
             }
@@ -476,6 +479,36 @@ namespace BuildingCollections.Systems
             definitionsDirty = true; // el siguiente fotograma borra las definiciones ya aplicadas
             applyMode = ApplyMode.Apply;
             return inputDeps;
+        }
+
+        /// <summary>Quita de la vista previa lo que está junto a una entidad con error. Devuelve cuántos.</summary>
+        int RemoveErrored()
+        {
+            var bad = new List<float3>();
+            using (var errors = m_ErrorQuery.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var e in errors)
+                {
+                    if (EntityManager.HasComponent<Transform>(e))
+                    {
+                        bad.Add(EntityManager.GetComponentData<Transform>(e).m_Position);
+                    }
+                }
+            }
+
+            int before = preview.Count;
+            preview.RemoveAll(p =>
+            {
+                var pos = p.IsDecor ? p.Pos : ZoneUtils.GetPosition(p.Block, p.Min, p.Max);
+                return bad.Any(b => math.distance(b.xz, pos.xz) < 2f);
+            });
+            int removed = before - preview.Count;
+            if (removed > 0)
+            {
+                Mod.Log.Info($"[build] Quitados por error: {removed} ({string.Join(", ", bad.Take(8).Select(b => $"({b.x:F0},{b.z:F0})"))}).");
+            }
+
+            return removed;
         }
 
         JobHandle CreatePreviewDefinitions(JobHandle inputDeps)
@@ -697,6 +730,13 @@ namespace BuildingCollections.Systems
             var verts = polygon.Select(p => new Pt(p.x, p.z)).ToList();
             CurbSnap.Sides(verts, polyCurb, polyArc, curbs, HugTolerance, out var sides, out var frontage);
 
+            // Todas las manzanas de calles que caen dentro del polígono, cada una con sus parcelas por la acera y
+            // recortadas por el polígono: así un polígono sobre varias manzanas usa también las calles de dentro.
+            if (cfg.UseVirtualLots && SelectFacesInPolygon(VirtualLots.Outline(sides), $"polígono de {polygon.Count} vértices"))
+            {
+                return;
+            }
+
             // Lados pegados a una calle: parcelas propias mirando a ella, como en el modo bloque.
             if (cfg.UseVirtualLots && frontage.Any(f => f) &&
                 SelectVirtualSides(sides, frontage, $"polígono de {polygon.Count} vértices ({frontage.Count(f => f)} lados con calle)"))
@@ -845,8 +885,22 @@ namespace BuildingCollections.Systems
         List<Pt> TraceRoadFace(float2 point, double radius, out int count, out List<(Entity edge, bool forward)> path)
         {
             path = null;
-            var edges = new List<RoadEdge>();
-            var owners = new List<Entity>();
+            ReadRoadGraph(point, radius, out var edges, out var owners);
+            count = edges.Count;
+            var face = RoadFace.Trace(edges, new Pt(point.x, point.y), out var steps);
+            if (face != null)
+            {
+                path = steps.Select(st => (owners[st.edge], st.forward)).ToList();
+            }
+
+            return face;
+        }
+
+        /// <summary>Calles a nivel del suelo cerca de un punto, como grafo (polilíneas por el eje entre nodos).</summary>
+        void ReadRoadGraph(float2 point, double radius, out List<RoadEdge> edges, out List<Entity> owners)
+        {
+            edges = new List<RoadEdge>();
+            owners = new List<Entity>();
             var nodes = new Dictionary<Entity, int>();
             int Id(Entity n)
             {
@@ -896,15 +950,6 @@ namespace BuildingCollections.Systems
                     owners.Add(e);
                 }
             }
-
-            count = edges.Count;
-            var face = RoadFace.Trace(edges, new Pt(point.x, point.y), out var steps);
-            if (face != null)
-            {
-                path = steps.Select(st => (owners[st.edge], st.forward)).ToList();
-            }
-
-            return face;
         }
 
         /// <summary>
@@ -937,6 +982,67 @@ namespace BuildingCollections.Systems
 
             var obstacles = BuildingFootprints(outline);
             var strips = VirtualLots.Build(sides, obstacles, frontage: frontage);
+            return SelectStrips(strips, outline, $"{description}: {sides.Count} aceras, {obstacles.Count} edificios existentes");
+        }
+
+        /// <summary>
+        /// Busca las manzanas de calles dentro del polígono (probando puntos en rejilla) y genera sus parcelas
+        /// recortadas por el polígono.
+        /// </summary>
+        bool SelectFacesInPolygon(List<Pt> clip, string description)
+        {
+            if (clip.Count < 3)
+            {
+                return false;
+            }
+
+            double minX = clip.Min(p => p.X), maxX = clip.Max(p => p.X), minZ = clip.Min(p => p.Y), maxZ = clip.Max(p => p.Y);
+            var center = new float2((float)((minX + maxX) / 2), (float)((minZ + maxZ) / 2));
+            double radius = Math.Sqrt((maxX - minX) * (maxX - minX) + (maxZ - minZ) * (maxZ - minZ)) / 2 + 600;
+            ReadRoadGraph(center, radius, out var edges, out var owners);
+            var faces = new List<List<Pt>>();
+            var strips = new List<LotStrip>();
+            var obstacles = BuildingFootprints(clip);
+            double step = Math.Max(12, Math.Sqrt((maxX - minX) * (maxZ - minZ) / 3000));
+            int sideCount = 0;
+            for (double z = minZ + step / 2; z < maxZ && faces.Count < 60; z += step)
+            {
+                for (double x = minX + step / 2; x < maxX && faces.Count < 60; x += step)
+                {
+                    var q = new Pt(x, z);
+                    if (!Polygon.Contains(clip, q) || faces.Any(f => Polygon.Contains(f, q)))
+                    {
+                        continue;
+                    }
+
+                    var face = RoadFace.Trace(edges, q, out var steps);
+                    if (face == null)
+                    {
+                        continue;
+                    }
+
+                    faces.Add(face);
+                    var sides = new List<List<Pt>>();
+                    foreach (var (edge, forward) in steps)
+                    {
+                        var side = SidewalkSide(owners[edge], forward, face);
+                        if (side != null && side.Count >= 2)
+                        {
+                            sides.Add(side);
+                        }
+                    }
+
+                    sideCount += sides.Count;
+                    strips.AddRange(VirtualLots.Build(sides, obstacles, clip: clip));
+                }
+            }
+
+            return faces.Count > 0 && SelectStrips(strips, clip, $"{description}: {faces.Count} manzanas, {sideCount} aceras, {obstacles.Count} edificios existentes");
+        }
+
+        /// <summary>Convierte las tiras en bloques equivalentes a los del juego y las deja seleccionadas.</summary>
+        bool SelectStrips(List<LotStrip> strips, List<Pt> outline, string description)
+        {
             var chosen = new List<SelectedBlock>();
             var heights = m_TerrainSystem.GetHeightData();
             foreach (var st in strips)
@@ -973,7 +1079,7 @@ namespace BuildingCollections.Systems
             definitionsDirty = true;
             SetArea(outline);
             freeFrontCells = 0;
-            var log = new StringBuilder($"[selección] {description}: {sides.Count} aceras, {strips.Count} tiras, {obstacles.Count} edificios existentes.\n");
+            var log = new StringBuilder($"[selección] {description}, {strips.Count} tiras.\n");
             foreach (var s in chosen)
             {
                 for (int x = 0; x < s.Virtual.Width; x++)
@@ -1263,9 +1369,13 @@ namespace BuildingCollections.Systems
                 return 0;
             }
 
+            // Solape real entre la celda (metida 0,25 m, para que dos edificios que solo se tocan no cuenten) y cada
+            // huella. Antes se probaban el centro y las esquinas metidas 1 m: entre rejillas que no coinciden (dos
+            // calles que se cruzan, con el sobrante de una tira en la esquina) se colaban solapes pequeños, y el juego
+            // marcaba en rojo los dos edificios.
             int masked = 0;
-            float2 r = MathUtils.Right(block.m_Direction) * (ZoneUtils.CELL_SIZE * 0.5f - 1f);
-            float2 f = block.m_Direction * (ZoneUtils.CELL_SIZE * 0.5f - 1f);
+            float2 r = MathUtils.Right(block.m_Direction) * (ZoneUtils.CELL_SIZE * 0.5f - 0.25f);
+            float2 f = block.m_Direction * (ZoneUtils.CELL_SIZE * 0.5f - 0.25f);
             for (int y = 0; y < grid.Depth; y++)
             {
                 for (int x = 0; x < grid.Width; x++)
@@ -1275,29 +1385,17 @@ namespace BuildingCollections.Systems
                         continue;
                     }
 
-                    // Centro y esquinas (metidas 1 m) de la celda: así también se tapa una celda de una rejilla girada
-                    // cuyo centro cae justo fuera del edificio pero cuyo cuerpo lo pisa.
                     float2 c = ZoneUtils.GetCellPosition(block, new int2(area.x + x, area.z + y)).xz;
-                    var probes = new[] { c, c + r + f, c + r - f, c - r + f, c - r - f };
-                    bool hit = false;
+                    Pt P(float2 v) => new Pt(v.x, v.y);
+                    var cell = new Quad(P(c + r + f), P(c - r + f), P(c - r - f), P(c + r - f));
                     foreach (var fp in footprints)
                     {
-                        foreach (var q in probes)
+                        if (fp.MaxX >= cell.MinX && fp.MinX <= cell.MaxX && fp.MaxY >= cell.MinY && fp.MinY <= cell.MaxY && Quad.Distance(fp, cell) <= 0)
                         {
-                            if (fp.Contains(new Pt(q.x, q.y)))
-                            {
-                                hit = true;
-                                break;
-                            }
+                            grid.Free[x, y] = false;
+                            masked++;
+                            break;
                         }
-
-                        if (hit) break;
-                    }
-
-                    if (hit)
-                    {
-                        grid.Free[x, y] = false;
-                        masked++;
                     }
                 }
             }

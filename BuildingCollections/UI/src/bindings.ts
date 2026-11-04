@@ -16,14 +16,14 @@ export interface BuilderDto {
     levelOp: number; levelValue: number;
     density: number;
     leaveGaps: boolean;
-    /** Colección cuyas plantas decoran el espacio sobrante ("" = sin decoración). */
-    decor: string;
+    /** Árboles del juego base en el espacio sobrante. */
+    trees: boolean;
     decorDensity: number;
 }
 export interface PlanDto { areaSelected: boolean; previewing: boolean; lots: number; blocks: number }
 
 export const DEFAULT_BUILDER: BuilderDto = {
-    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, decor: "", decorDensity: 50,
+    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100, leaveGaps: false, trees: false, decorDensity: 50,
 };
 
 const panelOpen$ = bindValue<boolean>(G, "panelOpen", false);

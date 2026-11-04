@@ -63,22 +63,20 @@ export const BuilderTab = () => {
                 </div>
             </div>
 
-            <div className={styles.sec}>
-                <span className={styles.lbl}>Decor</span>
-                <CollectionPicker items={collections} selected={b.decor} noneLabel="No decor" onSelect={(n) => set({ decor: n })} />
-            </div>
-            {collections.some((c) => c.name === b.decor) && (
-                <div className={styles.builderFilters}>
-                    <div className={styles.filterBox}>
-                        <div className={styles.filter} title="Trees and plants from this collection fill the leftover space (courtyards, gaps). Add them with Shift+click in Find It.">
-                            <span className={styles.filterLabel}>Decor density</span>
+            <div className={styles.builderFilters}>
+                <div className={styles.filterBox}>
+                    <CheckRow label="Trees in leftover space" checked={b.trees} onChange={(v) => set({ trees: v })}
+                        title="Base-game trees fill the leftover space (courtyards, gaps), away from sidewalks and buildings." />
+                    {b.trees && (
+                        <div className={styles.filter}>
+                            <span className={styles.filterLabel}>Tree density</span>
                             <Stepper value={`${b.decorDensity}%`}
                                 onDown={() => set({ decorDensity: Math.max(10, b.decorDensity - 10) })}
                                 onUp={() => set({ decorDensity: Math.min(100, b.decorDensity + 10) })} />
                         </div>
-                    </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             <div className={styles.summary}>
                 {!selected ? (

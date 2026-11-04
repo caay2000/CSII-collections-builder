@@ -142,10 +142,10 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public bool LeaveGaps { get; set; }
 
-        /// <summary>Colección cuyas plantas decoran el espacio sobrante ("" = sin decoración).</summary>
+        /// <summary>Árboles del juego base en el espacio sobrante (patios, huecos).</summary>
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
-        public string DecorCollection { get; set; } = string.Empty;
+        public bool Trees { get; set; }
 
         /// <summary>Densidad de la decoración (10 a 100).</summary>
         [SettingsUIHidden]
@@ -186,7 +186,7 @@ namespace BuildingCollections
             WidthValue = DepthValue = LevelValue = 0;
             Density = 100;
             LeaveGaps = false;
-            DecorCollection = string.Empty;
+            Trees = false;
             DecorDensity = 50;
             Mode = "block";
         }

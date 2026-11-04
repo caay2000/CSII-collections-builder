@@ -53,7 +53,7 @@ namespace BuildingCollections.Systems
             public int widthOp, widthValue, depthOp, depthValue, levelOp, levelValue;
             public int density = 100;
             public bool leaveGaps;
-            public string decor = string.Empty;
+            public bool trees;
             public int decorDensity = 50;
         }
 
@@ -90,31 +90,16 @@ namespace BuildingCollections.Systems
             AddBinding(new TriggerBinding(Group, "clear", () => Safe(() => Report(CollectionService.Clear(selected.value)))));
             AddBinding(new TriggerBinding(Group, "delete", () => Safe(() =>
             {
-                string deleted = selected.value;
                 Report(CollectionService.Delete(selected.value));
-                if (Mod.Settings != null && string.Equals(Mod.Settings.DecorCollection, deleted, StringComparison.OrdinalIgnoreCase))
-                {
-                    Mod.Settings.DecorCollection = string.Empty;
-                    saveCountdown = 60;
-                    PushBuilder();
-                }
 
                 SetSelected(CollectionStore.Collections.FirstOrDefault()?.Name ?? string.Empty);
             })));
             AddBinding(new TriggerBinding<string>(Group, "rename", name => Safe(() =>
             {
-                string oldName = selected.value;
                 var error = CollectionService.Rename(selected.value, name, out var newName);
                 Report(error);
                 if (error == null)
                 {
-                    // La colección de decoración se guarda por nombre: sigue a la colección renombrada.
-                    if (Mod.Settings != null && string.Equals(Mod.Settings.DecorCollection, oldName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        Mod.Settings.DecorCollection = newName;
-                        saveCountdown = 60;
-                        PushBuilder();
-                    }
 
                     SetSelected(newName);
                 }
@@ -388,14 +373,7 @@ namespace BuildingCollections.Systems
         {
             try
             {
-                if (!panelOpen.value || string.IsNullOrEmpty(selected.value) || prefab == null)
-                {
-                    return;
-                }
-
-                // Edificios, y también árboles y plantas (para la decoración del espacio sobrante).
-                if (!(prefab is BuildingPrefab) &&
-                    !(World.GetOrCreateSystemManaged<PrefabSystem>().TryGetEntity(prefab, out Unity.Entities.Entity pe) && EntityManager.HasComponent<PlantData>(pe)))
+                if (!panelOpen.value || string.IsNullOrEmpty(selected.value) || !(prefab is BuildingPrefab))
                 {
                     return;
                 }
@@ -435,7 +413,7 @@ namespace BuildingCollections.Systems
                 levelOp = (int)s.LevelOp, levelValue = s.LevelValue,
                 density = s.Density,
                 leaveGaps = s.LeaveGaps,
-                decor = s.DecorCollection ?? string.Empty,
+                trees = s.Trees,
                 decorDensity = s.DecorDensity,
             }));
         }
@@ -455,7 +433,7 @@ namespace BuildingCollections.Systems
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.LeaveGaps = f.leaveGaps;
-            s.DecorCollection = f.decor ?? string.Empty;
+            s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             builder.SetMode(s.Mode);
             saveCountdown = 60;
@@ -480,13 +458,8 @@ namespace BuildingCollections.Systems
                 .OrderBy(e => e.Info.PrefabName, StringComparer.Ordinal)
                 .ToList();
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
-            // Decoración: las plantas de la colección elegida (puede ser la misma que la de los edificios).
-            var decorCollection = CollectionStore.Find(s.DecorCollection);
-            var decor = decorCollection == null ? new List<CatalogEntry>() : decorCollection.Prefabs
-                .Select(n => PrefabCatalog.TryGet(n, out var e) ? e : null)
-                .Where(e => e != null && e.IsDecor)
-                .OrderBy(e => e.Info.PrefabName, StringComparer.Ordinal)
-                .ToList();
+            // Decoración: árboles del juego base en el espacio sobrante.
+            var decor = s.Trees ? PrefabCatalog.Trees.ToList() : new List<CatalogEntry>();
             builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps, decor, s.DecorDensity);
         }
 

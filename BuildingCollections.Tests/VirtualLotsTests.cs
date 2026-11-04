@@ -71,6 +71,18 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void Clip_polygon_cuts_the_strips()
+        {
+            // Solo la mitad izquierda de la manzana (x < 50).
+            var clip = L(-5, -5, 50, -5, 50, 65, -5, 65);
+            var strips = VirtualLots.Build(Rect(), new Quad[0], clip: clip);
+            var bottom = strips.Single(s => s.T.X > 0.9);
+            Assert.True(bottom.Grid.Free[0, 0]);
+            Assert.False(bottom.Grid.Free[7, 0]); // la celda 7 va de 56 a 64 m: fuera
+            Assert.All(strips.Where(s => s.T.Y > 0.9), s => Assert.Equal(0, s.Grid.FreeCount())); // el lado derecho queda fuera
+        }
+
+        [Fact]
         public void Curve_is_split_in_straight_pieces()
         {
             var arc = new List<Pt>();

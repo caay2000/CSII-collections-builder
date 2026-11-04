@@ -38,7 +38,8 @@ namespace BuildingCollections.Core
         /// <param name="frontage">Por lado: si da a una calle (lleva parcelas). null = todos. Un lado sin calle
         /// (un polígono que corta la manzana) solo cierra el contorno, y no hace esquina con sus vecinos.</param>
         public static List<LotStrip> Build(IReadOnlyList<List<Pt>> sides, IReadOnlyList<Quad> obstacles, int maxDepth = 6,
-            double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 0.75, IReadOnlyList<bool> frontage = null)
+            double mergeAngleDeg = 20, double cornerAngleDeg = 30, double straightTolerance = 0.75, IReadOnlyList<bool> frontage = null,
+            IReadOnlyList<Pt> clip = null)
         {
             var strips = new List<LotStrip>();
             var outline = Outline(sides);
@@ -79,7 +80,7 @@ namespace BuildingCollections.Core
                         bool open = true;
                         for (int y = 0; y < maxDepth; y++)
                         {
-                            open = open && CellFits(strip, x, y, outline, obstacles);
+                            open = open && CellFits(strip, x, y, outline, obstacles) && (clip == null || CellInside(strip, x, y, clip));
                             grid.Free[x, y] = open; // un edificio necesita celdas seguidas desde la acera
                         }
                     }
@@ -113,6 +114,16 @@ namespace BuildingCollections.Core
             }
 
             return poly;
+        }
+
+        /// <summary>Celda (centro y esquinas metidas 0,5 m) dentro de un polígono de recorte.</summary>
+        static bool CellInside(LotStrip s, int x, int y, IReadOnlyList<Pt> clip)
+        {
+            var c = s.CellCenter(x, y);
+            double h = Cell / 2 - 0.5;
+            return Polygon.Contains(clip, c) &&
+                Polygon.Contains(clip, LotStrip.Add(c, s.T, -h, s.N, -h)) && Polygon.Contains(clip, LotStrip.Add(c, s.T, h, s.N, -h)) &&
+                Polygon.Contains(clip, LotStrip.Add(c, s.T, h, s.N, h)) && Polygon.Contains(clip, LotStrip.Add(c, s.T, -h, s.N, h));
         }
 
         /// <summary>Celda dentro de la manzana (sus esquinas, metidas 0,5 m) y sin pisar ningún obstáculo.</summary>
