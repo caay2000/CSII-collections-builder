@@ -141,6 +141,11 @@ namespace BuildingCollections.Systems
                     active = builder;
                 }
 
+                if (lastTool == builder && active == defaultTool)
+                {
+                    wantTool = false; // salió de la nuestra a propósito (Esc): no se reactiva hasta volver a la pestaña
+                }
+
                 lastTool = active;
 
                 toolActive.Update(toolSystem.activeTool == builder);
@@ -380,7 +385,7 @@ namespace BuildingCollections.Systems
             s.WidthOp = ToOp(f.widthOp); s.WidthValue = Clamp(f.widthValue, 0, 5);
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
-            s.Density = Clamp((int)Math.Round(f.density / 10.0) * 10, 10, 100);
+            s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             builder.SetMode(s.Mode);
             saveCountdown = 60;
             PushBuilder();

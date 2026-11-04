@@ -436,18 +436,23 @@ namespace BuildingCollections.Systems
             var blocks = GatherBlocks(point.xz, cfg.SearchRadius, out int platter);
             var click = new Pt(point.x, point.z);
 
-            // Bloque de partida: el de la celda visible más cercana al clic (dentro de la celda, o a poca distancia).
+            // Bloque de partida: el de la celda visible que contiene el clic (cuadrado de 8 m girado con el bloque, más
+            // un margen opcional). Un clic en la calle no cae en ninguna celda y no selecciona nada.
             int start = -1;
-            double best = 5.7 + cfg.ClickSnapDistance;
+            double best = double.MaxValue;
+            double half = ZoneUtils.CELL_SIZE * 0.5 + Math.Max(0, cfg.ClickSnapDistance);
             for (int i = 0; i < blocks.Count; i++)
             {
+                var dir = blocks[i].block.Block.m_Direction;
+                var fwd = new Pt(dir.x, dir.y);
+                var right = new Pt(dir.y, -dir.x);
                 foreach (var c in blocks[i].cells)
                 {
-                    var d = c - click;
-                    double dist = Math.Sqrt(Pt.Dot(d, d));
-                    if (dist < best)
+                    var d = click - c;
+                    double a = Math.Abs(Pt.Dot(d, right)), b = Math.Abs(Pt.Dot(d, fwd));
+                    if (a <= half && b <= half && a + b < best)
                     {
-                        best = dist;
+                        best = a + b;
                         start = i;
                     }
                 }
