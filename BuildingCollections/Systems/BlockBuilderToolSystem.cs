@@ -1851,10 +1851,11 @@ namespace BuildingCollections.Systems
             // Un edificio (en min-max, corrido "shift") cabe: no se sale de la manzana por delante en el sentido en que
             // avanza, y no pisa a nadie más de "inset" m. Con lo ya construido igual, a propósito: solo se aprieta con
             // Anarchy, y la junta del final puede pisar lo que había lo mismo que las demás (perJoint, bajo el máximo).
-            bool Fits(int2 min, int2 max, float shift, float inset)
+            bool Fits(int2 min, int2 max, float shift, float inset, List<Quad> ignore = null)
             {
                 var strict = LotQuad(s.Block, min, max, shift, inset);
-                if (existing.Any(e => Quad.Distance(e, strict) <= 0) || otherQuads.Any(o => Quad.Distance(o, strict) <= 0))
+                bool Hits(Quad q) => (ignore == null || !ignore.Contains(q)) && Quad.Distance(q, strict) <= 0;
+                if (existing.Any(Hits) || otherQuads.Any(Hits))
                 {
                     return false;
                 }
@@ -1873,13 +1874,28 @@ namespace BuildingCollections.Systems
                 return true;
             }
 
-            // Hueco: hasta dónde llegaría el del extremo sin tocar nada.
+            // Hueco: hasta dónde llegaría el del extremo sin tocar nada. Lo que ya lo pisa por un lado o por detrás (la
+            // calle de al lado, que apretó su cadena contra este esquinero) no cuenta: al correrse a lo largo de la
+            // fachada no lo pisa más. Sin esto, el hueco medía 0 y no se cerraba ni se registraba. Lo de delante sí
+            // cuenta: empieza a menos de 1 m de la cara del extremo.
             var end = chain[0];
+            var endQuad = LotQuad(end, 0f, StrictOverlap);
+            float front = Proj(LotQuad(end, 0f, 0f), dir, max: true);
+            var beside = existing.Concat(otherQuads)
+                .Where(q => Quad.Distance(q, endQuad) <= 0 && Proj(q, dir, max: false) < front - 1f).ToList();
             const float Step = 0.1f;
             float gap = 0;
-            while (gap + Step < ZoneUtils.CELL_SIZE && Fits(end.Min, end.Max, dir * (gap + Step), StrictOverlap))
+            while (gap + Step < ZoneUtils.CELL_SIZE && Fits(end.Min, end.Max, dir * (gap + Step), StrictOverlap, beside))
             {
                 gap += Step;
+            }
+
+            // Proyección de un cuadrilátero sobre el eje de la fachada en el sentido del avance: su punto más adelantado
+            // (max) o más atrasado.
+            float Proj(Quad q, int sign, bool max)
+            {
+                var v = q.P.Select(c => (float)(c.X * axis.x + c.Y * axis.y) * sign);
+                return max ? v.Max() : v.Min();
             }
 
             // Menos de 0,3 m: ya está pegado. Una celda entera libre: es un hueco que ha decidido la densidad (o
@@ -1889,13 +1905,20 @@ namespace BuildingCollections.Systems
                 return 0;
             }
 
+            float missing = ZoneUtils.CELL_SIZE - gap;
             if (cornerOnly)
             {
-                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} junto al esquinero (calle sin más edificios): no hay cadena que apretar; se deja.");
+                // El esquinero no se mueve (va pegado al bordillo de la otra calle): solo cabe meter uno de una celda
+                // que pise lo mismo al esquinero y a lo de delante.
+                if (Insert(end, gap, missing, s, overlap, plain, prefabs, rng, dir, log, Fits))
+                {
+                    return 1;
+                }
+
+                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} junto al esquinero (calle sin más edificios): no cabe uno de una celda; se deja.");
                 return 0;
             }
 
-            float missing = ZoneUtils.CELL_SIZE - gap;
             int joints = chain.Count + 1;
             float perJoint = missing / joints;
             // El hueco se mide en pasos de 0,1 m sumados en float: 6,5 m sale 6,4999995 y pedía "0,50 m" con máximo
@@ -1962,8 +1985,61 @@ namespace BuildingCollections.Systems
                 }
             }
 
+            if (Insert(end, gap, missing, s, overlap, plain, prefabs, rng, dir, log, Fits))
+            {
+                return 1;
+            }
+
             log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")}: ningún edificio de la colección una celda más ancho cabe; se deja.");
             return 0;
+        }
+
+        /// <summary>
+        /// Hueco de casi una celda (falta como mucho el doble del solape): se mete un edificio de una celda delante del
+        /// extremo, corrido hacia atrás la mitad de lo que falta, así pisa lo mismo al de detrás y a lo de delante.
+        /// </summary>
+        bool Insert(Planned end, float gap, float missing, SelectedBlock s, float overlap, List<BuildingInfo> plain,
+            Dictionary<string, Entity> prefabs, System.Random rng, int dir, StringBuilder log, Func<int2, int2, float, float, List<Quad>, bool> fits)
+        {
+            float perJoint = missing / 2;
+            if (overlap <= StrictOverlap || perJoint > overlap + 0.01f)
+            {
+                return false;
+            }
+
+            var min = new int2(dir > 0 ? end.Max.x : end.Min.x - 1, end.Min.y);
+            if (min.x < s.Area.x || min.x + 1 > s.Area.x + s.Virtual.Width)
+            {
+                return false;
+            }
+
+            int dep = end.Max.y - end.Min.y;
+            var options = plain.Where(b => b.LotWidth == 1 && b.LotDepth <= dep && b.LotDepth <= s.Virtual.Depth && prefabs.ContainsKey(b.PrefabName))
+                .OrderBy(b => b.LotDepth == dep ? 0 : 1).ThenBy(_ => rng.Next()).ToList();
+            float shift = -dir * perJoint;
+            foreach (var b in options)
+            {
+                var max = new int2(min.x + 1, min.y + b.LotDepth);
+                if (!fits(min, max, shift, perJoint + StrictOverlap, null))
+                {
+                    continue;
+                }
+
+                preview.Add(new Planned
+                {
+                    Name = b.PrefabName,
+                    Prefab = prefabs[b.PrefabName],
+                    Block = s.Block,
+                    Min = min,
+                    Max = max,
+                    Owner = s,
+                    Shift = shift,
+                });
+                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} cerrado: metido {b.PrefabName} (1x{b.LotDepth}) tras {end.Name}, {perJoint:F2} m de solape por junta.");
+                return true;
+            }
+
+            return false;
         }
 
         static int MaskFootprints(PlanGrid grid, Block block, int4 area, List<Quad> footprints, float overlap)
