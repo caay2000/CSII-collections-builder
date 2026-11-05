@@ -260,7 +260,7 @@ namespace BuildingCollections.Systems
         }
 
         /// <summary>Calcula una combinación nueva con la semilla dada y pide al juego la vista previa.</summary>
-        public void GeneratePreview(IReadOnlyList<CatalogEntry> candidates, int density, int seed, bool leaveGaps,
+        public void GeneratePreview(IReadOnlyList<CatalogEntry> candidates, int density, int seed,
             IReadOnlyList<CatalogEntry> decor = null, int decorDensity = 50, int ageMask = 4)
         {
             try
@@ -277,7 +277,7 @@ namespace BuildingCollections.Systems
                 var prefabs = usable.ToDictionary(c => c.Info.PrefabName, c => c.Prefab, StringComparer.OrdinalIgnoreCase);
 
                 int index = 0;
-                var log = new StringBuilder($"[vista previa] semilla {seed}, densidad {density}%, huecos {leaveGaps}, {plain.Count} normales, {corners.Count} esquineros.\n");
+                var log = new StringBuilder($"[vista previa] semilla {seed}, densidad {density}%, {plain.Count} normales, {corners.Count} esquineros.\n");
 
                 // Huellas (en el suelo) de lo ya planificado: las celdas compartidas entre bloques que queden libres
                 // detrás de un edificio poco profundo se aprovechan desde la otra calle, sin solaparse.
@@ -357,7 +357,7 @@ namespace BuildingCollections.Systems
                     int masked = MaskFootprints(grid, s.Block, s.Area, Others(s), overlap);
 
                     // Cada calle al 100 %: la densidad se aplica luego a toda la selección (ver GridPlanner.Thin).
-                    var plan = GridPlanner.Plan(grid, plain, corners, 100, seed + 7919 * index++, leaveGaps, cornerPlans[s]);
+                    var plan = GridPlanner.Plan(grid, plain, corners, 100, seed + 7919 * index++, cornerPlans[s]);
                     footprints.RemoveAll(f => f.owner == s);
                     foreach (var p in plan)
                     {

@@ -189,11 +189,6 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public int Density { get; set; } = 100;
 
-        /// <summary>Dejar huecos: relleno al azar sin intentar cubrir toda la fachada.</summary>
-        [SettingsUIHidden]
-        [SettingsUISection(Section, Builder)]
-        public bool LeaveGaps { get; set; }
-
         /// <summary>
         /// Con Anarchy encendido, casilla "Overlap buildings" del panel: 0,5 m (marcada) o 0. Es un tope por junta entre
         /// edificios nuevos; lo ya construido no se pisa nunca.
@@ -266,7 +261,6 @@ namespace BuildingCollections
             WidthOp = DepthOp = LevelOp = CompareOp.Equal;
             WidthValue = DepthValue = LevelValue = 0;
             Density = 100;
-            LeaveGaps = false;
             Trees = false;
             AnarchyOverlap = 0.5f;
             DecorDensity = 50;

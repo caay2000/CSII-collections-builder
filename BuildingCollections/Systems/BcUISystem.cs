@@ -57,7 +57,6 @@ namespace BuildingCollections.Systems
             public string mode = "block";
             public int widthOp, widthValue, depthOp, depthValue, levelOp, levelValue;
             public int density = 100;
-            public bool leaveGaps;
             public bool trees;
             public int decorDensity = 50;
 
@@ -509,7 +508,6 @@ namespace BuildingCollections.Systems
                 depthOp = (int)s.DepthOp, depthValue = s.DepthValue,
                 levelOp = (int)s.LevelOp, levelValue = s.LevelValue,
                 density = s.Density,
-                leaveGaps = s.LeaveGaps,
                 trees = s.Trees,
                 decorDensity = s.DecorDensity,
                 overlap = s.AnarchyOverlap,
@@ -534,7 +532,6 @@ namespace BuildingCollections.Systems
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
-            s.LeaveGaps = f.leaveGaps;
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.AnarchyOverlap = f.overlap > 0 ? 0.5f : 0f; // casilla: 0,5 m o nada
@@ -583,7 +580,7 @@ namespace BuildingCollections.Systems
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
             // Decoración: árboles del juego base en el espacio sobrante, o los de un set de Tree Controller.
             var decor = s.Trees ? TreeDecor(s.TreeSet) : new List<CatalogEntry>();
-            builder.GeneratePreview(candidates, s.Density, seed, s.LeaveGaps, decor, s.DecorDensity, s.TreeAges);
+            builder.GeneratePreview(candidates, s.Density, seed, decor, s.DecorDensity, s.TreeAges);
         }
 
         static CatalogEntry Tagged(CatalogEntry e, int group, double share) => new CatalogEntry

@@ -142,7 +142,7 @@ namespace BuildingCollections.Tests
         [InlineData(7)]
         [InlineData(11)]
         [InlineData(24)]
-        public void Without_gaps_the_whole_front_is_covered(int width)
+        public void Full_density_covers_the_whole_front(int width)
         {
             var g = PlanGrid.AllFree(width, 3, false, false);
             for (int seed = 0; seed < 20; seed++)
@@ -154,7 +154,7 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
-        public void Without_gaps_covers_the_maximum_when_exact_is_impossible()
+        public void Full_density_covers_the_maximum_when_exact_is_impossible()
         {
             // Solo hay edificios de 3: en un tramo de 7 caben dos (6 de fachada), nunca menos.
             var g = PlanGrid.AllFree(7, 3, false, false);
@@ -180,7 +180,7 @@ namespace BuildingCollections.Tests
             var g = PlanGrid.AllFree(10, 3, true, true);
             var cp = GridPlanner.PlanCorners(g, Plain, Corners, 2);
             Assert.Contains(cp, p => p.IsCorner && p.X == 0);
-            var plan = GridPlanner.Plan(g, Plain, Corners, 100, 2, false, cp);
+            var plan = GridPlanner.Plan(g, Plain, Corners, 100, 2, cp);
             AssertNoOverlapAndInside(g, plan);
             Assert.All(cp, c => Assert.Contains(c, plan));
             Assert.Equal(10, plan.Sum(p => p.Building.LotWidth));

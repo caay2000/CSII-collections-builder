@@ -129,8 +129,6 @@ export const BuilderTab = () => {
                             onDown={() => set({ density: Math.max(10, density - 10) })}
                             onUp={() => set({ density: Math.min(100, density + 10) })} />
                     </div>
-                    <CheckRow label="Leave gaps" checked={b.leaveGaps} onChange={(v) => set({ leaveGaps: v })}
-                        title="Off: fill the whole road front with the sizes available. On: pick buildings at random and leave gaps." />
                     {plan.anarchyAvailable && (
                         // El interruptor del propio Anarchy (el mismo que su botón en las opciones de herramienta, que
                         // con esta herramienta no aparece). Cambia la siguiente vista previa: pulsa Reshuffle.

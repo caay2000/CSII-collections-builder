@@ -66,11 +66,11 @@ namespace BuildingCollections.Core
         /// <summary>
         /// Reparte edificios a lo largo de la fila frontal. Las esquinas llevan edificios esquineros (si la lista
         /// tiene alguno que encaje; si no, uno normal) y el resto, normales. La densidad (1 a 100) es el porcentaje
-        /// de la fachada libre (fila frontal) que se cubre. Sin <paramref name="leaveGaps"/>, el relleno cubre el
-        /// máximo de fachada posible con los anchos disponibles. El resultado depende solo de las entradas y de la semilla.
+        /// de la fachada libre (fila frontal) que se cubre; el relleno cubre el máximo de fachada posible con los
+        /// anchos disponibles y la densidad quita después. El resultado depende solo de las entradas y de la semilla.
         /// </summary>
         public static List<Placement> Plan(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, int density, int seed,
-            bool leaveGaps = false, IReadOnlyList<Placement> preplaced = null)
+            IReadOnlyList<Placement> preplaced = null)
         {
             var result = new List<Placement>();
             if (grid.Width <= 0 || grid.Depth <= 0 || density <= 0)
@@ -97,16 +97,9 @@ namespace BuildingCollections.Core
                 Corners(grid, used, plain, corners, rng, result);
             }
 
-            // 2) relleno del medio. Sin huecos: en cada tramo libre de la fila frontal se elige al azar una de las
-            //    combinaciones que cubren el máximo de fachada. Con huecos: de izquierda a derecha, al azar.
-            if (leaveGaps)
-            {
-                FillGreedy(grid, used, plain, rng, result);
-            }
-            else
-            {
-                FillMax(grid, used, plain, rng, result);
-            }
+            // 2) relleno del medio: en cada tramo libre de la fila frontal se elige al azar una de las combinaciones
+            //    que cubren el máximo de fachada. Los huecos los pone la densidad.
+            FillMax(grid, used, plain, rng, result);
 
             // 3) densidad: porcentaje de la fachada a calle (celdas libres de la fila frontal), no de toda la rejilla:
             //    el fondo de la parcela no cuenta. Se quitan al azar edificios (primero los normales).
@@ -217,38 +210,6 @@ namespace BuildingCollections.Core
             }
 
             return n;
-        }
-
-        /// <summary>De izquierda a derecha, un edificio al azar entre los que caben en el tramo (puede dejar huecos).</summary>
-        static void FillGreedy(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> plain, Random rng, List<Placement> result)
-        {
-            int x = 0;
-            while (x < grid.Width)
-            {
-                if (!used[x, 0])
-                {
-                    x++;
-                    continue;
-                }
-
-                int run = 0;
-                while (x + run < grid.Width && used[x + run, 0])
-                {
-                    run++;
-                }
-
-                var fitting = plain.Where(b => b.LotWidth <= run && Fits(used, grid, x, 0, b)).ToList();
-                if (fitting.Count == 0)
-                {
-                    x++;
-                    continue;
-                }
-
-                var pick = Pick(fitting, rng);
-                Occupy(used, x, 0, pick);
-                result.Add(new Placement { X = x, Y = 0, Building = pick, IsCorner = false });
-                x += pick.LotWidth;
-            }
         }
 
         /// <summary>
