@@ -1,0 +1,33 @@
+<Publish>
+	<!--Lo rellena el usuario con el número que da la primera publicación (Publish); lo necesitan NewVersion y Update.-->
+	<ModId Value="" />
+	<DisplayName Value="Building Collections" />
+	<ShortDescription Value="Group buildings into collections and fill a whole city block with them in one click." />
+	<!--Multilínea: sin espacios al principio de cada línea (lo pide el publicador).-->
+	<LongDescription>
+Building Collections lets you group buildings into named collections and then fill an entire city block with them in one click.
+
+**Features**
+- Collections of buildings, optionally tagged in Find It.
+- Block builder: pick a block (or draw a polygon) and the mod lays out buildings along the sidewalks, including corners and curves.
+- Filters by lot width, depth and building level; density control; mix two collections.
+- Optional overlap (with Anarchy) to close the leftover space at street ends and along curves.
+- Optional trees in leftover space.
+
+Early version (0.1.x): feedback and bug reports are welcome on GitHub.
+	</LongDescription>
+	<Thumbnail Value="Properties/Thumbnail.png" />
+	<Screenshot Value="Properties/Screenshots/cobblestone.jpg" />
+	<Screenshot Value="Properties/Screenshots/mill-lane.jpg" />
+	<Tag Value="Code Mod" />
+	<Tag Value="Buildings" />
+	<ForumLink Value="" />
+	<ModVersion Value="0.1.14" />
+	<GameVersion Value="1.*" />
+	<ChangeLog>
+First test release (private).
+	</ChangeLog>
+	<ExternalLink Type="github" Url="https://github.com/caay2000/CSII-collections-builder" />
+	<!--Public, Private o Unlisted. Privado mientras se prueba.-->
+	<AccessLevel Value="Private" />
+</Publish>

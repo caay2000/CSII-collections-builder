@@ -13,9 +13,12 @@ namespace BuildingCollections
 
         public static BuildingCollectionsSettings Settings { get; private set; }
 
+        /// <summary>Versión semver del mod (la define &lt;Version&gt; en el .csproj).</summary>
+        public static string Version { get; } = typeof(Mod).Assembly.GetName().Version is System.Version v ? $"{v.Major}.{v.Minor}.{v.Build}" : "?";
+
         public void OnLoad(UpdateSystem updateSystem)
         {
-            Log.Info(nameof(OnLoad));
+            Log.Info($"{nameof(OnLoad)} v{Version}");
             try
             {
                 CollectionStore.Load();

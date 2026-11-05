@@ -17,7 +17,7 @@ export interface BuilderDto {
     /** Árboles del juego base en el espacio sobrante. */
     trees: boolean;
     decorDensity: number;
-    /** Solape entre edificios nuevos con Anarchy: 0,5 m ("Overlap buildings" marcado) o 0. */
+    /** Solape entre edificios nuevos con Anarchy: 0 (casilla "Overlap buildings" desmarcada) o 0,5 (marcada); la cantidad está en las opciones (OverlapMeters). */
     overlap: number;
     /** Set de Tree Controller ("" = todos los árboles del juego base). */
     treeSet: string;
@@ -54,6 +54,8 @@ const plan$ = bindValue<string>(G, "plan", "{}");
 const escapes$ = bindValue<number>(G, "escapes", 0);
 /** Último mensaje de la herramienta del constructor (selección, vista previa, Build). */
 const builderMessage$ = bindValue<string>(G, "builderMessage", "");
+/** 0 si el último mensaje no es un error; si no, un número distinto en cada error (para repetir el destello). */
+const builderMessageError$ = bindValue<number>(G, "builderMessageError", 0);
 
 function parse<T>(raw: string, fallback: T): T {
     try { return JSON.parse(raw) as T; } catch { return fallback; }
@@ -66,6 +68,7 @@ export const useFindIt = () => useValue(findIt$);
 export const useSelected = () => useValue(selected$);
 export const useStatus = () => useValue(status$);
 export const useBuilderMessage = () => useValue(builderMessage$);
+export const useBuilderMessageError = () => useValue(builderMessageError$);
 /** JSON de un binding, parseado solo cuando cambia el texto (no en cada render): así la lista conserva su identidad. */
 function useJson<T>(raw: string, fallback: T): T {
     return useMemo(() => parse(raw, fallback), [raw]);

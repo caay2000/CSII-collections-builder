@@ -145,6 +145,9 @@ namespace BuildingCollections.Systems
 
         public int MessageSerial { get; private set; }
 
+        /// <summary>El último mensaje es un error (el panel lo pinta en rojo).</summary>
+        public bool MessageIsError { get; private set; }
+
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -242,6 +245,7 @@ namespace BuildingCollections.Systems
 
         public void ClearSelection()
         {
+            reselect = null;
             polygon.Clear();
             polyCurb.Clear();
             polyArc.Clear();
@@ -265,6 +269,14 @@ namespace BuildingCollections.Systems
         {
             try
             {
+                var clock = System.Diagnostics.Stopwatch.StartNew();
+                var times = new List<string>();
+                void Lap(string what)
+                {
+                    times.Add($"{what} {clock.ElapsedMilliseconds} ms");
+                    clock.Restart();
+                }
+
                 preview.Clear();
                 FrontFilled = FrontTotal = 0;
                 frontCells = new List<Pt>();
@@ -284,14 +296,21 @@ namespace BuildingCollections.Systems
                 // Con Anarchy encendido (y nuestra herramienta en su lista) se admite un solape pequeño entre edificios
                 // de calles distintas; sin él, ninguno (0,05 m solo para que dos que se tocan no cuenten).
                 bool anarchy = AnarchyBridge.Enabled;
-                // 0 en las opciones = sin solape, igual que sin Anarchy (0,05 m de margen para que tocarse no cuente).
-                // Casilla "Overlap buildings": 0,5 m o nada (un 1 m o 2 m guardado de antes cuenta como 0,5).
-                float overlap = anarchy && (Mod.Settings?.AnarchyOverlap ?? 0.5f) > 0 ? OverlapOn : StrictOverlap;
+                float overlap = CurrentOverlap();
+
+                // Las tiras de las curvas dependen del solape (ver VirtualLots.SnapChunks): si ha cambiado desde que se
+                // eligió la manzana, se vuelve a elegir con el de ahora.
+                if (reselect != null && Math.Abs(CurveOverlap(overlap) - stripsOverlap) > 1e-4)
+                {
+                    log.Append($"  el solape ha cambiado ({stripsOverlap:F2} -> {CurveOverlap(overlap):F2} m): se vuelve a elegir la zona.\n");
+                    reselect();
+                }
                 log.Append($"  solape admitido {overlap:F2} m{(anarchy ? " (Anarchy)" : string.Empty)}.\n");
 
                 // Lo que ya está construido no se pisa nunca, ni con Anarchy: se relee ahora (la selección puede ser de
                 // antes de un Build) y se tapan sus celdas sin margen de solape.
                 var existing = areaOutline != null ? BuildingFootprints(areaOutline) : new List<Quad>();
+                Lap("edificios existentes");
                 var footprints = new List<(Quad quad, SelectedBlock owner)>();
                 Quad Footprint(SelectedBlock s, Placement p)
                 {
@@ -300,7 +319,12 @@ namespace BuildingCollections.Systems
                     return ToQuad(ZoneUtils.CalculateCorners(s.Block, new ValidArea { m_Area = new int4(min.x, max.x, min.y, max.y) }));
                 }
 
-                List<Quad> Others(SelectedBlock s) => footprints.Where(f => f.owner != s).Select(f => f.quad).ToList();
+                // Con solape permitido, dos tramos contiguos de una curva no se tapan entre sí si la cuña de sus fondos
+                // es pequeña (ver VirtualLots.BacksMayOverlap); sin esto cada junta perdía una celda (~8 m de hueco).
+                bool wedgeOk = overlap > StrictOverlap;
+                bool Neighbours(SelectedBlock a, SelectedBlock b) => wedgeOk && VirtualLots.BacksMayOverlap(a.Strip, b.Strip);
+
+                List<Quad> Others(SelectedBlock s) => footprints.Where(f => f.owner != s && !Neighbours(f.owner, s)).Select(f => f.quad).ToList();
 
                 // Primero los bloques con más celdas propias (no compartidas): las calles largas antes que las laterales.
                 var grids = new List<(SelectedBlock s, PlanGrid grid)>();
@@ -340,6 +364,8 @@ namespace BuildingCollections.Systems
                     }
                 }
 
+                Lap("rejillas");
+
                 // Pasada 1: cada bloque reserva sus esquinas antes de que nadie rellene. Dos bloques que se tocan en una
                 // esquina se la disputan; sin esto, el relleno del primero le quitaba la esquina al segundo.
                 var cornerPlans = new Dictionary<SelectedBlock, List<Placement>>();
@@ -378,6 +404,8 @@ namespace BuildingCollections.Systems
 
                     log.AppendLine($"  {(s.Virtual != null ? "tira" : "bloque " + s.Entity.Index)}: rejilla {grid.Width}x{grid.Depth}, {grid.FreeCount()} libres ({masked} tapadas por otros bloques), esquinas L={grid.LeftCorner} R={grid.RightCorner} -> {string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [esquina]" : string.Empty)}"))}");
                 }
+
+                Lap($"esquinas y relleno ({grids.Count} tiras)");
 
                 // Densidad sobre toda la selección: por calle, en calles de 3 o 4 celdas, un 90 % se quedaba en un 70 %.
                 if (density < 100)
@@ -428,6 +456,8 @@ namespace BuildingCollections.Systems
                     footprints = preview.Where(p => !p.IsDecor).Select(p => (LotQuad(p, p.Shift, 0f), p.Owner)).ToList();
                 }
 
+                Lap("densidad y huecos");
+
                 // Fachada ocupada: celdas a la calle (cada una una vez, también las de las esquinas) con algún edificio.
                 FrontTotal = frontCells.Count;
                 FrontFilled = CountFront();
@@ -441,6 +471,8 @@ namespace BuildingCollections.Systems
                 {
                     Mod.Log.Error(e);
                 }
+
+                Lap("fachada y diagnóstico");
 
                 // Decoración del espacio sobrante (patio, huecos): plantas de la colección elegida, lejos de la acera y de
                 // los edificios (los planificados y los que ya hay), y sin pisar árboles existentes.
@@ -490,15 +522,17 @@ namespace BuildingCollections.Systems
                     log.AppendLine($"  decoración: {plants} plantas de {decor.Count} tipos, densidad {decorDensity}%; {tooBig} puntos sin sitio para ninguna; radios {radii.Min():F1}-{radii.Max():F1} m.");
                 }
 
+                Lap("decoración");
+                log.AppendLine($"  tiempos: {string.Join(", ", times)}.");
                 Mod.Log.Info(log.ToString().TrimEnd());
                 Say(buildingsPlanned == 0 && plants == 0 ? "Nothing fits in the selected area with these filters."
-                    : plants > 0 ? $"Preview: {buildingsPlanned} buildings, {plants} plants." : $"Preview: {buildingsPlanned} buildings.");
+                    : plants > 0 ? $"Preview: {buildingsPlanned} buildings, {plants} plants." : $"Preview: {buildingsPlanned} buildings.", error: buildingsPlanned == 0 && plants == 0);
             }
             catch (Exception e)
             {
                 Mod.Log.Error(e);
                 preview.Clear();
-                Say("Preview failed (see log).");
+                Say("Preview failed (see log).", error: true);
             }
         }
 
@@ -607,7 +641,7 @@ namespace BuildingCollections.Systems
             var cfg = DevConfig.Load();
             if (preview.Count == 0)
             {
-                Say("Generate a preview first.");
+                Say("Generate a preview first.", error: true);
                 applyMode = ApplyMode.None;
                 return inputDeps;
             }
@@ -620,7 +654,7 @@ namespace BuildingCollections.Systems
                 int removed = RemoveErrored();
                 FrontFilled = CountFront();
                 Mod.Log.Info($"[build] Cancelado: hay entidades con error ({m_ErrorQuery.CalculateEntityCount()}); quitados {removed} de la vista previa.");
-                Say(removed > 0 ? $"Removed {removed} items that collide with something (red). Press Build again." : "Some items in the preview have errors (red). Try Reshuffle.");
+                Say(removed > 0 ? $"Removed {removed} items that collide with something (red). Press Build again." : "Some items in the preview have errors (red). Try Reshuffle.", error: true);
                 definitionsDirty = removed > 0;
                 applyMode = ApplyMode.None;
                 return inputDeps;
@@ -872,7 +906,41 @@ namespace BuildingCollections.Systems
             return result;
         }
 
+        /// <summary>
+        /// Solape admitido entre edificios: casilla "Overlap buildings" (marcada/no) con la cantidad por junta de las
+        /// opciones (0,5 a 2 m), solo con Anarchy; si no, 0,05 m de margen para que tocarse no cuente.
+        /// </summary>
+        float CurrentOverlap()
+        {
+            bool overlapOn = (Mod.Settings?.AnarchyOverlap ?? OverlapOn) > 0;
+            float meters = Math.Min(2f, Math.Max(0.5f, Mod.Settings?.OverlapMeters ?? OverlapOn));
+            return AnarchyBridge.Enabled && overlapOn ? meters : StrictOverlap;
+        }
+
+        static double CurveOverlap(float overlap) => overlap > StrictOverlap ? overlap : 0;
+
+        /// <summary>Vuelve a hacer la última selección (con el solape de ahora); null si no hay.</summary>
+        Action reselect;
+
+        /// <summary>Solape con el que se hicieron las tiras de la selección actual.</summary>
+        double stripsOverlap;
+
         void SelectAt(float3 point)
+        {
+            // Al repetirla (cambió el solape) también se toma el solape de ahora: si no, las tiras salían con el viejo
+            // y la vista previa volvía a elegir la zona cada vez.
+            reselect = () =>
+            {
+                stripsOverlap = CurveOverlap(CurrentOverlap());
+                SelectAtCore(point);
+            };
+            stripsOverlap = CurveOverlap(CurrentOverlap());
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            SelectAtCore(point);
+            Mod.Log.Info($"[selección] tiempo: {clock.ElapsedMilliseconds} ms.");
+        }
+
+        void SelectAtCore(float3 point)
         {
             var cfg = DevConfig.Load();
 
@@ -882,6 +950,26 @@ namespace BuildingCollections.Systems
             {
                 var face = TraceRoadFace(point.xz, cfg.RoadSearchRadius, out int roads, out var path);
                 lastSidesFull = false;
+
+                // Sin manzana cerrada por calles no se selecciona nada: antes se cogían los bloques de zona cercanos y,
+                // en una zona abierta, salían decenas de bloques sueltos. Para eso está Polygon.
+                if (face == null)
+                {
+                    Mod.Log.Info($"[selección] clic en ({point.x:F1}, {point.z:F1}): no está encerrado por calles ({roads} tramos cerca); no se selecciona.");
+                    Say("This area isn't enclosed by roads. Use Polygon to select it.", error: true);
+                    return;
+                }
+
+                // Manzana demasiado grande para el límite de las opciones (rendimiento).
+                double area = Polygon.Area(face);
+                int maxHa = Math.Max(1, Mod.Settings?.MaxBlockHectares ?? 5);
+                if (area > maxHa * 10000.0)
+                {
+                    Mod.Log.Info($"[selección] clic en ({point.x:F1}, {point.z:F1}): manzana de {area / 10000:F1} ha, más que el límite de {maxHa} ha; no se selecciona.");
+                    Say($"This block is {area / 10000:F1} ha, over the {maxHa} ha limit (Options). Use Polygon, or raise the limit.", error: true);
+                    return;
+                }
+
                 if (face != null && cfg.UseVirtualLots && SelectVirtual(face, path, $"manzana de calles ({path.Count} tramos), clic en ({point.x:F1}, {point.z:F1})"))
                 {
                     return;
@@ -892,7 +980,7 @@ namespace BuildingCollections.Systems
                 if (face != null && lastSidesFull)
                 {
                     Mod.Log.Info($"[selección] clic en ({point.x:F1}, {point.z:F1}): la manzana ya está llena; no se selecciona.");
-                    Say("This block is already full.");
+                    Say("This block is already full.", error: true);
                     return;
                 }
 
@@ -938,7 +1026,7 @@ namespace BuildingCollections.Systems
             if (start < 0)
             {
                 Mod.Log.Info($"[selección] clic en ({point.x:F1}, {point.z:F1}): ningún bloque de zona ({blocks.Count} bloques cerca, {platter} de Platter ignorados).");
-                Say("Click inside a zoned block.");
+                Say("Click inside a zoned block.", error: true);
                 return;
             }
 
@@ -955,6 +1043,7 @@ namespace BuildingCollections.Systems
             if (selection.Count > 0)
             {
                 // Polígono ya cerrado: un clic nuevo empieza otro.
+                reselect = null;
                 selection.Clear();
                 preview.Clear();
                 polygon.Clear();
@@ -989,6 +1078,8 @@ namespace BuildingCollections.Systems
 
         void SelectPolygon()
         {
+            reselect = SelectPolygon;
+            stripsOverlap = CurveOverlap(CurrentOverlap());
             var cfg = DevConfig.Load();
             var verts = polygon.Select(p => new Pt(p.x, p.z)).ToList();
             CurbSnap.Sides(verts, polyCurb, polyArc, curbs, HugTolerance, out var sides, out var frontage);
@@ -1010,10 +1101,11 @@ namespace BuildingCollections.Systems
             var poly = VirtualLots.Outline(sides);
             if (!SelectInside(poly, $"polígono de {polygon.Count} vértices"))
             {
+                reselect = null;
                 polygon.Clear();
                 polyCurb.Clear();
                 polyArc.Clear();
-                Say("The polygon touches no street and contains no zoned cells.");
+                Say("The polygon touches no street and contains no zoned cells.", error: true);
             }
         }
 
@@ -1248,7 +1340,7 @@ namespace BuildingCollections.Systems
 
             var obstacles = BuildingFootprints(outline);
             var notes = new List<string>();
-            var strips = VirtualLots.Build(sides, obstacles, frontage: frontage, notes: notes);
+            var strips = VirtualLots.Build(sides, obstacles, frontage: frontage, notes: notes, curveOverlap: stripsOverlap);
             Mod.Log.Info($"[selección] contorno: {sides.Count} aceras, {outline.Count} puntos, {obstacles.Count} edificios existentes.\n  " + string.Join("\n  ", notes));
             lastSidesFull = strips.Count > 0 && strips.All(st => st.Grid.FreeCount() == 0);
             if (!SelectStrips(strips, outline, $"{description}: {sides.Count} aceras, {obstacles.Count} edificios existentes"))
@@ -1322,7 +1414,7 @@ namespace BuildingCollections.Systems
                     sideCount += sides.Count;
                     outlines.Add(VirtualLots.Outline(sides));
                     var notes = new List<string>();
-                    strips.AddRange(VirtualLots.Build(sides, obstacles, clip: clip, notes: notes));
+                    strips.AddRange(VirtualLots.Build(sides, obstacles, clip: clip, notes: notes, curveOverlap: stripsOverlap));
                     Mod.Log.Info($"[selección] polígono, manzana {faces.Count}: {sides.Count} aceras.\n  " + string.Join("\n  ", notes));
                 }
             }
@@ -1706,7 +1798,7 @@ namespace BuildingCollections.Systems
         /// <summary>Margen sin solape: dos edificios que solo se tocan no cuentan como solapados.</summary>
         const float StrictOverlap = 0.05f;
 
-        /// <summary>Solape por junta con "Overlap buildings" (Anarchy): más no mejoraba el resultado.</summary>
+        /// <summary>Solape por junta por defecto con "Overlap buildings" (Anarchy); las opciones dejan elegir 0,5 a 2 m.</summary>
         const float OverlapOn = 0.5f;
 
 
@@ -1923,7 +2015,7 @@ namespace BuildingCollections.Systems
             bool Fits(Block blk, int2 min, int2 max, float shift, float inset, List<Quad> ignore)
             {
                 var strict = LotQuad(blk, min, max, shift, inset);
-                bool Hits(Quad q) => (ignore == null || !ignore.Contains(q)) && Quad.Distance(q, strict) <= 0;
+                bool Hits(Quad q) => Quad.Touch(q, strict) && (ignore == null || !ignore.Contains(q));
                 if (existing.Any(Hits) || otherQuads.Any(Hits))
                 {
                     return false;
@@ -1959,9 +2051,15 @@ namespace BuildingCollections.Systems
             var endQuad = LotQuad(end, 0f, StrictOverlap);
             float front = Proj(LotQuad(end, 0f, 0f), dir, max: true);
             var beside = existing.Concat(otherQuads)
-                .Where(q => Quad.Distance(q, endQuad) <= 0 && Proj(q, dir, max: false) < front - 1f).ToList();
+                .Where(q => Quad.Touch(q, endQuad) && Proj(q, dir, max: false) < front - 1f).ToList();
+            // Primero de metro en metro y luego de 0,1 en 0,1 (antes, hasta 80 pruebas por extremo).
             const float Step = 0.1f;
             float gap = 0;
+            while (gap + 1f + Step < ZoneUtils.CELL_SIZE && Fits(end.Block, end.Min, end.Max, dir * (gap + 1f), StrictOverlap, beside))
+            {
+                gap += 1f;
+            }
+
             while (gap + Step < ZoneUtils.CELL_SIZE && Fits(end.Block, end.Min, end.Max, dir * (gap + Step), StrictOverlap, beside))
             {
                 gap += Step;
@@ -2001,8 +2099,27 @@ namespace BuildingCollections.Systems
             float perJoint = n > 0 ? missing / (n + 1) : float.MaxValue;
             if (n > 0 && perJoint <= overlap + 0.01f)
             {
+                // Los demás de la cadena no dependen del edificio elegido para ensanchar: cada uno se comprueba una vez,
+                // quieto o corrido una celda (antes, con cada candidato y cada posición: miles de pruebas por hueco).
+                float JointShift(int j) => -dir * missing * (n - j) / (n + 1);
+                var stayOk = new bool?[n];
+                var moveOk = new bool?[n];
+                bool Stays(int j) => stayOk[j] ??= Fits(chain[j].Block, chain[j].Min, chain[j].Max, JointShift(j), perJoint + StrictOverlap, null);
+                bool Moves(int j) => moveOk[j] ??= Fits(chain[j].Block, chain[j].Min + new int2(dir, 0), chain[j].Max + new int2(dir, 0), JointShift(j), perJoint + StrictOverlap, null);
+
                 foreach (int k in Enumerable.Range(0, own).OrderBy(_ => rng.Next()))
                 {
+                    bool rest = true;
+                    for (int j = 0; j < n && rest; j++)
+                    {
+                        rest = j == k || (j < k ? Moves(j) : Stays(j));
+                    }
+
+                    if (!rest)
+                    {
+                        continue;
+                    }
+
                     var cur = chain[k];
                     int w = cur.Max.x - cur.Min.x, dep = cur.Max.y - cur.Min.y;
                     // Nunca más profundo: por detrás podría salirse de una manzana estrecha.
@@ -2025,16 +2142,10 @@ namespace BuildingCollections.Systems
                                 else { mins[j] = new int2(p.Min.x - 1, p.Min.y); maxs[j] = new int2(p.Max.x, p.Min.y + b.LotDepth); }
                             }
 
-                            shifts[j] = -dir * missing * (n - j) / (n + 1);
+                            shifts[j] = JointShift(j);
                         }
 
-                        bool ok = true;
-                        for (int j = 0; j < n && ok; j++)
-                        {
-                            ok = Fits(chain[j].Block, mins[j], maxs[j], shifts[j], perJoint + StrictOverlap, null);
-                        }
-
-                        if (!ok)
+                        if (!Fits(chain[k].Block, mins[k], maxs[k], shifts[k], perJoint + StrictOverlap, null))
                         {
                             continue;
                         }
@@ -2097,7 +2208,7 @@ namespace BuildingCollections.Systems
                     var p = theirs[i];
                     var last = chain[chain.Count - 1];
                     bool touching = added == 0
-                        ? Quad.Distance(LotQuad(p, p.Shift, -0.3f), LotQuad(last, last.Shift, -0.3f)) <= 0 // a menos de 0,6 m
+                        ? Quad.Touch(LotQuad(p, p.Shift, -0.3f), LotQuad(last, last.Shift, -0.3f)) // a menos de 0,6 m
                         : (dir > 0 ? p.Max.x == last.Min.x : p.Min.x == last.Max.x);
                     if (p.Corner || p.Shift != 0 || !touching || chain.Contains(p))
                     {
@@ -2410,9 +2521,11 @@ namespace BuildingCollections.Systems
             overlay.AddBufferWriter(default(JobHandle));
         }
 
-        void Say(string message)
+        /// <summary>Mensaje para el panel. "error": algo que el usuario tiene que cambiar (en rojo, con destello).</summary>
+        void Say(string message, bool error = false)
         {
             Message = message;
+            MessageIsError = error;
             MessageSerial++;
         }
     }

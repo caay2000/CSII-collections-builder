@@ -64,6 +64,13 @@ namespace BuildingCollections.Core
             return best;
         }
 
+        /// <summary>
+        /// Se tocan o se solapan (Distance &lt;= 0), descartando antes por la caja: casi todos los pares están lejos y
+        /// así no se calculan sus 16 distancias entre lados.
+        /// </summary>
+        public static bool Touch(Quad a, Quad b) =>
+            a.MaxX >= b.MinX && b.MaxX >= a.MinX && a.MaxY >= b.MinY && b.MaxY >= a.MinY && Distance(a, b) <= 0;
+
         /// <summary>Distancia mínima entre dos cuadriláteros (0 si se tocan o se solapan).</summary>
         public static double Distance(Quad a, Quad b)
         {
@@ -117,6 +124,18 @@ namespace BuildingCollections.Core
 
     public static class Polygon
     {
+        /// <summary>Área (m², sin signo) de un polígono simple.</summary>
+        public static double Area(IReadOnlyList<Pt> poly)
+        {
+            double a = 0;
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+            {
+                a += poly[j].X * poly[i].Y - poly[i].X * poly[j].Y;
+            }
+
+            return System.Math.Abs(a) / 2;
+        }
+
         /// <summary>Punto dentro de un polígono simple (convexo o cóncavo), por paridad de cruces.</summary>
         public static bool Contains(IReadOnlyList<Pt> poly, Pt q)
         {

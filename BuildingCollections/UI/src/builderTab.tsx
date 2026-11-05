@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import styles from "./panel.module.scss";
-import { actions, BuilderDto, BuildingDto, useBuilder, useBuilderMessage, useBuildings, useCollections, useMixBuildings, usePlan, useSelected } from "./bindings";
+import { actions, BuilderDto, BuildingDto, useBuilder, useBuilderMessage, useBuilderMessageError, useBuildings, useCollections, useMixBuildings, usePlan, useSelected } from "./bindings";
 import { matches } from "./collectionsTab";
 import { CheckRow, CollectionPicker, icon, MixSlider, StepFilter, Stepper } from "./widgets";
 
@@ -34,6 +34,7 @@ export const BuilderTab = () => {
     const buildings = useBuildings();
     const plan = usePlan();
     const message = useBuilderMessage();
+    const messageError = useBuilderMessageError();
     const set = (patch: Partial<BuilderDto>) => actions.setBuilder({ ...b, ...patch });
 
     // Abrir la pestaña activa la herramienta de selección; cerrarla la desactiva (como StreetBuilder).
@@ -136,10 +137,10 @@ export const BuilderTab = () => {
                             title="Turns the Anarchy mod on or off (same as its own button). With it on, new buildings may overlap a little, so street ends close up. Existing buildings are never removed; at most the last joint touches them by the same overlap." />
                     )}
                     {plan.anarchy && (
-                        // Con Anarchy, los edificios nuevos pueden pisarse 0,5 m para cerrar el sobrante de cada calle
-                        // (probado: más solape no mejora y se nota). Apagado: sin solape. Pulsa Reshuffle para aplicarlo.
+                        // Con Anarchy, los edificios nuevos pueden pisarse para cerrar el sobrante de cada calle; cuánto
+                        // (0,5 a 2 m por junta) se elige en las opciones del mod. Pulsa Reshuffle para aplicarlo.
                         <CheckRow label="Overlap buildings" accent checked={b.overlap > 0} onChange={(v) => set({ overlap: v ? 0.5 : 0 })}
-                            title="Street lengths are rarely a multiple of 8 m. On: to close the leftover at the end of a street, one building is made a cell wider and the row is squeezed, each joint overlapping by up to 0.5 m. Off: no overlap, a single gap stays. Press Reshuffle to apply." />
+                            title="Street lengths are rarely a multiple of 8 m. On: to close the leftover at the end of a street, one building is made a cell wider and the row is squeezed, each joint overlapping by up to the amount set in the mod's options (0.5 m by default). Off: no overlap, a single gap stays. Press Reshuffle to apply." />
                     )}
                 </div>
             </div>
@@ -224,7 +225,9 @@ export const BuilderTab = () => {
                 )}
             </div>
 
-            {line && <div className={collectionProblem ? styles.builderMsgWarn : styles.builderMsg}>{line}</div>}
+            {line && (collectionProblem ? <div className={styles.builderMsgWarn}>{line}</div>
+                : messageError ? <div key={messageError} className={styles.builderMsgError}>{line}</div>
+                : <div className={styles.builderMsg}>{line}</div>)}
 
             <div className={styles.actions}>
                 <button className={styles.btnClear} title="Clear selection (right-click)" disabled={!plan.areaSelected} onClick={() => actions.clearSelection()}>
