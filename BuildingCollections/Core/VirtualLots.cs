@@ -74,40 +74,54 @@ namespace BuildingCollections.Core
                     continue;
                 }
 
-                // Extremos de cada tramo. En una esquina, el contorno del juego viene redondeado (cada lado acaba ~0,5 m
-                // antes): una manzana de 4 x 5 celdas medía 31 x 39 m y perdía una celda por lado. El primer y el último
-                // tramo se alargan hasta el cruce con el lado de al lado, que es la esquina de verdad.
-                var allChunks = mergedChunks[sideIndex];
-                var ends = new Dictionary<(int, int), (Pt a, Pt b)>();
-                for (int c = 0; c < allChunks.Count; c++)
+                // En una esquina, el contorno del juego viene redondeado (cada lado acaba ~0,5 m antes): una manzana de
+                // 4 x 5 celdas medía 31 x 39 m y perdía una celda por lado. El lado se alarga, por la recta de su primer
+                // y su último tramo, hasta el cruce con el lado de al lado, que es la esquina de verdad.
+                var raw = mergedChunks[sideIndex];
+                var pts = new List<Pt>(side.Points);
+                if (raw.Count > 0 && side.StartCorner)
                 {
-                    var (f, t2) = allChunks[c];
-                    var a0 = side.Points[f];
-                    var b0 = side.Points[t2];
-                    if (c == 0 && side.StartCorner)
+                    int pi = (sideIndex - 1 + merged.Count) % merged.Count;
+                    var pc = mergedChunks[pi];
+                    if (pc.Count > 0)
                     {
-                        int pi = (sideIndex - 1 + merged.Count) % merged.Count;
-                        var pc = mergedChunks[pi];
-                        if (pc.Count > 0)
+                        var (pf, pt) = pc[pc.Count - 1];
+                        var e = ExtendToCorner(pts[raw[0].to], pts[0], merged[pi].Points[pf], merged[pi].Points[pt]);
+                        if (Dist(e, pts[0]) > 1e-6)
                         {
-                            var (pf, pt) = pc[pc.Count - 1];
-                            a0 = ExtendToCorner(b0, a0, merged[pi].Points[pf], merged[pi].Points[pt]);
+                            pts.Insert(0, e);
+                            raw = raw.Select((c, i) => (i == 0 ? 0 : c.from + 1, c.to + 1)).ToList();
                         }
                     }
-
-                    if (c == allChunks.Count - 1 && side.EndCorner)
-                    {
-                        int ni = (sideIndex + 1) % merged.Count;
-                        var nc = mergedChunks[ni];
-                        if (nc.Count > 0)
-                        {
-                            var (nf, nt) = nc[0];
-                            b0 = ExtendToCorner(a0, b0, merged[ni].Points[nf], merged[ni].Points[nt]);
-                        }
-                    }
-
-                    ends[allChunks[c]] = (a0, b0);
                 }
+
+                if (raw.Count > 0 && side.EndCorner)
+                {
+                    int ni = (sideIndex + 1) % merged.Count;
+                    var nc = mergedChunks[ni];
+                    if (nc.Count > 0)
+                    {
+                        var (nf, nt) = nc[0];
+                        var last = raw[raw.Count - 1];
+                        var e = ExtendToCorner(pts[last.from], pts[pts.Count - 1], merged[ni].Points[nf], merged[ni].Points[nt]);
+                        if (Dist(e, pts[pts.Count - 1]) > 1e-6)
+                        {
+                            pts.Add(e);
+                            raw[raw.Count - 1] = (last.from, pts.Count - 1);
+                        }
+                    }
+                }
+
+                // Lado curvo (más de un tramo recto): se vuelve a partir en tramos de un múltiplo exacto de 8 m, cada uno
+                // empezando donde acaba el anterior. Con los tramos sueltos, el sobrante de cada uno se repartía a sus
+                // dos extremos y en cada unión quedaba un hueco de 2 a 4 m imposible de cerrar.
+                var allChunks = raw;
+                if (raw.Count > 1)
+                {
+                    (pts, allChunks) = SnapChunks(pts, straightTolerance);
+                }
+
+                var ends = allChunks.ToDictionary(c => c, c => (a: pts[c.from], b: pts[c.to]));
 
                 // Tramos de al menos una celda: un tramo corto al principio no debe quitarle la esquina al siguiente.
                 var chunks = allChunks
@@ -123,8 +137,8 @@ namespace BuildingCollections.Core
                         string turnNext = "";
                         if (c + 1 < allChunks.Count)
                         {
-                            var d1 = side.Points[t2] - side.Points[f];
-                            var d2 = side.Points[allChunks[c + 1].to] - side.Points[allChunks[c + 1].from];
+                            var d1 = pts[t2] - pts[f];
+                            var d2 = pts[allChunks[c + 1].to] - pts[allChunks[c + 1].from];
                             turnNext = $", gira {Angle(d1, d2):F0}°";
                         }
 
@@ -153,10 +167,10 @@ namespace BuildingCollections.Core
                     for (int m = chunks[k].from + 1; m < chunks[k].to; m++)
                     {
                         // Solo la parte de la curva delante de la tira (el sobrante no cuenta).
-                        double along = Pt.Dot(t, side.Points[m] - a);
+                        double along = Pt.Dot(t, pts[m] - a);
                         if (along >= offset - 0.5 && along <= offset + width * Cell + 0.5)
                         {
-                            inward = Math.Max(inward, Pt.Cross(t, side.Points[m] - a));
+                            inward = Math.Max(inward, Pt.Cross(t, pts[m] - a));
                         }
                     }
 
@@ -402,6 +416,184 @@ namespace BuildingCollections.Core
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Parte una polilínea curva en tramos rectos cuya cuerda mide un múltiplo exacto de una celda (el más largo
+        /// que se separa de la curva como mucho "tolerance"), cada uno empezando donde acaba el anterior. Los cortes
+        /// caen entre vértices: se añaden como puntos nuevos. El último tramo se alarga hasta el final de la curva si
+        /// sigue recto (el sobrante de toda la curva queda ahí, en un solo sitio).
+        /// </summary>
+        public static (List<Pt> pts, List<(int from, int to)> chunks) SnapChunks(List<Pt> src, double tolerance)
+        {
+            var pts = new List<Pt> { src[0] };
+            var chunks = new List<(int, int)>();
+            int seg = 0;            // el punto actual está en el segmento src[seg] - src[seg + 1]
+            var cur = src[0];
+            Pt? prevDir = null;
+            while (seg < src.Count - 1)
+            {
+                if (!Longest(src, seg, cur, tolerance, out int bestSeg, out var best))
+                {
+                    // Ni una celda recta desde aquí (un giro muy cerrado): se salta al siguiente vértice.
+                    seg++;
+                    cur = src[seg];
+                    pts.Add(cur);
+                    prevDir = null;
+                    continue;
+                }
+
+                // Giro hacia la manzana (curva con la manzana por dentro): los fondos de los edificios convergen y,
+                // pegados en el quiebro, chocarían por detrás. El tramo empieza más allá, lo justo para que los de
+                // ConvexDepth m de fondo solo se toquen.
+                var dir = Unit(best - cur);
+                if (prevDir.HasValue)
+                {
+                    double turn = Math.Atan2(Pt.Cross(prevDir.Value, dir), Pt.Dot(prevDir.Value, dir));
+                    double skip = turn > 0.01 ? Math.Min(Cell - 0.5, ConvexDepth * Math.Tan(turn)) : 0;
+                    if (skip > 0.05 && PointAtChord(src, seg, cur, skip, out int gs, out var gp))
+                    {
+                        for (int v = seg + 1; v <= gs; v++)
+                        {
+                            pts.Add(src[v]);
+                        }
+
+                        if (Dist(pts[pts.Count - 1], gp) > 1e-6)
+                        {
+                            pts.Add(gp);
+                        }
+
+                        seg = gs;
+                        cur = gp;
+                        if (!Longest(src, seg, cur, tolerance, out bestSeg, out best))
+                        {
+                            prevDir = null;
+                            continue;
+                        }
+
+                        dir = Unit(best - cur);
+                    }
+                }
+
+                int from = pts.Count - 1;
+                for (int v = seg + 1; v <= bestSeg; v++)
+                {
+                    pts.Add(src[v]);
+                }
+
+                if (Dist(pts[pts.Count - 1], best) > 1e-6)
+                {
+                    pts.Add(best);
+                }
+
+                chunks.Add((from, pts.Count - 1));
+                seg = bestSeg;
+                cur = best;
+                prevDir = dir;
+            }
+
+            // Lo que queda (menos de una celda) se suma al último tramo si sigue recto; si no, se queda sin parcelas.
+            var end = src[src.Count - 1];
+            if (Dist(cur, end) > 1e-6)
+            {
+                if (chunks.Count > 0)
+                {
+                    var (lf, _) = chunks[chunks.Count - 1];
+                    var rest = new List<Pt>(pts.GetRange(lf, pts.Count - lf)) { end };
+                    if (MaxDeviation(rest, 0, rest.Count - 1) <= tolerance)
+                    {
+                        pts.Add(end);
+                        chunks[chunks.Count - 1] = (lf, pts.Count - 1);
+                        return (pts, chunks);
+                    }
+                }
+
+                pts.Add(end);
+            }
+
+            return (pts, chunks);
+        }
+
+        /// <summary>Fondo (m) con el que se separan los tramos en un giro hacia la manzana: 2 celdas, el más habitual.</summary>
+        const double ConvexDepth = 16;
+
+        static Pt Unit(Pt d)
+        {
+            double l = Math.Sqrt(Pt.Dot(d, d));
+            return l < 1e-9 ? d : new Pt(d.X / l, d.Y / l);
+        }
+
+        /// <summary>El tramo recto más largo desde "cur" con un múltiplo exacto de celdas de cuerda.</summary>
+        static bool Longest(List<Pt> src, int seg, Pt cur, double tolerance, out int bestSeg, out Pt best)
+        {
+            bestSeg = -1;
+            best = cur;
+            for (int k = 1; ; k++)
+            {
+                if (!PointAtChord(src, seg, cur, k * Cell, out int qs, out var q) || Deviation(src, cur, seg, q, qs) > tolerance)
+                {
+                    break;
+                }
+
+                bestSeg = qs;
+                best = q;
+            }
+
+            return bestSeg >= 0;
+        }
+
+        /// <summary>Primer punto de la polilínea, desde "cur" (en el segmento "seg") hacia delante, a "dist" en línea recta.</summary>
+        static bool PointAtChord(List<Pt> src, int seg, Pt cur, double dist, out int qs, out Pt q)
+        {
+            for (int i = seg; i < src.Count - 1; i++)
+            {
+                var a = i == seg ? cur : src[i];
+                var b = src[i + 1];
+                if (Dist(cur, b) < dist)
+                {
+                    continue;
+                }
+
+                // Sobre a-b, el punto a "dist" de cur (a está más cerca que dist; b, más lejos o igual).
+                var d = b - a;
+                double dd = Pt.Dot(d, d);
+                if (dd < 1e-12)
+                {
+                    continue;
+                }
+
+                var f = a - cur;
+                double bq = 2 * Pt.Dot(f, d), c = Pt.Dot(f, f) - dist * dist;
+                double disc = Math.Max(0, bq * bq - 4 * dd * c);
+                double t = (-bq + Math.Sqrt(disc)) / (2 * dd);
+                t = Math.Min(1, Math.Max(0, t));
+                qs = i;
+                q = new Pt(a.X + d.X * t, a.Y + d.Y * t);
+                return true;
+            }
+
+            qs = -1;
+            q = cur;
+            return false;
+        }
+
+        /// <summary>Lo que más se separa de la cuerda cur-q la polilínea entre ellos (sus vértices intermedios).</summary>
+        static double Deviation(List<Pt> src, Pt cur, int seg, Pt q, int qs)
+        {
+            var d = q - cur;
+            double len = Math.Sqrt(Pt.Dot(d, d));
+            if (len < 1e-6)
+            {
+                return 0;
+            }
+
+            double worst = 0;
+            for (int v = seg + 1; v <= qs; v++)
+            {
+                worst = Math.Max(worst, Math.Abs(Pt.Cross(d, src[v] - cur)) / len);
+            }
+
+            return worst;
         }
 
         static double MaxDeviation(List<Pt> pts, int i, int j)
