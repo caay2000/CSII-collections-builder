@@ -110,23 +110,60 @@ namespace BuildingCollections.Core
 
             // 3) densidad: porcentaje de la fachada a calle (celdas libres de la fila frontal), no de toda la rejilla:
             //    el fondo de la parcela no cuenta. Se quitan al azar edificios (primero los normales).
-            int front = FrontFree(grid);
-            int target = (int)Math.Floor(front * density / 100.0);
-            int covered = result.Sum(p => p.Building.LotWidth);
-            while (covered > target && result.Count > 0)
+            var removed = Thin(result.Select(p => (p.Building.LotWidth, p.IsCorner)).ToList(), FrontFree(grid), density, rng);
+            return result.Where((p, i) => !removed.Contains(i)).OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
+        }
+
+        /// <summary>
+        /// Densidad: qué edificios (índices) quitar para cubrir el porcentaje pedido de las celdas de fachada
+        /// ("front"). Objetivo redondeado al más cercano; se quitan al azar, primero los normales, y nunca uno que
+        /// deje la fachada más lejos del objetivo de lo que estaba (antes se quitaba uno de 2 con 1 de sobra, y con
+        /// el redondeo hacia abajo en cada calle corta un 90 % se quedaba en un 70 %). Se usa sobre toda la
+        /// selección a la vez: en calles de 3 o 4 celdas, por separado, no hay forma de acercarse.
+        /// </summary>
+        public static HashSet<int> Thin(IReadOnlyList<(int width, bool corner)> items, int front, int density, Random rng)
+        {
+            var removed = new HashSet<int>();
+            int target = (int)Math.Round(front * Math.Min(Math.Max(density, 0), 100) / 100.0, MidpointRounding.AwayFromZero);
+            int covered = items.Sum(i => i.width);
+            while (covered > target)
             {
-                var removable = result.Where(p => !p.IsCorner).ToList();
-                if (removable.Count == 0)
+                int excess = covered - target;
+                var pool = Enumerable.Range(0, items.Count).Where(i => !removed.Contains(i) && !items[i].corner).ToList();
+                if (pool.Count == 0)
                 {
-                    removable = result;
+                    pool = Enumerable.Range(0, items.Count).Where(i => !removed.Contains(i)).ToList();
                 }
 
-                var victim = removable[rng.Next(removable.Count)];
-                result.Remove(victim);
-                covered -= victim.Building.LotWidth;
+                if (pool.Count == 0)
+                {
+                    break;
+                }
+
+                var fit = pool.Where(i => items[i].width <= excess).ToList();
+                int victim;
+                if (fit.Count > 0)
+                {
+                    victim = fit[rng.Next(fit.Count)];
+                }
+                else
+                {
+                    // Todos se pasan: el más estrecho, solo si quitándolo se queda más cerca del objetivo.
+                    int w = pool.Min(i => items[i].width);
+                    if (w - excess >= excess)
+                    {
+                        break;
+                    }
+
+                    var narrow = pool.Where(i => items[i].width == w).ToList();
+                    victim = narrow[rng.Next(narrow.Count)];
+                }
+
+                removed.Add(victim);
+                covered -= items[victim].width;
             }
 
-            return result.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
+            return removed;
         }
 
         /// <summary>

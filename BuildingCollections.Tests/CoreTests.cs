@@ -128,12 +128,14 @@ namespace BuildingCollections.Tests
         [InlineData(100)]
         [InlineData(50)]
         [InlineData(25)]
-        public void Density_never_exceeds_target(int density)
+        public void Density_lands_near_target(int density)
         {
             var g = PlanGrid.AllFree(30, 3, true, true);
             var plan = GridPlanner.Plan(g, Plain, Corners, density, 3);
             AssertNoOverlapAndInside(g, plan);
-            Assert.True(plan.Sum(p => p.Building.LotWidth) <= System.Math.Floor(g.Width * density / 100.0) || plan.All(p => p.IsCorner));
+            // Lo más cerca posible del objetivo: como mucho a media anchura del edificio más ancho.
+            double target = System.Math.Round(g.Width * density / 100.0, System.MidpointRounding.AwayFromZero);
+            Assert.True(System.Math.Abs(plan.Sum(p => p.Building.LotWidth) - target) <= Plain.Max(b => b.LotWidth) / 2.0 || plan.All(p => p.IsCorner));
         }
 
         [Theory]
@@ -194,6 +196,27 @@ namespace BuildingCollections.Tests
             var g = PlanGrid.AllFree(10, 3, false, false);
             g.Free[4, 0] = false;
             AssertNoOverlapAndInside(g, GridPlanner.Plan(g, Plain, Corners, 100, 9));
+        }
+
+        [Fact]
+        public void Thin_reaches_target_across_short_streets()
+        {
+            // 4 calles de 4 celdas, todo de 1 de ancho salvo un esquinero por calle: 90 % de 16 = 14 celdas.
+            var items = new List<(int, bool)>();
+            for (int k = 0; k < 4; k++) { items.Add((1, true)); items.Add((1, false)); items.Add((1, false)); items.Add((1, false)); }
+            var removed = GridPlanner.Thin(items, 16, 90, new System.Random(1));
+            Assert.Equal(2, removed.Count);
+            Assert.All(removed, i => Assert.False(items[i].Item2));
+        }
+
+        [Fact]
+        public void Thin_never_overshoots_with_wide_buildings()
+        {
+            // 1 celda de sobra y solo edificios de 2: quitar uno dejaría la fachada más lejos; no se quita.
+            var items = new List<(int, bool)> { (2, false), (2, false), (2, false), (2, false), (2, false) };
+            Assert.Empty(GridPlanner.Thin(items, 10, 90, new System.Random(3)));
+            // Con 3 de sobra se quita uno de 2 (queda a 1).
+            Assert.Single(GridPlanner.Thin(items, 10, 70, new System.Random(3)));
         }
     }
 }

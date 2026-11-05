@@ -131,6 +131,13 @@ namespace BuildingCollections.Systems
 
         public int FrontTotal { get; private set; }
 
+        /// <summary>Centros de las celdas a la calle de la selección, cada una una sola vez (la de una esquina da a
+        /// dos calles y está en las dos tiras).</summary>
+        List<Pt> frontCells = new List<Pt>();
+
+        /// <summary>Centros de los edificios que ha quitado la densidad: cerrar un hueco no debe rellenarlos.</summary>
+        List<Pt> thinned = new List<Pt>();
+
         /// <summary>Bloques de zona seleccionados.</summary>
         public int Blocks => selection.Count;
 
@@ -247,6 +254,7 @@ namespace BuildingCollections.Systems
             decorClip = null;
             freeFrontCells = 0;
             FrontFilled = FrontTotal = 0;
+            frontCells = new List<Pt>();
             definitionsDirty = true;
             Say("Selection cleared.");
         }
@@ -259,6 +267,7 @@ namespace BuildingCollections.Systems
             {
                 preview.Clear();
                 FrontFilled = FrontTotal = 0;
+                frontCells = new List<Pt>();
                 autoCleanPasses = 0;
                 definitionsDirty = true;
                 var cfg = DevConfig.Load();
@@ -295,6 +304,8 @@ namespace BuildingCollections.Systems
 
                 // Primero los bloques con más celdas propias (no compartidas): las calles largas antes que las laterales.
                 var grids = new List<(SelectedBlock s, PlanGrid grid)>();
+                frontCells = new List<Pt>();
+                thinned = new List<Pt>();
                 foreach (var s in selection.OrderByDescending(OwnedCells).ToList())
                 {
                     PlanGrid grid;
@@ -313,6 +324,20 @@ namespace BuildingCollections.Systems
 
                     MaskFootprints(grid, s.Block, s.Area, existing, StrictOverlap);
                     grids.Add((s, grid));
+                    for (int x = 0; x < grid.Width; x++)
+                    {
+                        if (!grid.Free[x, 0])
+                        {
+                            continue;
+                        }
+
+                        var c = ZoneUtils.GetCellPosition(s.Block, new int2(s.Area.x + x, s.Area.z)).xz;
+                        var pt = new Pt(c.x, c.y);
+                        if (!frontCells.Any(o => (o.X - pt.X) * (o.X - pt.X) + (o.Y - pt.Y) * (o.Y - pt.Y) < 4))
+                        {
+                            frontCells.Add(pt);
+                        }
+                    }
                 }
 
                 // Pasada 1: cada bloque reserva sus esquinas antes de que nadie rellene. Dos bloques que se tocan en una
@@ -327,16 +352,12 @@ namespace BuildingCollections.Systems
                 }
 
                 // Pasada 2: relleno, respetando las esquinas propias y las huellas de los demás.
-                int frontTotal = 0;
                 foreach (var (s, grid) in grids)
                 {
                     int masked = MaskFootprints(grid, s.Block, s.Area, Others(s), overlap);
-                    for (int x = 0; x < grid.Width; x++)
-                    {
-                        frontTotal += grid.Free[x, 0] ? 1 : 0;
-                    }
 
-                    var plan = GridPlanner.Plan(grid, plain, corners, density, seed + 7919 * index++, leaveGaps, cornerPlans[s]);
+                    // Cada calle al 100 %: la densidad se aplica luego a toda la selección (ver GridPlanner.Thin).
+                    var plan = GridPlanner.Plan(grid, plain, corners, 100, seed + 7919 * index++, leaveGaps, cornerPlans[s]);
                     footprints.RemoveAll(f => f.owner == s);
                     foreach (var p in plan)
                     {
@@ -358,6 +379,41 @@ namespace BuildingCollections.Systems
                     log.AppendLine($"  {(s.Virtual != null ? "tira" : "bloque " + s.Entity.Index)}: rejilla {grid.Width}x{grid.Depth}, {grid.FreeCount()} libres ({masked} tapadas por otros bloques), esquinas L={grid.LeftCorner} R={grid.RightCorner} -> {string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [esquina]" : string.Empty)}"))}");
                 }
 
+                // Densidad sobre toda la selección: por calle, en calles de 3 o 4 celdas, un 90 % se quedaba en un 70 %.
+                if (density < 100)
+                {
+                    // Cada edificio cuenta las celdas a la calle que cubre (un esquinero, las de sus dos calles); los que no
+                    // dan a la calle no entran en el recuento ni se quitan.
+                    var taken = new bool[frontCells.Count];
+                    var front = new List<(Planned p, int cells)>();
+                    foreach (var p in preview.Where(p => !p.IsDecor))
+                    {
+                        var q = LotQuad(p, p.Shift, 0.5f);
+                        int n = 0;
+                        for (int i = 0; i < frontCells.Count; i++)
+                        {
+                            if (!taken[i] && q.Contains(frontCells[i]))
+                            {
+                                taken[i] = true;
+                                n++;
+                            }
+                        }
+
+                        if (n > 0)
+                        {
+                            front.Add((p, n));
+                        }
+                    }
+
+                    var removed = GridPlanner.Thin(front.Select(f => (f.cells, f.p.Corner)).ToList(), frontCells.Count, density,
+                        new System.Random(seed ^ 0x1b873593));
+                    var gone = new HashSet<Planned>(removed.Select(i => front[i].p));
+                    thinned = gone.Select(p => LotQuad(p, p.Shift, 0f)).Select(q => new Pt(q.P.Average(v => v.X), q.P.Average(v => v.Y))).ToList();
+                    preview.RemoveAll(gone.Contains);
+                    footprints = preview.Where(p => !p.IsDecor).Select(p => (LotQuad(p, p.Shift, 0f), p.Owner)).ToList();
+                    log.AppendLine($"  densidad {density}%: quitados {gone.Count} edificios ({removed.Sum(i => front[i].cells)} celdas a la calle) de {frontCells.Count} celdas.");
+                }
+
                 // Cada calle se rellena con edificios de 8 m en 8 m: al final suele quedar un trozo de celda hasta el
                 // esquinero de la calle de al lado. Con Anarchy se cierra ensanchando uno y apretando la cadena.
                 int justified = 0;
@@ -372,9 +428,8 @@ namespace BuildingCollections.Systems
                     footprints = preview.Where(p => !p.IsDecor).Select(p => (LotQuad(p, p.Shift, 0f), p.Owner)).ToList();
                 }
 
-                // Fachada ocupada: celdas a la calle con edificio, de las que había libres (cada ensanche suma una
-                // celda que antes no contaba, un trozo junto al de al lado).
-                FrontTotal = frontTotal + justified;
+                // Fachada ocupada: celdas a la calle (cada una una vez, también las de las esquinas) con algún edificio.
+                FrontTotal = frontCells.Count;
                 FrontFilled = CountFront();
                 log.AppendLine($"  fachada: {FrontFilled} de {FrontTotal} celdas a la calle ocupadas.");
                 // Solo diagnóstico: si falla, no debe tirar una vista previa buena.
@@ -1660,7 +1715,11 @@ namespace BuildingCollections.Systems
             math.normalizesafe(ZoneUtils.GetCellPosition(b, new int2(1, 0)).xz - ZoneUtils.GetCellPosition(b, new int2(0, 0)).xz);
 
         /// <summary>Celdas a la calle ocupadas por los edificios de la vista previa.</summary>
-        int CountFront() => preview.Where(p => !p.IsDecor && p.Owner != null && p.Min.y == p.Owner.Area.z).Sum(p => p.Max.x - p.Min.x);
+        int CountFront()
+        {
+            var quads = preview.Where(p => !p.IsDecor).Select(p => LotQuad(p, p.Shift, 0.5f)).ToList();
+            return frontCells.Count(c => quads.Any(q => q.Contains(c)));
+        }
 
         static string StripInfo(LotStrip st) => st == null ? "(sin datos)"
             : $"lado {st.SideIndex} tramo {st.ChunkIndex + 1}/{st.ChunkCount}, acera de ({st.ChunkStart.X:F1},{st.ChunkStart.Y:F1}) largo {st.ChunkLength:F2} m, " +
@@ -1856,6 +1915,12 @@ namespace BuildingCollections.Systems
                 var strict = LotQuad(s.Block, min, max, shift, inset);
                 bool Hits(Quad q) => (ignore == null || !ignore.Contains(q)) && Quad.Distance(q, strict) <= 0;
                 if (existing.Any(Hits) || otherQuads.Any(Hits))
+                {
+                    return false;
+                }
+
+                // Un hueco que ha dejado la densidad a propósito no se rellena al cerrar otro.
+                if (ignore == null && thinned.Any(strict.Contains))
                 {
                     return false;
                 }
