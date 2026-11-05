@@ -1879,12 +1879,14 @@ namespace BuildingCollections.Systems
         {
             // Cadena desde el extremo: edificios seguidos (sin hueco entre ellos), sin el esquinero (va pegado al bordillo).
             var chain = new List<Planned>();
+            bool reachedStripEnd = true;
             for (int i = dir > 0 ? mine.Count - 1 : 0; i >= 0 && i < mine.Count; i -= dir)
             {
                 var p = mine[i];
                 // Ya tocado desde el otro extremo (una calle sin esquinero puede tener una sola cadena): no se toca.
                 if (p.Corner || p.Shift != 0 || (chain.Count > 0 && (dir > 0 ? p.Max.x != chain[chain.Count - 1].Min.x : p.Min.x != chain[chain.Count - 1].Max.x)))
                 {
+                    reachedStripEnd = false;
                     break;
                 }
 
@@ -1904,15 +1906,23 @@ namespace BuildingCollections.Systems
                 return 0;
             }
 
-            var otherQuads = preview.Where(p => !p.IsDecor && !chain.Contains(p)).Select(p => LotQuad(p, p.Shift, 0f)).ToList();
-            var axis = FrontAxis(s.Block);
-
-            // Un edificio (en min-max, corrido "shift") cabe: no se sale de la manzana por delante en el sentido en que
-            // avanza, y no pisa a nadie más de "inset" m. Con lo ya construido igual, a propósito: solo se aprieta con
-            // Anarchy, y la junta del final puede pisar lo que había lo mismo que las demás (perJoint, bajo el máximo).
-            bool Fits(int2 min, int2 max, float shift, float inset, List<Quad> ignore = null)
+            // En una curva, la cadena sigue por los tramos anteriores del mismo lado (pegados a este): más juntas entre
+            // las que repartir el solape. Solo se corren; no se ensanchan ni cambian de celda.
+            int own = chain.Count;
+            if (!cornerOnly && reachedStripEnd)
             {
-                var strict = LotQuad(s.Block, min, max, shift, inset);
+                ExtendChainAcrossStrips(s, chain, dir);
+            }
+
+            var otherQuads = preview.Where(p => !p.IsDecor && !chain.Contains(p)).Select(p => LotQuad(p, p.Shift, 0f)).ToList();
+
+            // Un edificio (en min-max, corrido "shift" por el eje de su propia tira) cabe: no se sale de la manzana por
+            // delante en el sentido en que avanza, y no pisa a nadie más de "inset" m. Con lo ya construido igual, a
+            // propósito: solo se aprieta con Anarchy, y la junta del final puede pisar lo que había lo mismo que las
+            // demás (perJoint, bajo el máximo).
+            bool Fits(Block blk, int2 min, int2 max, float shift, float inset, List<Quad> ignore)
+            {
+                var strict = LotQuad(blk, min, max, shift, inset);
                 bool Hits(Quad q) => (ignore == null || !ignore.Contains(q)) && Quad.Distance(q, strict) <= 0;
                 if (existing.Any(Hits) || otherQuads.Any(Hits))
                 {
@@ -1925,12 +1935,13 @@ namespace BuildingCollections.Systems
                     return false;
                 }
 
-                var probe = LotQuad(s.Block, min, max, shift, 0.5f);
+                var ax = FrontAxis(blk);
+                var probe = LotQuad(blk, min, max, shift, 0.5f);
                 var center = new Pt(probe.P.Average(v => v.X), probe.P.Average(v => v.Y));
                 foreach (var c in probe.P)
                 {
                     var d = c - center;
-                    if ((d.X * axis.x + d.Y * axis.y) * dir > 0 && !Polygon.Contains(areaOutline, c))
+                    if ((d.X * ax.x + d.Y * ax.y) * dir > 0 && !Polygon.Contains(areaOutline, c))
                     {
                         return false;
                     }
@@ -1944,13 +1955,14 @@ namespace BuildingCollections.Systems
             // fachada no lo pisa más. Sin esto, el hueco medía 0 y no se cerraba ni se registraba. Lo de delante sí
             // cuenta: empieza a menos de 1 m de la cara del extremo.
             var end = chain[0];
+            var axis = FrontAxis(end.Block);
             var endQuad = LotQuad(end, 0f, StrictOverlap);
             float front = Proj(LotQuad(end, 0f, 0f), dir, max: true);
             var beside = existing.Concat(otherQuads)
                 .Where(q => Quad.Distance(q, endQuad) <= 0 && Proj(q, dir, max: false) < front - 1f).ToList();
             const float Step = 0.1f;
             float gap = 0;
-            while (gap + Step < ZoneUtils.CELL_SIZE && Fits(end.Min, end.Max, dir * (gap + Step), StrictOverlap, beside))
+            while (gap + Step < ZoneUtils.CELL_SIZE && Fits(end.Block, end.Min, end.Max, dir * (gap + Step), StrictOverlap, beside))
             {
                 gap += Step;
             }
@@ -1963,110 +1975,160 @@ namespace BuildingCollections.Systems
                 return max ? v.Max() : v.Min();
             }
 
-            // Menos de 0,3 m: ya está pegado. Una celda entera libre: es un hueco que ha decidido la densidad (o
-            // "dejar huecos"), no el sobrante de la calle; no se toca.
+            // Menos de 0,3 m: ya está pegado. Una celda entera libre: es un hueco que ha decidido la densidad, no el
+            // sobrante de la calle; no se toca.
             if (gap < 0.3f || gap >= ZoneUtils.CELL_SIZE - Step - 1e-3f)
             {
                 return 0;
             }
 
+            string where = dir > 0 ? "final" : "principio";
             float missing = ZoneUtils.CELL_SIZE - gap;
-            if (cornerOnly)
+            if (overlap <= StrictOverlap)
             {
-                // El esquinero no se mueve (va pegado al bordillo de la otra calle): solo cabe meter uno de una celda
-                // que pise lo mismo al esquinero y a lo de delante.
-                if (Insert(end, gap, missing, s, overlap, plain, prefabs, rng, dir, log, Fits))
-                {
-                    return 1;
-                }
-
-                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} junto al esquinero (calle sin más edificios): no cabe uno de una celda; se deja.");
+                log.AppendLine($"  hueco de {gap:F1} m al {where}: sin solape no se cierra; se deja.");
                 return 0;
             }
 
-            int joints = chain.Count + 1;
-            float perJoint = missing / joints;
-            // El hueco se mide en pasos de 0,1 m sumados en float: 6,5 m sale 6,4999995 y pedía "0,50 m" con máximo
-            // 0,5, y se rechazaba. Un centímetro de margen absorbe ese error.
-            if (overlap <= StrictOverlap || perJoint > overlap + 0.01f)
-            {
-                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")}: cerrarlo pide {perJoint:F2} m de solape en cada una de {joints} juntas{(overlap <= StrictOverlap ? " (sin solape)" : $" (máximo {overlap:F1} m)")}; se deja.");
-                return 0;
-            }
+            // El esquinero no se mueve (va pegado al bordillo de la otra calle): la cadena que se aprieta es la que
+            // queda detrás del nuevo, ninguna.
+            var moving = cornerOnly ? new List<Planned>() : chain;
 
-            // Se prueba a ensanchar una celda cada edificio de la cadena (al azar), con uno de la colección del mismo
-            // fondo (o, si no hay, menos profundo), y a apretar la cadena: el k-ésimo desde el extremo retrocede
-            // missing * (n - k) / (n + 1), así cada junta (también con lo de delante y lo de detrás) pisa perJoint.
-            int n = chain.Count;
-            foreach (int k in Enumerable.Range(0, n).OrderBy(_ => rng.Next()))
+            // 1) Ensanchar una celda un edificio de la cadena (de esta tira) y apretarla: el k-ésimo desde el extremo
+            //    retrocede missing * (n - k) / (n + 1), así cada junta (también con lo de delante y lo de detrás) pisa
+            //    perJoint. El hueco se mide en pasos de 0,1 m sumados en float: un centímetro de margen.
+            int n = moving.Count;
+            float perJoint = n > 0 ? missing / (n + 1) : float.MaxValue;
+            if (n > 0 && perJoint <= overlap + 0.01f)
             {
-                var cur = chain[k];
-                int w = cur.Max.x - cur.Min.x, dep = cur.Max.y - cur.Min.y;
-                // Nunca más profundo: por detrás podría salirse de una manzana estrecha.
-                var options = plain.Where(b => b.LotWidth == w + 1 && b.LotDepth <= dep && prefabs.ContainsKey(b.PrefabName))
-                    .OrderBy(b => b.LotDepth == dep ? 0 : 1).ThenBy(_ => rng.Next()).ToList();
-                foreach (var b in options)
+                foreach (int k in Enumerable.Range(0, own).OrderBy(_ => rng.Next()))
                 {
-                    var mins = new int2[n];
-                    var maxs = new int2[n];
-                    var shifts = new float[n];
-                    for (int j = 0; j < n; j++)
+                    var cur = chain[k];
+                    int w = cur.Max.x - cur.Min.x, dep = cur.Max.y - cur.Min.y;
+                    // Nunca más profundo: por detrás podría salirse de una manzana estrecha.
+                    var options = plain.Where(b => b.LotWidth == w + 1 && b.LotDepth <= dep && prefabs.ContainsKey(b.PrefabName))
+                        .OrderBy(b => b.LotDepth == dep ? 0 : 1).ThenBy(_ => rng.Next()).ToList();
+                    foreach (var b in options)
                     {
-                        var p = chain[j];
-                        int move = j < k ? dir : 0; // los que están entre el ensanchado y el extremo se corren una celda
-                        mins[j] = new int2(p.Min.x + move, p.Min.y);
-                        maxs[j] = new int2(p.Max.x + move, p.Max.y);
-                        if (j == k)
+                        var mins = new int2[n];
+                        var maxs = new int2[n];
+                        var shifts = new float[n];
+                        for (int j = 0; j < n; j++)
                         {
-                            if (dir > 0) { maxs[j] = new int2(p.Max.x + 1, p.Min.y + b.LotDepth); }
-                            else { mins[j] = new int2(p.Min.x - 1, p.Min.y); maxs[j] = new int2(p.Max.x, p.Min.y + b.LotDepth); }
+                            var p = chain[j];
+                            int move = j < k ? dir : 0; // los que están entre el ensanchado y el extremo se corren una celda
+                            mins[j] = new int2(p.Min.x + move, p.Min.y);
+                            maxs[j] = new int2(p.Max.x + move, p.Max.y);
+                            if (j == k)
+                            {
+                                if (dir > 0) { maxs[j] = new int2(p.Max.x + 1, p.Min.y + b.LotDepth); }
+                                else { mins[j] = new int2(p.Min.x - 1, p.Min.y); maxs[j] = new int2(p.Max.x, p.Min.y + b.LotDepth); }
+                            }
+
+                            shifts[j] = -dir * missing * (n - j) / (n + 1);
                         }
 
-                        shifts[j] = -dir * missing * (n - j) / joints;
-                    }
+                        bool ok = true;
+                        for (int j = 0; j < n && ok; j++)
+                        {
+                            ok = Fits(chain[j].Block, mins[j], maxs[j], shifts[j], perJoint + StrictOverlap, null);
+                        }
 
-                    bool ok = true;
-                    for (int j = 0; j < n && ok; j++)
-                    {
-                        ok = Fits(mins[j], maxs[j], shifts[j], perJoint + StrictOverlap);
-                    }
+                        if (!ok)
+                        {
+                            continue;
+                        }
 
-                    if (!ok)
-                    {
-                        continue;
-                    }
+                        log.AppendLine($"  hueco de {gap:F1} m al {where} cerrado: {cur.Name} -> {b.PrefabName} ({w}->{w + 1} de ancho), {n} edificios apretados{(n > own ? $" ({n - own} de tramos anteriores)" : string.Empty)}, {perJoint:F2} m de solape por junta.");
+                        cur.Name = b.PrefabName;
+                        cur.Prefab = prefabs[b.PrefabName];
+                        for (int j = 0; j < n; j++)
+                        {
+                            chain[j].Min = mins[j];
+                            chain[j].Max = maxs[j];
+                            chain[j].Shift = shifts[j];
+                        }
 
-                    log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} cerrado: {cur.Name} -> {b.PrefabName} ({w}->{w + 1} de ancho), {n} edificios apretados, {perJoint:F2} m de solape por junta.");
-                    cur.Name = b.PrefabName;
-                    cur.Prefab = prefabs[b.PrefabName];
-                    for (int j = 0; j < n; j++)
-                    {
-                        chain[j].Min = mins[j];
-                        chain[j].Max = maxs[j];
-                        chain[j].Shift = shifts[j];
+                        return 1;
                     }
-
-                    return 1;
                 }
             }
 
-            if (Insert(end, gap, missing, s, overlap, plain, prefabs, rng, dir, log, Fits))
+            // 2) Meter uno de una celda delante del extremo y apretar la cadena (una junta más que al ensanchar).
+            if (Insert(end, moving, gap, missing, s, overlap, plain, prefabs, rng, dir, log, Fits))
             {
                 return 1;
             }
 
-            log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")}: ningún edificio de la colección una celda más ancho cabe; se deja.");
+            log.AppendLine($"  hueco de {gap:F1} m al {where}: ni ensanchando uno ni metiendo uno de una celda cabe con {n + 2} juntas como mucho ({missing / (n + 2):F2} m por junta, máximo {overlap:F1} m); se deja.");
             return 0;
         }
 
         /// <summary>
-        /// Hueco de casi una celda (falta como mucho el doble del solape): se mete un edificio de una celda delante del
-        /// extremo, corrido hacia atrás la mitad de lo que falta, así pisa lo mismo al de detrás y a lo de delante.
+        /// Alarga la cadena (que ha llegado al principio de su tira, en sentido contrario a "dir") por las tiras
+        /// anteriores del mismo lado: la que acaba donde empieza esta, y así. Para en un esquinero, en un edificio ya
+        /// corrido o en un hueco.
         /// </summary>
-        bool Insert(Planned end, float gap, float missing, SelectedBlock s, float overlap, List<BuildingInfo> plain,
-            Dictionary<string, Entity> prefabs, System.Random rng, int dir, StringBuilder log, Func<int2, int2, float, float, List<Quad>, bool> fits)
+        void ExtendChainAcrossStrips(SelectedBlock s, List<Planned> chain, int dir)
         {
-            float perJoint = missing / 2;
+            var cur = s;
+            while (true)
+            {
+                var st = cur.Strip;
+                if (st == null)
+                {
+                    return;
+                }
+
+                // dir > 0: la cadena va hacia atrás, a la tira que acaba donde empieza esta. dir < 0: al revés.
+                var here = dir > 0 ? st.ChunkStart : new Pt(st.ChunkStart.X + st.T.X * st.ChunkLength, st.ChunkStart.Y + st.T.Y * st.ChunkLength);
+                var next = selection.FirstOrDefault(o => o != cur && o.Strip != null && o.Strip.SideIndex == st.SideIndex && Near(dir > 0
+                    ? new Pt(o.Strip.ChunkStart.X + o.Strip.T.X * o.Strip.ChunkLength, o.Strip.ChunkStart.Y + o.Strip.T.Y * o.Strip.ChunkLength)
+                    : o.Strip.ChunkStart, here));
+                if (next == null)
+                {
+                    return;
+                }
+
+                var theirs = preview.Where(p => !p.IsDecor && p.Owner == next).OrderBy(p => p.Min.x).ToList();
+                int added = 0;
+                for (int i = dir > 0 ? theirs.Count - 1 : 0; i >= 0 && i < theirs.Count; i -= dir)
+                {
+                    var p = theirs[i];
+                    var last = chain[chain.Count - 1];
+                    bool touching = added == 0
+                        ? Quad.Distance(LotQuad(p, p.Shift, -0.3f), LotQuad(last, last.Shift, -0.3f)) <= 0 // a menos de 0,6 m
+                        : (dir > 0 ? p.Max.x == last.Min.x : p.Min.x == last.Max.x);
+                    if (p.Corner || p.Shift != 0 || !touching || chain.Contains(p))
+                    {
+                        return;
+                    }
+
+                    chain.Add(p);
+                    added++;
+                }
+
+                if (added == 0)
+                {
+                    return;
+                }
+
+                cur = next;
+            }
+
+            static bool Near(Pt a, Pt b) => (a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y) < 1.0;
+        }
+
+        /// <summary>
+        /// Mete un edificio de una celda delante del extremo y aprieta la cadena "moving" (vacía si el extremo es un
+        /// esquinero, que no se mueve): con N edificios que se mueven (el nuevo y la cadena) hay N + 1 juntas, y el
+        /// j-ésimo desde el nuevo retrocede missing * (N - j) / (N + 1); cada junta pisa missing / (N + 1).
+        /// </summary>
+        bool Insert(Planned end, List<Planned> moving, float gap, float missing, SelectedBlock s, float overlap, List<BuildingInfo> plain,
+            Dictionary<string, Entity> prefabs, System.Random rng, int dir, StringBuilder log, Func<Block, int2, int2, float, float, List<Quad>, bool> fits)
+        {
+            int count = moving.Count + 1;
+            float perJoint = missing / (count + 1);
             if (overlap <= StrictOverlap || perJoint > overlap + 0.01f)
             {
                 return false;
@@ -2081,13 +2143,26 @@ namespace BuildingCollections.Systems
             int dep = end.Max.y - end.Min.y;
             var options = plain.Where(b => b.LotWidth == 1 && b.LotDepth <= dep && b.LotDepth <= s.Virtual.Depth && prefabs.ContainsKey(b.PrefabName))
                 .OrderBy(b => b.LotDepth == dep ? 0 : 1).ThenBy(_ => rng.Next()).ToList();
-            float shift = -dir * perJoint;
+            float Shift(int j) => -dir * missing * (count - j) / (count + 1);
+            for (int j = 0; j < moving.Count; j++)
+            {
+                if (!fits(moving[j].Block, moving[j].Min, moving[j].Max, Shift(j + 1), perJoint + StrictOverlap, null))
+                {
+                    return false;
+                }
+            }
+
             foreach (var b in options)
             {
                 var max = new int2(min.x + 1, min.y + b.LotDepth);
-                if (!fits(min, max, shift, perJoint + StrictOverlap, null))
+                if (!fits(s.Block, min, max, Shift(0), perJoint + StrictOverlap, null))
                 {
                     continue;
+                }
+
+                for (int j = 0; j < moving.Count; j++)
+                {
+                    moving[j].Shift = Shift(j + 1);
                 }
 
                 preview.Add(new Planned
@@ -2098,9 +2173,9 @@ namespace BuildingCollections.Systems
                     Min = min,
                     Max = max,
                     Owner = s,
-                    Shift = shift,
+                    Shift = Shift(0),
                 });
-                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} cerrado: metido {b.PrefabName} (1x{b.LotDepth}) tras {end.Name}, {perJoint:F2} m de solape por junta.");
+                log.AppendLine($"  hueco de {gap:F1} m al {(dir > 0 ? "final" : "principio")} cerrado: metido {b.PrefabName} (1x{b.LotDepth}) tras {end.Name}, {moving.Count} edificios apretados, {perJoint:F2} m de solape por junta.");
                 return true;
             }
 

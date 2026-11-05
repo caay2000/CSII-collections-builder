@@ -147,5 +147,48 @@ namespace BuildingCollections.Tests
             Assert.Equal(5, strips.Single(s => s.T.Y > 0.9).Width);
             Assert.True(bottom.Grid.Free[0, 0] && bottom.Grid.Free[3, 0]);
         }
+
+        static List<Pt> Arc(double r, double fromDeg, double toDeg, int n)
+        {
+            var pts = new List<Pt>();
+            for (int i = 0; i <= n; i++)
+            {
+                double a = (fromDeg + (toDeg - fromDeg) * i / n) * System.Math.PI / 180;
+                pts.Add(new Pt(r * System.Math.Cos(a), r * System.Math.Sin(a)));
+            }
+            return pts;
+        }
+
+        [Fact]
+        public void Curve_chunks_are_whole_cells_and_contiguous_when_bending_away()
+        {
+            // Recorrida en sentido horario: gira a la derecha, la manzana (a la izquierda) queda por fuera de la curva.
+            var (pts, chunks) = VirtualLots.SnapChunks(Arc(200, 90, 30, 60), 2.0);
+            Assert.True(chunks.Count >= 3);
+            for (int c = 0; c < chunks.Count; c++)
+            {
+                double len = System.Math.Sqrt(Pt.Dot(pts[chunks[c].to] - pts[chunks[c].from], pts[chunks[c].to] - pts[chunks[c].from]));
+                if (c < chunks.Count - 1)
+                {
+                    Assert.True(System.Math.Abs(len - 8 * System.Math.Round(len / 8)) < 0.01, $"tramo {c}: {len}");
+                    Assert.Equal(chunks[c].to, chunks[c + 1].from);
+                }
+            }
+        }
+
+        [Fact]
+        public void Curve_chunks_leave_room_for_the_backs_when_bending_into_the_block()
+        {
+            // Antihorario: gira a la izquierda, hacia la manzana. Entre tramos queda el hueco justo para 16 m de fondo.
+            var (pts, chunks) = VirtualLots.SnapChunks(Arc(200, 30, 90, 60), 2.0);
+            Assert.True(chunks.Count >= 3);
+            for (int c = 0; c + 1 < chunks.Count; c++)
+            {
+                var a = pts[chunks[c].to];
+                var b = pts[chunks[c + 1].from];
+                double gap = System.Math.Sqrt(Pt.Dot(b - a, b - a));
+                Assert.InRange(gap, 0.5, 8);
+            }
+        }
     }
 }
