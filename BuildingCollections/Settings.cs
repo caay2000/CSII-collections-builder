@@ -190,12 +190,17 @@ namespace BuildingCollections
         public int Density { get; set; } = 100;
 
         /// <summary>
-        /// Con Anarchy encendido, casilla "Overlap buildings" del panel: 0,5 m (marcada) o 0. Es un tope por junta entre
-        /// edificios nuevos; lo ya construido no se pisa nunca.
+        /// Con Anarchy encendido, casilla "Overlap buildings" del panel: mayor que 0 = marcada. La cantidad por junta
+        /// está en <see cref="OverlapMeters"/>; lo ya construido no se pisa nunca.
         /// </summary>
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
         public float AnarchyOverlap { get; set; } = 0.5f;
+
+        /// <summary>Solape máximo por junta (m) cuando "Overlap buildings" está marcado: 0,5, 1, 1,5 o 2.</summary>
+        [SettingsUISlider(min = 0.5f, max = 2f, step = 0.5f, unit = Unit.kFloatSingleFraction)]
+        [SettingsUISection(Section, Builder)]
+        public float OverlapMeters { get; set; } = 0.5f;
 
         /// <summary>Árboles del juego base en el espacio sobrante (patios, huecos).</summary>
         [SettingsUIHidden]
@@ -226,6 +231,14 @@ namespace BuildingCollections
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
         public int DecorDensity { get; set; } = 50;
+
+        /// <summary>
+        /// Área máxima (hectáreas) de una manzana en modo Block. Una más grande no se selecciona (se pide Polygon): con
+        /// curvas, cada manzana grande genera muchas tiras y la vista previa tarda más. 1 ha = 10.000 m².
+        /// </summary>
+        [SettingsUISlider(min = 1, max = 50, step = 1, unit = Unit.kInteger)]
+        [SettingsUISection(Section, Builder)]
+        public int MaxBlockHectares { get; set; } = 5;
 
         /// <summary>Modo de selección del constructor: "block" o "polygon".</summary>
         [SettingsUIHidden]
@@ -269,6 +282,8 @@ namespace BuildingCollections
             MixCollection = string.Empty;
             MixShare = 50;
             Mode = "block";
+            MaxBlockHectares = 5;
+            OverlapMeters = 0.5f;
         }
     }
 }

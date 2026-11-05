@@ -30,6 +30,7 @@ namespace BuildingCollections.Systems
         ValueBinding<string> buildings;
         ValueBinding<string> mixBuildings;
         ValueBinding<string> builderMessage;
+        ValueBinding<int> builderMessageError;
         bool mixDirty = true;
         ValueBinding<string> selected;
         ValueBinding<string> status;
@@ -88,6 +89,8 @@ namespace BuildingCollections.Systems
             AddBinding(buildings = new ValueBinding<string>(Group, "buildings", "[]"));
             AddBinding(mixBuildings = new ValueBinding<string>(Group, "mixBuildings", "[]"));
             AddBinding(builderMessage = new ValueBinding<string>(Group, "builderMessage", string.Empty));
+            // 0 = no es error; si no, un número distinto en cada error (el panel repite el destello aunque el texto sea igual).
+            AddBinding(builderMessageError = new ValueBinding<int>(Group, "builderMessageError", 0));
             AddBinding(selected = new ValueBinding<string>(Group, "selected", string.Empty));
             AddBinding(status = new ValueBinding<string>(Group, "status", string.Empty));
             AddBinding(builderBinding = new ValueBinding<string>(Group, "builder", "{}"));
@@ -236,6 +239,7 @@ namespace BuildingCollections.Systems
                     messageSerial = builder.MessageSerial;
                     status.Update(builder.Message);
                     builderMessage.Update(builder.Message);
+                    builderMessageError.Update(builder.MessageIsError ? builder.MessageSerial : 0);
                 }
 
                 // Cada ~2 s (o al abrir el panel) se comprueba si han llegado prefabs nuevos.
@@ -428,6 +432,7 @@ namespace BuildingCollections.Systems
         {
             name = name ?? string.Empty;
             selected.Update(name);
+            builderMessageError.Update(0);
             builderMessage.Update(string.Empty); // el mensaje anterior ya no aplica
             buildingsDirty = true;
             collectionsDirty = true;
@@ -534,12 +539,13 @@ namespace BuildingCollections.Systems
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
-            s.AnarchyOverlap = f.overlap > 0 ? 0.5f : 0f; // casilla: 0,5 m o nada
+            s.AnarchyOverlap = f.overlap > 0 ? 0.5f : 0f; // casilla: marcada o no (la cantidad, en OverlapMeters)
             s.TreeSet = TreeControllerBridge.SetIds.Contains(f.treeSet) ? f.treeSet : string.Empty;
             s.TreeAges = (f.treeAges & 15) == 0 ? 4 : f.treeAges & 15;
             s.MixCollection = CollectionStore.Find(f.mix ?? string.Empty)?.Name ?? string.Empty;
             s.MixShare = Clamp((int)Math.Round(f.mixShare / 5.0, MidpointRounding.AwayFromZero) * 5, 5, 95);
             mixDirty = true;
+            builderMessageError.Update(0);
             builderMessage.Update(string.Empty); // cambian los ajustes: el mensaje anterior ya no aplica
             builder.SetMode(s.Mode);
             saveCountdown = 60;
@@ -556,6 +562,7 @@ namespace BuildingCollections.Systems
                 return;
             }
 
+            var clock = System.Diagnostics.Stopwatch.StartNew();
             PrefabCatalog.Refresh(World, DevConfig.Load().SwapCornerSides);
             var filter = s.ToFilter();
             List<CatalogEntry> Matching(BuildingCollection col) => col.Prefabs
@@ -580,7 +587,9 @@ namespace BuildingCollections.Systems
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
             // Decoración: árboles del juego base en el espacio sobrante, o los de un set de Tree Controller.
             var decor = s.Trees ? TreeDecor(s.TreeSet) : new List<CatalogEntry>();
+            long prep = clock.ElapsedMilliseconds;
             builder.GeneratePreview(candidates, s.Density, seed, decor, s.DecorDensity, s.TreeAges);
+            Mod.Log.Info($"[vista previa] total {clock.ElapsedMilliseconds} ms (catálogo y filtros {prep} ms).");
         }
 
         static CatalogEntry Tagged(CatalogEntry e, int group, double share) => new CatalogEntry

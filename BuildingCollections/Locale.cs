@@ -14,7 +14,7 @@ namespace BuildingCollections
         {
             return new Dictionary<string, string>
             {
-                { s.GetSettingsLocaleID(), "Building Collections" },
+                { s.GetSettingsLocaleID(), $"Building Collections v{Mod.Version}" },
                 { s.GetOptionTabLocaleID(BuildingCollectionsSettings.Section), "Main" },
                 { s.GetOptionGroupLocaleID(BuildingCollectionsSettings.Collections), "Collections" },
                 { s.GetOptionGroupLocaleID(BuildingCollectionsSettings.Builder), "Block builder" },
@@ -45,6 +45,10 @@ namespace BuildingCollections
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.LevelValue)), "Building level: value" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.Density)), "Density" },
                 { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.Density)), "Percentage of free cells to cover with buildings." },
+                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.OverlapMeters)), "Overlap per joint (m)" },
+                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.OverlapMeters)), "How much two new buildings may overlap at each joint when \"Overlap buildings\" is ticked in the builder panel (needs Anarchy). Higher values close bigger leftovers at street ends but can hide part of a facade." },
+                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.MaxBlockHectares)), "Largest block for Block mode (hectares)" },
+                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.MaxBlockHectares)), "Block mode only selects blocks up to this size (1 ha = 10,000 m²). Bigger blocks, especially with curved streets, make the preview slower: use Polygon for those, or raise this limit if your PC handles it." },
 
                 { s.GetEnumValueLocaleID(CompareOp.Equal), "=" },
                 { s.GetEnumValueLocaleID(CompareOp.NotEqual), "!=" },
