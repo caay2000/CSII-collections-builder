@@ -129,5 +129,23 @@ namespace BuildingCollections.Tests
             var strips = VirtualLots.Build(sides, new Quad[0]);
             Assert.True(strips.Count >= 4);
         }
+
+        [Fact]
+        public void Rounded_corners_do_not_lose_a_cell()
+        {
+            // Manzana de 4 x 5 celdas (32 x 40 m) como la da el juego: cada lado acaba 0,5 m antes de la esquina.
+            var sides = new List<List<Pt>>
+            {
+                L(0.5, 0, 31.5, 0), L(32, 0.5, 32, 39.5), L(31.5, 40, 0.5, 40), L(0, 39.5, 0, 0.5),
+            };
+            var strips = VirtualLots.Build(sides, new Quad[0]);
+            Assert.Equal(4, strips.Count);
+            var bottom = strips.Single(s => s.T.X > 0.9);
+            Assert.Equal(4, bottom.Width);
+            Assert.True(bottom.Slack < 0.1);
+            Assert.True(bottom.P0.X < 0.1 && bottom.P0.Y > -0.1);
+            Assert.Equal(5, strips.Single(s => s.T.Y > 0.9).Width);
+            Assert.True(bottom.Grid.Free[0, 0] && bottom.Grid.Free[3, 0]);
+        }
     }
 }

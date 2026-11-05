@@ -62,8 +62,10 @@ namespace BuildingCollections.Core
                 return strips;
             }
 
+            var merged = Merge(sides, frontage, mergeAngleDeg, cornerAngleDeg);
+            var mergedChunks = merged.Select(m => Chunks(m.Points, straightTolerance)).ToList();
             int sideIndex = -1;
-            foreach (var side in Merge(sides, frontage, mergeAngleDeg, cornerAngleDeg))
+            foreach (var side in merged)
             {
                 sideIndex++;
                 if (!side.Frontage)
@@ -72,10 +74,44 @@ namespace BuildingCollections.Core
                     continue;
                 }
 
+                // Extremos de cada tramo. En una esquina, el contorno del juego viene redondeado (cada lado acaba ~0,5 m
+                // antes): una manzana de 4 x 5 celdas medía 31 x 39 m y perdía una celda por lado. El primer y el último
+                // tramo se alargan hasta el cruce con el lado de al lado, que es la esquina de verdad.
+                var allChunks = mergedChunks[sideIndex];
+                var ends = new Dictionary<(int, int), (Pt a, Pt b)>();
+                for (int c = 0; c < allChunks.Count; c++)
+                {
+                    var (f, t2) = allChunks[c];
+                    var a0 = side.Points[f];
+                    var b0 = side.Points[t2];
+                    if (c == 0 && side.StartCorner)
+                    {
+                        int pi = (sideIndex - 1 + merged.Count) % merged.Count;
+                        var pc = mergedChunks[pi];
+                        if (pc.Count > 0)
+                        {
+                            var (pf, pt) = pc[pc.Count - 1];
+                            a0 = ExtendToCorner(b0, a0, merged[pi].Points[pf], merged[pi].Points[pt]);
+                        }
+                    }
+
+                    if (c == allChunks.Count - 1 && side.EndCorner)
+                    {
+                        int ni = (sideIndex + 1) % merged.Count;
+                        var nc = mergedChunks[ni];
+                        if (nc.Count > 0)
+                        {
+                            var (nf, nt) = nc[0];
+                            b0 = ExtendToCorner(a0, b0, merged[ni].Points[nf], merged[ni].Points[nt]);
+                        }
+                    }
+
+                    ends[allChunks[c]] = (a0, b0);
+                }
+
                 // Tramos de al menos una celda: un tramo corto al principio no debe quitarle la esquina al siguiente.
-                var allChunks = Chunks(side.Points, straightTolerance);
                 var chunks = allChunks
-                    .Where(c => (int)Math.Floor((Dist(side.Points[c.from], side.Points[c.to]) + 0.5) / Cell) >= 1)
+                    .Where(c => (int)Math.Floor((Dist(ends[c].a, ends[c].b) + 0.5) / Cell) >= 1)
                     .ToList();
                 if (notes != null)
                 {
@@ -83,7 +119,7 @@ namespace BuildingCollections.Core
                     for (int c = 0; c < allChunks.Count; c++)
                     {
                         var (f, t2) = allChunks[c];
-                        double l = Dist(side.Points[f], side.Points[t2]);
+                        double l = Dist(ends[allChunks[c]].a, ends[allChunks[c]].b);
                         string turnNext = "";
                         if (c + 1 < allChunks.Count)
                         {
@@ -101,8 +137,7 @@ namespace BuildingCollections.Core
                 }
                 for (int k = 0; k < chunks.Count; k++)
                 {
-                    var a = side.Points[chunks[k].from];
-                    var b = side.Points[chunks[k].to];
+                    var (a, b) = ends[chunks[k]];
                     var d = b - a;
                     double len = Math.Sqrt(Pt.Dot(d, d));
                     int width = (int)Math.Floor((len + 0.5) / Cell);
@@ -151,6 +186,33 @@ namespace BuildingCollections.Core
             }
 
             return strips;
+        }
+
+        /// <summary>
+        /// Alarga el extremo "end" del segmento from-end, por su misma recta, hasta cruzar la recta c-d (la del lado de
+        /// al lado). Solo si el cruce queda por delante y a menos de 1,5 m: con un redondeo mayor (radio > ~1,7 m) la celda
+        /// de la esquina, metida 0,5 m, ya cae fuera del contorno y se perdería el esquinero.
+        /// </summary>
+        static Pt ExtendToCorner(Pt from, Pt end, Pt c, Pt d)
+        {
+            var t = end - from;
+            var u = d - c;
+            double lt = Math.Sqrt(Pt.Dot(t, t)), lu = Math.Sqrt(Pt.Dot(u, u));
+            if (lt < 1e-6 || lu < 1e-6)
+            {
+                return end;
+            }
+
+            t = new Pt(t.X / lt, t.Y / lt);
+            u = new Pt(u.X / lu, u.Y / lu);
+            double den = Pt.Cross(t, u);
+            if (Math.Abs(den) < 0.2)
+            {
+                return end;
+            }
+
+            double s = Pt.Cross(c - end, u) / den;
+            return s >= 0 && s <= 1.5 ? new Pt(end.X + t.X * s, end.Y + t.Y * s) : end;
         }
 
         /// <summary>Contorno cerrado de la manzana: los lados uno tras otro.</summary>
