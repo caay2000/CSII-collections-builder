@@ -14,7 +14,6 @@ namespace BuildingCollections.Tests
         [InlineData(0.3)]
         public void Share_follows_the_slider_even_with_uneven_collections(double share)
         {
-            // Una colección con 1 edificio y otra con 9: sin elegir antes la colección saldría ~10 % / 90 %.
             var plain = new[] { B("a", 0, share) }.Concat(Enumerable.Range(0, 9).Select(i => B("b" + i, 1, 1 - share))).ToList();
             int first = 0, total = 0;
             for (int seed = 0; seed < 200; seed++)

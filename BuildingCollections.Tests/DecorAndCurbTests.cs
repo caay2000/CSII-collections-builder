@@ -26,7 +26,6 @@ namespace BuildingCollections.Tests
             var radii = new List<double> { 1.0, 5.0 };
             var rng = new System.Random(1);
 
-            // A 3 m del edificio solo cabe el pequeño; a 8 m cualquiera; pegado, ninguno.
             for (int i = 0; i < 20; i++)
             {
                 Assert.Equal(0, Decor.PickFitting(new Pt(13, 5), new[] { house }, radii, 0.5, rng));
@@ -49,7 +48,7 @@ namespace BuildingCollections.Tests
 
         static List<List<Pt>> Curbs() => new List<List<Pt>>
         {
-            Enumerable.Range(0, 11).Select(i => new Pt(i * 10, 0)).ToList(),   // bordillo a lo largo de y = 0
+            Enumerable.Range(0, 11).Select(i => new Pt(i * 10, 0)).ToList(),
         };
 
         [Fact]
@@ -85,11 +84,11 @@ namespace BuildingCollections.Tests
             var curbs = Curbs();
             CurbSnap.TrySnap(curbs, new Pt(95, 1), 6, out var a);
             CurbSnap.TrySnap(curbs, new Pt(5, 1), 6, out var b);
-            var verts = new List<Pt> { new Pt(95, 50), a.Point, b.Point, new Pt(5, 50) }; // horario
+            var verts = new List<Pt> { new Pt(95, 50), a.Point, b.Point, new Pt(5, 50) };
             CurbSnap.Sides(verts, new[] { -1, 0, 0, -1 }, new[] { 0, a.Arc, b.Arc, 0 }, curbs, 1.5, out var sides, out var front);
             var strips = VirtualLots.Build(sides, new Quad[0], frontage: front);
             Assert.Single(strips);
-            Assert.True(strips[0].T.X > 0.9); // con la manzana a la izquierda, el frente va hacia +x
+            Assert.True(strips[0].T.X > 0.9);
         }
     }
 }

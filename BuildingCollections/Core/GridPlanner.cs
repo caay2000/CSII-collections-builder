@@ -4,20 +4,14 @@ using System.Linq;
 
 namespace BuildingCollections.Core
 {
-    /// <summary>
-    /// Rejilla de celdas de un bloque. x avanza a lo largo de la calle y y se aleja de ella (y = 0 es la fila de
-    /// la calle). Free[x, y] indica si la celda está libre.
-    /// </summary>
     public sealed class PlanGrid
     {
         public int Width;
         public int Depth;
         public bool[,] Free;
 
-        /// <summary>El extremo izquierdo (x = 0) de la fila frontal es una esquina.</summary>
         public bool LeftCorner;
 
-        /// <summary>El extremo derecho (x = Width - 1) de la fila frontal es una esquina.</summary>
         public bool RightCorner;
 
         public static PlanGrid AllFree(int width, int depth, bool leftCorner, bool rightCorner)
@@ -63,12 +57,6 @@ namespace BuildingCollections.Core
 
     public static class GridPlanner
     {
-        /// <summary>
-        /// Reparte edificios a lo largo de la fila frontal. Las esquinas llevan edificios esquineros (si la lista
-        /// tiene alguno que encaje; si no, uno normal) y el resto, normales. La densidad (1 a 100) es el porcentaje
-        /// de la fachada libre (fila frontal) que se cubre; el relleno cubre el máximo de fachada posible con los
-        /// anchos disponibles y la densidad quita después. El resultado depende solo de las entradas y de la semilla.
-        /// </summary>
         public static List<Placement> Plan(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, int density, int seed,
             IReadOnlyList<Placement> preplaced = null)
         {
@@ -80,10 +68,8 @@ namespace BuildingCollections.Core
 
             density = Math.Min(density, 100);
             var rng = new Random(seed);
-            var used = (bool[,])grid.Free.Clone();   // true = celda aún disponible
+            var used = (bool[,])grid.Free.Clone();
 
-            // 1) esquinas primero, para que el relleno del medio no las ocupe. Si ya vienen decididas (una primera
-            //    pasada que reparte las esquinas entre tiras que se tocan), se respetan.
             if (preplaced != null)
             {
                 foreach (var p in preplaced)
@@ -97,23 +83,16 @@ namespace BuildingCollections.Core
                 Corners(grid, used, plain, corners, rng, result);
             }
 
-            // 2) relleno del medio: en cada tramo libre de la fila frontal se elige al azar una de las combinaciones
-            //    que cubren el máximo de fachada. Los huecos los pone la densidad.
             FillMax(grid, used, plain, rng, result);
+            if (density >= 100)
+            {
+                return result.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
+            }
 
-            // 3) densidad: porcentaje de la fachada a calle (celdas libres de la fila frontal), no de toda la rejilla:
-            //    el fondo de la parcela no cuenta. Se quitan al azar edificios (primero los normales).
             var removed = Thin(result.Select(p => (p.Building.LotWidth, p.IsCorner)).ToList(), FrontFree(grid), density, rng);
             return result.Where((p, i) => !removed.Contains(i)).OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
         }
 
-        /// <summary>
-        /// Densidad: qué edificios (índices) quitar para cubrir el porcentaje pedido de las celdas de fachada
-        /// ("front"). Objetivo redondeado al más cercano; se quitan al azar, primero los normales, y nunca uno que
-        /// deje la fachada más lejos del objetivo de lo que estaba (antes se quitaba uno de 2 con 1 de sobra, y con
-        /// el redondeo hacia abajo en cada calle corta un 90 % se quedaba en un 70 %). Se usa sobre toda la
-        /// selección a la vez: en calles de 3 o 4 celdas, por separado, no hay forma de acercarse.
-        /// </summary>
         public static HashSet<int> Thin(IReadOnlyList<(int width, bool corner)> items, int front, int density, Random rng)
         {
             var removed = new HashSet<int>();
@@ -141,7 +120,6 @@ namespace BuildingCollections.Core
                 }
                 else
                 {
-                    // Todos se pasan: el más estrecho, solo si quitándolo se queda más cerca del objetivo.
                     int w = pool.Min(i => items[i].width);
                     if (w - excess >= excess)
                     {
@@ -159,11 +137,6 @@ namespace BuildingCollections.Core
             return removed;
         }
 
-        /// <summary>
-        /// Solo las esquinas, sobre la rejilla tal como está. Sirve para una primera pasada en la que todas las tiras
-        /// reservan sus esquinas antes de rellenar ninguna: dos tiras que se tocan en una esquina se la disputan, y
-        /// así el relleno de una no le quita la esquina a la otra.
-        /// </summary>
         public static List<Placement> PlanCorners(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, int seed)
         {
             var result = new List<Placement>();
@@ -175,16 +148,11 @@ namespace BuildingCollections.Core
             return result;
         }
 
-        /// <summary>
-        /// Como el juego (ZoneSpawnSystem), el acceso del edificio debe coincidir exactamente con las calles de la
-        /// parcela: con calle a los dos lados y un edificio "izquierda y derecha" que ocupe todo el ancho, ese; si no,
-        /// uno por cada esquina.
-        /// </summary>
         static void Corners(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners, Random rng, List<Placement> result)
         {
             if (grid.LeftCorner && grid.RightCorner && TryBoth(grid, used, corners, rng, result))
             {
-                return; // relleno completo con un único edificio de dos esquinas
+                return;
             }
 
             if (grid.RightCorner)
@@ -212,10 +180,6 @@ namespace BuildingCollections.Core
             return n;
         }
 
-        /// <summary>
-        /// En cada tramo libre de la fila frontal, programación dinámica: best[i] = máxima fachada cubierta desde i
-        /// hasta el final del tramo. Luego se recorre eligiendo al azar entre las opciones que mantienen el óptimo.
-        /// </summary>
         static void FillMax(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> plain, Random rng, List<Placement> result)
         {
             int x0 = 0;
@@ -233,7 +197,6 @@ namespace BuildingCollections.Core
                     len++;
                 }
 
-                // Dentro del tramo los edificios ocupan columnas distintas: lo que cabe se decide con el estado inicial.
                 var options = new List<BuildingInfo>[len];
                 for (int i = 0; i < len; i++)
                 {
@@ -256,7 +219,7 @@ namespace BuildingCollections.Core
                     var optimal = options[k].Where(b => b.LotWidth + best[k + b.LotWidth] == best[k]).ToList();
                     if (optimal.Count == 0)
                     {
-                        k++; // saltarse esta celda es lo óptimo
+                        k++;
                         continue;
                     }
 
@@ -273,7 +236,6 @@ namespace BuildingCollections.Core
         static void TryCorner(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<BuildingInfo> plain,
             CornerKind side, bool atRight, Random rng, List<Placement> result)
         {
-            // Primero un esquinero cuyo acceso lateral sea exactamente ese lado; si no hay, uno normal (decisión del spec).
             var pool = corners.Where(b => (b.Corner & (CornerKind.Left | CornerKind.Right)) == side).ToList();
             bool isCorner = pool.Count > 0;
             if (!isCorner)
@@ -302,7 +264,6 @@ namespace BuildingCollections.Core
             result.Add(new Placement { X = px, Y = 0, Building = pick, IsCorner = isCorner });
         }
 
-        /// <summary>Calle a izquierda y derecha: un edificio "izquierda y derecha" que llene exactamente el ancho.</summary>
         static bool TryBoth(PlanGrid grid, bool[,] used, IReadOnlyList<BuildingInfo> corners, Random rng, List<Placement> result)
         {
             var both = CornerKind.Left | CornerKind.Right;
@@ -318,11 +279,6 @@ namespace BuildingCollections.Core
             return true;
         }
 
-        /// <summary>
-        /// Uno al azar. Con una mezcla de dos colecciones y opciones de las dos, primero se elige la colección según su
-        /// parte (Share) y luego un edificio de ella; así el reparto sigue el porcentaje elegido aunque una colección
-        /// tenga muchos más edificios que la otra. Sin mezcla, igual que antes (mismo uso del generador).
-        /// </summary>
         internal static BuildingInfo Pick(List<BuildingInfo> options, Random rng)
         {
             int first = 0;

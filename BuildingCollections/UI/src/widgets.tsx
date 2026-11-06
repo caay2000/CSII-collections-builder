@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import styles from "./panel.module.scss";
 import { CollectionDto } from "./bindings";
 
-/** Iconos .svg servidos desde la carpeta del mod (Mod.cs registra coui://buildingcollections/). */
 export const icon = (name: string) => `coui://buildingcollections/icons/${name}.svg`;
 
 export const IconButton = (p: { name: string; title: string; className?: string; disabled?: boolean; onClick: () => void }) => (
@@ -11,16 +10,9 @@ export const IconButton = (p: { name: string; title: string; className?: string;
     </button>
 );
 
-// Esc lo recibe el panel (acción "Back"). Si hay un campo en línea abierto, Esc lo cancela en vez de cerrar el panel.
-// El campo también ve la tecla Esc (keydown) y puede desmontarse antes de que llegue "Back": esa misma pulsación
-// no debe cerrar además el panel.
 let escapeOverride: (() => void) | null = null;
 let lastEscape = 0;
 
-/**
- * Único punto de entrada de Esc (tecla leída desde C#, acción "Back" o el propio campo): una misma pulsación
- * puede llegar por varios caminos y solo cuenta una vez. Cancela el campo en línea abierto o, si no hay, cierra.
- */
 export const onEscape = (close: () => void) => {
     const now = Date.now();
     if (now - lastEscape < 400) return;
@@ -29,7 +21,6 @@ export const onEscape = (close: () => void) => {
     else close();
 };
 
-/** Campo en línea: Enter confirma, Esc cancela. Se enfoca al aparecer. */
 export const InlineInput = (p: { initial?: string; placeholder: string; onSubmit: (v: string) => void; onCancel: () => void }) => {
     const [value, setValue] = useState(p.initial ?? "");
     const ref = useRef<HTMLInputElement>(null);
@@ -50,7 +41,6 @@ export const InlineInput = (p: { initial?: string; placeholder: string; onSubmit
 
 export const OPS = ["=", "≠", ">", "<"];
 
-/** Control de flechas: [op] ∨ valor ∧. El operador conserva su hueco aunque no se vea, para que nada se mueva. */
 export const StepFilter = (p: {
     label: string; op: number; value: number; max?: number; onChange: (op: number, value: number) => void;
 }) => {
@@ -67,7 +57,6 @@ export const StepFilter = (p: {
     );
 };
 
-/** ∨ valor ∧ */
 export const Stepper = (p: { value: string; onDown: () => void; onUp: () => void }) => (
     <>
         <button className={styles.stepBtn} title="Decrease" onClick={p.onDown}><img src={icon("chevron-down")} /></button>
@@ -76,7 +65,6 @@ export const Stepper = (p: { value: string; onDown: () => void; onUp: () => void
     </>
 );
 
-/** Fila con casilla a la derecha, alineada con el valor de los filtros. */
 export const CheckRow = (p: { label: string; checked: boolean; title?: string; accent?: boolean; onChange: (v: boolean) => void }) => (
     <div className={styles.filter} title={p.title}>
         <span className={p.accent ? styles.filterLabelAnarchy : styles.filterLabel}>{p.label}</span>
@@ -86,7 +74,6 @@ export const CheckRow = (p: { label: string; checked: boolean; title?: string; a
     </div>
 );
 
-/** Desplegable propio con el estilo del panel (el nativo del juego salía blanco y fuera de tono). */
 export const CollectionPicker = (p: { items: CollectionDto[]; selected: string; onSelect: (n: string) => void; noneLabel?: string }) => {
     const [open, setOpen] = useState(false);
     const cur = p.items.find((c) => c.name === p.selected);
@@ -117,16 +104,10 @@ export const CollectionPicker = (p: { items: CollectionDto[]; selected: string; 
     );
 };
 
-/**
- * Reparto entre dos colecciones: a la izquierda la primera, a la derecha la segunda. Se arrastra el tirador (o se
- * pulsa en la barra) en pasos de 5 %, del 5 al 95. Mientras se arrastra solo cambia el estado local; el valor se
- * envía a C# al soltar, para no mandar un trigger por cada movimiento del ratón.
- */
 export const MixSlider = (p: { left: string; right: string; share: number; onChange: (share: number) => void }) => {
     const [drag, setDrag] = useState<number | null>(null);
     const track = useRef<HTMLDivElement>(null);
     const share = drag ?? p.share;
-    // Al soltar, el valor vuelve de C# un fotograma después: se mantiene el arrastrado hasta que llega (sin salto).
     const dragging = useRef(false);
     useEffect(() => { if (drag !== null && !dragging.current && p.share === drag) setDrag(null); }, [p.share, drag]);
     const at = (clientX: number) => {

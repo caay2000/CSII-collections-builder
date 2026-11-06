@@ -7,7 +7,6 @@ namespace BuildingCollections.Tests
 {
     public class RoadFaceTests
     {
-        // Rejilla de 3x3 nodos a 100 m: cuatro manzanas cuadradas. Nodo (i, j) = j * 3 + i.
         static List<RoadEdge> Grid()
         {
             var edges = new List<RoadEdge>();
@@ -68,7 +67,7 @@ namespace BuildingCollections.Tests
         public void Dead_end_inside_the_block_is_walked_around()
         {
             var edges = Grid();
-            edges.Add(Line(4, 99, new Pt(100, 100), new Pt(150, 150))); // calle sin salida dentro de la manzana (1,1)
+            edges.Add(Line(4, 99, new Pt(100, 100), new Pt(150, 150)));
             var poly = RoadFace.Trace(edges, new Pt(180, 120));
             Assert.NotNull(poly);
             Assert.Equal((100.0, 100.0, 200.0, 200.0), Bounds(poly));
@@ -79,7 +78,6 @@ namespace BuildingCollections.Tests
         public void Curved_street_follows_the_curve()
         {
             var edges = Grid();
-            // El tramo inferior de la manzana (0,0) se sustituye por una curva que baja hasta y = -40.
             edges.RemoveAll(e => e.Start == 0 && e.End == 1);
             var curve = new RoadEdge { Start = 0, End = 1 };
             for (int k = 0; k <= 10; k++)

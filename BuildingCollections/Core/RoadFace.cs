@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace BuildingCollections.Core
 {
-    /// <summary>Tramo de calle entre dos nodos, como polilínea en el suelo (x, z) de Start a End.</summary>
     public sealed class RoadEdge
     {
         public int Start;
@@ -11,28 +10,15 @@ namespace BuildingCollections.Core
         public List<Pt> Points = new List<Pt>();
     }
 
-    /// <summary>
-    /// Manzana como "todo lo que queda dentro de las calles": la cara del grafo de calles que contiene el clic.
-    /// Se parte del tramo más cercano, recorrido en el sentido que deja el clic a la izquierda, y en cada nodo se
-    /// gira lo más posible a la izquierda; al volver al tramo inicial la cara está cerrada. Una calle sin salida
-    /// dentro de la manzana se recorre por un lado y se vuelve por el otro.
-    /// </summary>
     public static class RoadFace
     {
-        /// <summary>
-        /// Contorno de la manzana que contiene <paramref name="click"/>, o null si el clic no queda encerrado por
-        /// calles (la cara recorrida no lo contiene) o el recorrido no se cierra en <paramref name="maxSteps"/> tramos.
-        /// </summary>
         public static List<Pt> Trace(IReadOnlyList<RoadEdge> edges, Pt click, int maxSteps = 400) =>
             Trace(edges, click, out _, maxSteps);
 
-        /// <summary>Igual, y además el recorrido: cada tramo de la manzana y si se recorre de Start a End.</summary>
         public static List<Pt> Trace(IReadOnlyList<RoadEdge> edges, Pt click, out List<(int edge, bool forward)> path, int maxSteps = 400,
             Dictionary<int, List<int>> adjacency = null)
         {
             path = null;
-            // Tramos más cercanos. Si el más cercano es un nodo compartido por varios tramos, se prueban todos (y
-            // en los dos sentidos) hasta dar con la cara que contiene el clic.
             var near = new List<(double d, int edge, bool forward)>();
             for (int e = 0; e < edges.Count; e++)
             {
@@ -84,7 +70,6 @@ namespace BuildingCollections.Core
             return null;
         }
 
-        /// <summary>Tramos por nodo. Para trazar muchas manzanas sobre el mismo grafo, se calcula una vez.</summary>
         public static Dictionary<int, List<int>> Adjacency(IReadOnlyList<RoadEdge> edges)
         {
             var byNode = new Dictionary<int, List<int>>();
@@ -131,7 +116,6 @@ namespace BuildingCollections.Core
                     foreach (int k in around)
                     {
                         var kp = edges[k].Points;
-                        // Un tramo en bucle (Start == End) sale por los dos extremos.
                         if (edges[k].Start == node)
                         {
                             Consider(k, true, kp[1] - kp[0]);
@@ -146,7 +130,6 @@ namespace BuildingCollections.Core
 
                 void Consider(int k, bool fwd, Pt outDir)
                 {
-                    // Volver por el mismo tramo solo si no hay otra salida (calle sin salida).
                     bool uTurn = k == edge && fwd != forward;
                     double turn = uTurn ? -10 : Math.Atan2(Pt.Cross(inDir, outDir), Pt.Dot(inDir, outDir));
                     if (turn > bestTurn)
@@ -164,7 +147,7 @@ namespace BuildingCollections.Core
 
                 if (nextEdge == startEdge && nextForward == startForward)
                 {
-                    poly.RemoveAt(poly.Count - 1); // el último punto es el primero
+                    poly.RemoveAt(poly.Count - 1);
                     return poly.Count >= 3 && Polygon.Contains(poly, click) ? poly : null;
                 }
 
@@ -185,7 +168,6 @@ namespace BuildingCollections.Core
             list.Add(edge);
         }
 
-        /// <summary>Distancia de q al segmento ab; side &gt; 0 si q queda a la izquierda de a→b.</summary>
         static double SegmentDistance(Pt a, Pt b, Pt q, out double side)
         {
             var ab = b - a;

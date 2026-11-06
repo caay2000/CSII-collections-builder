@@ -9,7 +9,6 @@ using Unity.Entities;
 
 namespace BuildingCollections
 {
-    /// <summary>Un edificio tal como lo lee el mod del propio juego.</summary>
     public sealed class CatalogEntry
     {
         public Entity Prefab;
@@ -17,15 +16,9 @@ namespace BuildingCollections
         public int AccessType;
         public string Icon;
 
-        /// <summary>Árbol de la decoración, no un edificio.</summary>
         public bool IsDecor;
     }
 
-    /// <summary>
-    /// Índice nombre de prefab → datos del edificio, leído del juego (BuildingData, SpawnableBuildingData,
-    /// BuildingPrefab.m_AccessType) y no de Find It. Se reconstruye cuando cambia el número de prefabs de edificio,
-    /// porque Extra Assets Importer y otros añaden assets mucho después de cargar el juego.
-    /// </summary>
     public static class PrefabCatalog
     {
         static readonly Dictionary<string, CatalogEntry> byName = new Dictionary<string, CatalogEntry>(StringComparer.OrdinalIgnoreCase);
@@ -33,24 +26,20 @@ namespace BuildingCollections
         static EntityQuery treeQuery;
         static readonly List<CatalogEntry> trees = new List<CatalogEntry>();
 
-        /// <summary>Árboles del juego base (sin muertos, tocones ni troncos) para la decoración.</summary>
         public static IReadOnlyList<CatalogEntry> Trees => trees;
 
         static bool IsUnwantedTree(string name)
         {
-            // "Log" como palabra (troncos), no dentro de otra ("Logo").
             return System.Text.RegularExpressions.Regex.IsMatch(name, @"Dead|Stump|Fallen|Burnt|Sapling|Log(?![a-z])");
         }
         static World queryWorld;
         static int lastCount = -1;
         static bool lastSwap;
 
-        /// <summary>Se incrementa cada vez que el índice cambia, para que la UI sepa que debe refrescar.</summary>
         public static int Version { get; private set; }
 
         public static bool TryGet(string name, out CatalogEntry entry) => byName.TryGetValue(name ?? string.Empty, out entry);
 
-        /// <summary>Reconstruye el índice si cambió el número de prefabs de edificio o el criterio de esquinas.</summary>
         public static void Refresh(World world, bool swapCornerSides)
         {
             try
@@ -123,7 +112,6 @@ namespace BuildingCollections
                 }
             }
 
-            // Árboles del juego base para decorar el espacio sobrante (no los de mods: así el resultado es previsible).
             trees.Clear();
             using (var entities = treeQuery.ToEntityArray(Allocator.Temp))
             {
@@ -140,10 +128,10 @@ namespace BuildingCollections
             }
 
             trees.Sort((a, b) => string.CompareOrdinal(a.Info.PrefabName, b.Info.PrefabName));
-            Mod.Log.Info($"Árboles del juego para la decoración ({trees.Count}): {string.Join(", ", trees.Select(t => t.Info.PrefabName))}");
+            Mod.Log.Info($"Base-game trees for decoration ({trees.Count}): {string.Join(", ", trees.Select(t => t.Info.PrefabName))}");
 
             Version++;
-            Mod.Log.Info($"Catálogo de edificios: {byName.Count} prefabs ({duplicates} nombres repetidos ignorados).");
+            Mod.Log.Info($"Building catalog: {byName.Count} prefabs ({duplicates} duplicate names ignored).");
         }
     }
 }

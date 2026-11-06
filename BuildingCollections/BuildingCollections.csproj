@@ -4,7 +4,7 @@
     <LangVersion>9.0</LangVersion>
     <AssemblyName>BuildingCollections</AssemblyName>
     <RootNamespace>BuildingCollections</RootNamespace>
-    <Version>0.1.14</Version>
+    <Version>0.1.33</Version>
     <Nullable>disable</Nullable>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <ManagedPath Condition="'$(ManagedPath)' == ''">/mnt/c/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Managed</ManagedPath>
@@ -33,7 +33,7 @@
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedPath)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 
-  <!-- Copia el resultado a la carpeta de mods locales de Windows -->
+  <!-- Copies the output to the local Windows mods folder -->
   <Target Name="DeployLocal" AfterTargets="Build" Condition="'$(Deploy)' == 'true'">
     <ItemGroup>
       <Out Include="$(OutDir)BuildingCollections.dll;$(OutDir)BuildingCollections.pdb;$(MSBuildProjectDirectory)/UI/icon.svg" />

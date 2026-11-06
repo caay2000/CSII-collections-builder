@@ -86,7 +86,7 @@ namespace BuildingCollections.Tests
                         Assert.InRange(x, 0, g.Width - 1);
                         Assert.InRange(y, 0, g.Depth - 1);
                         Assert.True(g.Free[x, y]);
-                        Assert.True(seen.Add((x, y)), "celda duplicada");
+                        Assert.True(seen.Add((x, y)), "duplicate cell");
                     }
                 }
             }
@@ -133,7 +133,6 @@ namespace BuildingCollections.Tests
             var g = PlanGrid.AllFree(30, 3, true, true);
             var plan = GridPlanner.Plan(g, Plain, Corners, density, 3);
             AssertNoOverlapAndInside(g, plan);
-            // Lo más cerca posible del objetivo: como mucho a media anchura del edificio más ancho.
             double target = System.Math.Round(g.Width * density / 100.0, System.MidpointRounding.AwayFromZero);
             Assert.True(System.Math.Abs(plan.Sum(p => p.Building.LotWidth) - target) <= Plain.Max(b => b.LotWidth) / 2.0 || plan.All(p => p.IsCorner));
         }
@@ -156,7 +155,6 @@ namespace BuildingCollections.Tests
         [Fact]
         public void Full_density_covers_the_maximum_when_exact_is_impossible()
         {
-            // Solo hay edificios de 3: en un tramo de 7 caben dos (6 de fachada), nunca menos.
             var g = PlanGrid.AllFree(7, 3, false, false);
             var threes = new[] { B("p3", 3, 2) };
             for (int seed = 0; seed < 20; seed++)
@@ -168,7 +166,6 @@ namespace BuildingCollections.Tests
         [Fact]
         public void Density_counts_only_the_road_front()
         {
-            // 20 de fachada y 6 de fondo: con edificios de 2 de fondo, el 60% tiene que dejar el 40% de la fachada vacía.
             var g = PlanGrid.AllFree(20, 6, false, false);
             var plan = GridPlanner.Plan(g, Plain, Corners, 60, 4);
             Assert.InRange(plan.Sum(p => p.Building.LotWidth), 9, 12);
@@ -201,7 +198,6 @@ namespace BuildingCollections.Tests
         [Fact]
         public void Thin_reaches_target_across_short_streets()
         {
-            // 4 calles de 4 celdas, todo de 1 de ancho salvo un esquinero por calle: 90 % de 16 = 14 celdas.
             var items = new List<(int, bool)>();
             for (int k = 0; k < 4; k++) { items.Add((1, true)); items.Add((1, false)); items.Add((1, false)); items.Add((1, false)); }
             var removed = GridPlanner.Thin(items, 16, 90, new System.Random(1));
@@ -212,10 +208,8 @@ namespace BuildingCollections.Tests
         [Fact]
         public void Thin_never_overshoots_with_wide_buildings()
         {
-            // 1 celda de sobra y solo edificios de 2: quitar uno dejaría la fachada más lejos; no se quita.
             var items = new List<(int, bool)> { (2, false), (2, false), (2, false), (2, false), (2, false) };
             Assert.Empty(GridPlanner.Thin(items, 10, 90, new System.Random(3)));
-            // Con 3 de sobra se quita uno de 2 (queda a 1).
             Assert.Single(GridPlanner.Thin(items, 10, 70, new System.Random(3)));
         }
     }

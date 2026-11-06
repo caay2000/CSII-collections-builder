@@ -4,7 +4,6 @@ using BuildingCollections.Core;
 
 namespace BuildingCollections
 {
-    /// <summary>Acciones sobre colecciones que combinan nuestro almacén con Find It.</summary>
     public static class CollectionService
     {
         public static string Create(string name)
@@ -12,43 +11,42 @@ namespace BuildingCollections
             name = (name ?? string.Empty).Trim();
             if (name.Length == 0)
             {
-                return "El nombre está vacío.";
+                return "The name is empty.";
             }
 
             if (CollectionStore.Find(name) != null)
             {
-                return $"Ya existe la colección '{name}'.";
+                return $"Collection '{name}' already exists.";
             }
 
             if (TagInUse(CollectionLogic.NormalizeTag(name), null))
             {
-                return $"Otra colección ya usa la etiqueta #{CollectionLogic.NormalizeTag(name)}.";
+                return $"Another collection already uses the tag #{CollectionLogic.NormalizeTag(name)}.";
             }
 
             CollectionStore.Collections.Add(new BuildingCollection { Name = name, Tag = CollectionLogic.NormalizeTag(name) });
             CollectionStore.Save();
-            Mod.Log.Info($"Colección '{name}' creada (etiqueta #{CollectionLogic.NormalizeTag(name)}).");
+            Mod.Log.Info($"Collection '{name}' created (tag #{CollectionLogic.NormalizeTag(name)}).");
             return null;
         }
 
-        /// <summary>Suma a la colección todos los edificios de la lista filtrada de Find It, y los etiqueta.</summary>
         public static string AddAllFromFindIt(string collectionName)
         {
             var c = CollectionStore.Find(collectionName);
             if (c == null)
             {
-                return "No hay colección seleccionada.";
+                return "No collection selected.";
             }
 
             if (!FindItBridge.IsAvailable)
             {
-                return "Find It no está instalado o activo.";
+                return "Find It is not installed or active.";
             }
 
             var filtered = FindItBridge.GetFilteredBuildings();
             if (filtered.Count == 0)
             {
-                return "Find It no devuelve edificios con el filtro actual.";
+                return "Find It returns no buildings with the current filter.";
             }
 
             int added = CollectionLogic.AddRange(c.Prefabs, filtered.Select(f => f.Info.PrefabName));
@@ -59,22 +57,21 @@ namespace BuildingCollections
             }
 
             CollectionStore.Save();
-            Mod.Log.Info($"'{c.Name}': {filtered.Count} en Find It, {added} nuevos; {filtered.Count} etiquetas en cola. Total {c.Prefabs.Count}.");
+            Mod.Log.Info($"'{c.Name}': {filtered.Count} in Find It, {added} new; {filtered.Count} tags queued. Total {c.Prefabs.Count}.");
             return null;
         }
 
-        /// <summary>Añade un edificio suelto (Shift+clic) y lo etiqueta en Find It si está. Devuelve null si todo fue bien.</summary>
         public static string AddPrefab(string collectionName, string prefabName)
         {
             var c = CollectionStore.Find(collectionName);
             if (c == null)
             {
-                return "No hay colección seleccionada.";
+                return "No collection selected.";
             }
 
             if (CollectionLogic.AddRange(c.Prefabs, new[] { prefabName }) == 0)
             {
-                return $"'{prefabName}' ya estaba en '{c.Name}'.";
+                return $"'{prefabName}' was already in '{c.Name}'.";
             }
 
             if (!FindItBridge.TryGetId(prefabName, out _))
@@ -84,17 +81,16 @@ namespace BuildingCollections
 
             TagQueue.Add(prefabName, c.Tag);
             CollectionStore.Save();
-            Mod.Log.Info($"'{c.Name}': añadido '{prefabName}'. Total {c.Prefabs.Count}.");
+            Mod.Log.Info($"'{c.Name}': added '{prefabName}'. Total {c.Prefabs.Count}.");
             return null;
         }
 
-        /// <summary>Quita edificios sueltos de la colección y su etiqueta de Find It.</summary>
         public static string RemoveBuildings(string collectionName, IEnumerable<string> prefabNames)
         {
             var c = CollectionStore.Find(collectionName);
             if (c == null)
             {
-                return "No hay colección seleccionada.";
+                return "No collection selected.";
             }
 
             int removed = 0;
@@ -109,56 +105,53 @@ namespace BuildingCollections
             }
 
             CollectionStore.Save();
-            Mod.Log.Info($"'{c.Name}': quitados {removed}. Total {c.Prefabs.Count}.");
+            Mod.Log.Info($"'{c.Name}': removed {removed}. Total {c.Prefabs.Count}.");
             return null;
         }
 
-        /// <summary>Quita todos los edificios de la colección y su etiqueta de Find It.</summary>
         public static string Clear(string collectionName)
         {
             var c = CollectionStore.Find(collectionName);
             if (c == null)
             {
-                return "No hay colección seleccionada.";
+                return "No collection selected.";
             }
 
             RemoveBuildings(collectionName, c.Prefabs.ToList());
-            Mod.Log.Info($"Colección '{c.Name}' vaciada.");
+            Mod.Log.Info($"Collection '{c.Name}' emptied.");
             return null;
         }
 
-        /// <summary>Cambia el nombre de la colección y su etiqueta de Find It (quita la vieja y pone la nueva).</summary>
         public static string Rename(string collectionName, string newName, out string finalName)
         {
             finalName = null;
             var c = CollectionStore.Find(collectionName);
             if (c == null)
             {
-                return "No hay colección seleccionada.";
+                return "No collection selected.";
             }
 
             newName = (newName ?? string.Empty).Trim();
             if (newName.Length == 0)
             {
-                return "El nombre está vacío.";
+                return "The name is empty.";
             }
 
             var other = CollectionStore.Find(newName);
             if (other != null && other != c)
             {
-                return $"Ya existe la colección '{newName}'.";
+                return $"Collection '{newName}' already exists.";
             }
 
             string oldName = c.Name, oldTag = c.Tag, newTag = CollectionLogic.NormalizeTag(newName);
             if (TagInUse(newTag, c))
             {
-                return $"Otra colección ya usa la etiqueta #{newTag}.";
+                return $"Another collection already uses the tag #{newTag}.";
             }
 
             c.Name = newName;
             if (!string.Equals(oldTag, newTag, System.StringComparison.OrdinalIgnoreCase))
             {
-                // Si solo cambian mayúsculas se conserva la etiqueta tal como está en Find It.
                 c.Tag = newTag;
                 FindItBridge.RefreshIds();
                 foreach (var p in c.Prefabs)
@@ -170,21 +163,20 @@ namespace BuildingCollections
 
             CollectionStore.Save();
             finalName = newName;
-            Mod.Log.Info($"Colección '{oldName}' renombrada a '{newName}' (etiqueta #{oldTag} -> #{newTag}).");
+            Mod.Log.Info($"Collection '{oldName}' renamed to '{newName}' (tag #{oldTag} -> #{newTag}).");
             return null;
         }
 
         static bool TagInUse(string tag, BuildingCollection except) =>
             CollectionStore.Collections.Any(o => o != except && string.Equals(o.Tag, tag, System.StringComparison.OrdinalIgnoreCase));
 
-        /// <summary>Copia la colección con un nombre nuevo ("X copy", "X copy 2"...) y su propia etiqueta.</summary>
         public static string Clone(string collectionName, out string newName)
         {
             newName = null;
             var c = CollectionStore.Find(collectionName);
             if (c == null)
             {
-                return "No hay colección seleccionada.";
+                return "No collection selected.";
             }
 
             newName = c.Name + " copy";
@@ -203,11 +195,10 @@ namespace BuildingCollections
             }
 
             CollectionStore.Save();
-            Mod.Log.Info($"Colección '{c.Name}' clonada como '{newName}' ({copy.Prefabs.Count} edificios).");
+            Mod.Log.Info($"Collection '{c.Name}' cloned as '{newName}' ({copy.Prefabs.Count} buildings).");
             return null;
         }
 
-        /// <summary>Se enciende la opción de etiquetas: se ponen las de todas las colecciones (las que ya están no cambian).</summary>
         public static void SyncFindItTags()
         {
             int n = 0;
@@ -220,7 +211,7 @@ namespace BuildingCollections
                 }
             }
 
-            Mod.Log.Info($"Etiquetas de Find It activadas: {n} por poner.");
+            Mod.Log.Info($"Find It tags enabled: {n} to apply.");
         }
 
         public static string Delete(string collectionName)
@@ -228,13 +219,13 @@ namespace BuildingCollections
             var c = CollectionStore.Find(collectionName);
             if (c == null)
             {
-                return "No hay colección seleccionada.";
+                return "No collection selected.";
             }
 
             Clear(collectionName);
             CollectionStore.Collections.Remove(c);
             CollectionStore.Save();
-            Mod.Log.Info($"Colección '{c.Name}' borrada.");
+            Mod.Log.Info($"Collection '{c.Name}' deleted.");
             return null;
         }
     }

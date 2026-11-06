@@ -1,4 +1,3 @@
-// Aproximaciones de los iconos del juego (coui://uil/... y Media/...) que el navegador no puede cargar.
 const svg = (body: string) => "data:image/svg+xml;utf8," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`);
 

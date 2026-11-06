@@ -7,7 +7,6 @@ import { CollectionsTab } from "./collectionsTab";
 import { BuilderTab } from "./builderTab";
 import { icon, onEscape } from "./widgets";
 
-// Servido desde la carpeta del mod (Mod.cs registra coui://buildingcollections/). El motor no admite data: URIs.
 const ICON = "coui://buildingcollections/icon.svg";
 
 export const GameTopLeftButton = () => {
@@ -24,11 +23,9 @@ export const GameTopLeftButton = () => {
 
 type Tab = "collections" | "builder";
 
-// Última pestaña usada y posición del panel: se conservan al cerrarlo y abrirlo (mientras el juego esté abierto).
 let lastTab: Tab = "collections";
 let offset = { x: 0, y: 0 };
 
-/** Arrastre por la cabecera: desplaza el panel con transform, desde su sitio por defecto. */
 function useDrag() {
     const [pos, setPos] = useState(offset);
     const drag = useRef<{ mx: number; my: number; x: number; y: number } | null>(null);
@@ -52,10 +49,7 @@ const Panel = () => {
     const [tab, setTabState] = useState<Tab>(lastTab);
     const setTab = (t: Tab) => { lastTab = t; setTabState(t); };
     const drag = useDrag();
-    // Esc ("Back") cierra el panel, como los paneles del juego; con el panel cerrado, Esc vuelve a abrir el menú.
-    // Si hay un campo en línea abierto (crear, renombrar), Esc solo lo cancela.
     const back = useMemo(() => ({ Back: () => onEscape(() => actions.setPanelOpen(false)) }), []);
-    // Esc leído desde C# (el contador sube con cada pulsación): mismo criterio que "Back".
     const escapes = useEscapes();
     const seenEscapes = useRef(escapes);
     useEffect(() => {

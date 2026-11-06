@@ -1,0 +1,156 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace BuildingCollections.Core
+{
+    public sealed class EndGapCloser
+    {
+        const float Step = 0.1f;
+        const float CoarseStep = 1f;
+        const float CellSize = (float)CellFrame.Size;
+        const float StrictOverlap = FootprintMask.StrictOverlap;
+        const float MinGap = 0.3f;
+        const float BesideMargin = 1f;
+        const double JoinSlack = 1;
+        public const float MaxSpreadSliver = SpreadStrategy.MaxSliver;
+
+        readonly List<PlannedLot> lots;
+        readonly IReadOnlyList<PlanBlock> blocks;
+        readonly IReadOnlyList<Quad> existing;
+        readonly IReadOnlyList<Pt> thinned;
+        readonly IReadOnlyList<Pt> outline;
+        readonly GapTools tools;
+        readonly IReadOnlyList<IGapStrategy> strategies;
+
+        public EndGapCloser(List<PlannedLot> lots, IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> thinned,
+            IReadOnlyList<Pt> outline, IReadOnlyList<BuildingInfo> plain, float overlap, Random rng, List<string> log)
+        {
+            this.lots = lots;
+            this.blocks = blocks;
+            this.existing = existing;
+            this.thinned = thinned;
+            this.outline = outline;
+            tools = new GapTools { Lots = lots, Plain = plain, Overlap = overlap, Rng = rng, Log = log };
+            strategies = new IGapStrategy[] { new WidenStrategy(tools), new InsertStrategy(tools), new SpreadStrategy(tools) };
+        }
+
+        IEnumerable<LotStrip> Strips => blocks.Where(b => b.Strip != null).Select(b => b.Strip);
+
+        public int Close(PlanBlock block)
+        {
+            if (!block.IsVirtual || outline == null || !lots.Any(p => p.Owner == block))
+            {
+                return 0;
+            }
+
+            int closed = 0;
+            var st = block.Strip;
+            bool startFirst = st != null && EndSlack(st, -1) > EndSlack(st, +1);
+            foreach (int dir in startFirst ? new[] { -1, +1 } : new[] { +1, -1 })
+            {
+                if (!JoinsNextChunk(block, dir) || HasSlack(block, dir))
+                {
+                    closed += CloseEnd(block, dir);
+                }
+            }
+
+            return closed;
+        }
+
+        bool HasSlack(PlanBlock block, int dir)
+        {
+            var st = block.Strip;
+            if (st == null)
+            {
+                return false;
+            }
+
+            if (EndSlack(st, dir) >= JoinSlack)
+            {
+                return true;
+            }
+
+            var next = LotStrip.Next(st, Strips, dir);
+            return next != null && EndSlack(next, -dir) >= JoinSlack;
+        }
+
+        static double EndSlack(LotStrip st, int dir) => dir > 0 ? st.ChunkLength - st.Offset - st.Width * CellSize : st.Offset;
+
+        bool JoinsNextChunk(PlanBlock block, int dir) => block.Strip != null && LotStrip.Next(block.Strip, Strips, dir) != null;
+
+        int CloseEnd(PlanBlock block, int dir)
+        {
+            var chain = EndChain.Build(block, lots, blocks, dir);
+            if (chain == null)
+            {
+                return 0;
+            }
+
+            var otherQuads = lots.Where(p => !chain.Lots.Contains(p)).Select(p => p.Footprint(0)).ToList();
+            var gap = new EndGap
+            {
+                Block = block,
+                Chain = chain,
+                Dir = dir,
+                Fits = new LotFitTest(existing, thinned, outline, otherQuads, dir),
+                Beside = Beside(chain.End, otherQuads, dir),
+            };
+            gap.Gap = Measure(gap);
+            if (gap.Gap < MinGap || gap.Gap >= CellSize - Step - 1e-3f)
+            {
+                return 0;
+            }
+
+            if (strategies.Any(s => s.TryClose(gap)))
+            {
+                return 1;
+            }
+
+            int n = chain.Moving.Count;
+            tools.Log.Add(tools.Overlap > StrictOverlap
+                ? $"  {gap.Gap:F1} m gap at the {gap.Where}: neither widening one nor inserting a one-cell building fits with at most {n + 2} joints ({gap.Missing / (n + 2):F2} m per joint, maximum {tools.Overlap:F1} m), nor spreading; left as is."
+                : $"  {gap.Gap:F1} m gap at the {gap.Where}: without overlap it can be neither closed nor spread; left as is.");
+            return 0;
+        }
+
+        List<Quad> Beside(PlannedLot end, List<Quad> otherQuads, int dir)
+        {
+            var axis = end.Owner.Frame.AxisX;
+            var endQuad = end.Footprint(end.Box, 0, StrictOverlap);
+            float front = Proj(end.Footprint(end.Box, 0, 0), axis, dir, max: true);
+            return existing.Concat(otherQuads)
+                .Where(q => Quad.Touch(q, endQuad) && Proj(q, axis, dir, max: false) < front - BesideMargin).ToList();
+        }
+
+        static float Measure(EndGap gap)
+        {
+            var end = gap.Chain.End;
+            bool Free(float g) => gap.Fits.Fits(end, end.Box, gap.Dir * g, StrictOverlap, gap.Beside);
+            float measured = 0;
+            while (measured + CoarseStep + Step < CellSize && Free(measured + CoarseStep))
+            {
+                measured += CoarseStep;
+            }
+
+            while (measured + Step < CellSize && Free(measured + Step))
+            {
+                measured += Step;
+            }
+
+            return measured;
+        }
+
+        static float Proj(Quad q, Pt axis, int sign, bool max)
+        {
+            float best = max ? float.MinValue : float.MaxValue;
+            foreach (var c in q.P)
+            {
+                float v = (float)(c.X * axis.X + c.Y * axis.Y) * sign;
+                best = max ? Math.Max(best, v) : Math.Min(best, v);
+            }
+
+            return best;
+        }
+    }
+}

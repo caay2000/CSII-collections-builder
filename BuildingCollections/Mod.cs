@@ -13,7 +13,6 @@ namespace BuildingCollections
 
         public static BuildingCollectionsSettings Settings { get; private set; }
 
-        /// <summary>Versión semver del mod (la define &lt;Version&gt; en el .csproj).</summary>
         public static string Version { get; } = typeof(Mod).Assembly.GetName().Version is System.Version v ? $"{v.Major}.{v.Minor}.{v.Build}" : "?";
 
         public void OnLoad(UpdateSystem updateSystem)
@@ -31,7 +30,7 @@ namespace BuildingCollections
                 AssetDatabase.global.LoadSettings(nameof(BuildingCollections), Settings, new BuildingCollectionsSettings(this));
                 Settings.ChooseFindItTagsOnce();
                 Settings.Loaded = true;
-                Log.Info($"Etiquetas de Find It: {(Settings.FindItTags ? "activadas" : "desactivadas")}.");
+                Log.Info($"Find It tags: {(Settings.FindItTags ? "enabled" : "disabled")}.");
 
                 updateSystem.UpdateAt<BlockBuilderToolSystem>(SystemUpdatePhase.ToolUpdate);
                 updateSystem.UpdateAt<BuiltGuardSystem>(SystemUpdatePhase.ModificationEnd);
@@ -44,7 +43,6 @@ namespace BuildingCollections
             }
         }
 
-        /// <summary>Publica la carpeta del mod como coui://buildingcollections/ para servir el icono del botón.</summary>
         void RegisterUIAssets()
         {
             try
@@ -53,16 +51,16 @@ namespace BuildingCollections
                 {
                     var dir = System.IO.Path.GetDirectoryName(asset.path);
                     Colossal.UI.UIManager.defaultUISystem?.AddHostLocation("buildingcollections", dir, false);
-                    Log.Info("Recursos de UI en coui://buildingcollections/ -> " + dir);
+                    Log.Info("UI resources at coui://buildingcollections/ -> " + dir);
                 }
                 else
                 {
-                    Log.Warn("No se encontró la carpeta del mod; el icono usará el valor por defecto.");
+                    Log.Warn("Mod folder not found; the icon will use the default.");
                 }
             }
             catch (System.Exception e)
             {
-                Log.Warn("No se pudo registrar la carpeta de UI: " + e.Message);
+                Log.Warn("Could not register the UI folder: " + e.Message);
             }
         }
 
