@@ -41,10 +41,21 @@ namespace BuildingCollections.Simulator
 
     public static class Simulation
     {
-        public static readonly IReadOnlyList<BuildingInfo> Plain = new List<BuildingInfo>
+        static readonly IReadOnlyList<BuildingInfo> Common = new List<BuildingInfo>
         {
             B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3),
         };
+
+        public static readonly IReadOnlyDictionary<string, IReadOnlyList<BuildingInfo>> Catalogs = new Dictionary<string, IReadOnlyList<BuildingInfo>>
+        {
+            ["game"] = Common,
+            ["with-2x1"] = Common.Append(B("2x1", 2, 1)).ToList(),
+            ["full"] = Common.Append(B("2x1", 2, 1)).Append(B("1x1", 1, 1)).ToList(),
+        };
+
+        public const string DefaultCatalog = "game";
+
+        public static IReadOnlyList<BuildingInfo> Plain { get; set; } = Catalogs[DefaultCatalog];
 
         public static readonly IReadOnlyList<BuildingInfo> Corners = new List<BuildingInfo>
         {

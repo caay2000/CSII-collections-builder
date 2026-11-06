@@ -124,6 +124,22 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void A_two_wide_one_deep_building_does_not_shrink_the_reserved_front()
+        {
+            var plain = new List<BuildingInfo> { B("1x2", 1, 2), B("2x1", 2, 1), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3) };
+            var corners = new List<BuildingInfo>
+            {
+                B("cL1", 1, 1, CornerKind.Front | CornerKind.Left), B("cR1", 1, 1, CornerKind.Front | CornerKind.Right),
+                B("cL2", 1, 2, CornerKind.Front | CornerKind.Left), B("cR2", 1, 2, CornerKind.Front | CornerKind.Right),
+                B("cL22", 2, 2, CornerKind.Front | CornerKind.Left), B("cR22", 2, 2, CornerKind.Front | CornerKind.Right),
+            };
+            var runs = Enumerable.Range(1, 10).Select(seed => Plan(Rect(99.9, 35.8), 2f, seed: seed, plain: plain, corners: corners)).ToList();
+            int filled = runs.Sum(r => r.FrontFilled);
+            int cells = runs.Sum(r => r.FrontCells.Count);
+            Assert.True(filled >= cells - 10, $"{filled} of {cells} street cells filled over ten seeds");
+        }
+
+        [Fact]
         public void Street_with_leftover_and_few_joints_is_filled_with_narrow_buildings()
         {
             var plain = new List<BuildingInfo> { B("1x1", 1, 1), B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3) };

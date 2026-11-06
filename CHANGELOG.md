@@ -4,6 +4,14 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.1.37
+- La reserva de fachada usa el fondo del edificio más estrecho del catálogo (normalmente el 1x2), no el del menos
+  profundo: en colecciones con edificios 2x1, una celda aislada de una sola fila no se puede rellenar con un 2x1, y
+  antes volvían a aparecer esos huecos junto a las esquinas.
+- Simulador: catálogos con nombre (`game` por defecto, `with-2x1`, `full`) que se eligen con `SIM_CATALOG`, porque
+  cada colección tiene un surtido distinto. Con 2 m de solape, en `with-2x1` la acera sin cubrir baja de 1681 m a
+  1615 m; `game` y `full` no cambian.
+
 ## 0.1.36
 - Menos huecos en la fachada junto a las esquinas: cuando el catálogo no tiene edificios de una celda de fondo, ya no
   se queda ninguna celda de calle con una sola fila libre (imposible de rellenar).

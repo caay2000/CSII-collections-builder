@@ -17,6 +17,7 @@ Find It is optional (only used for "Add all" and tags, via reflection). No other
 | `BuildingCollections/` | The mod (C#, net48). `Core/` is pure logic with no game dependencies. |
 | `BuildingCollections/UI/` | Panel in React/TypeScript (webpack). `harness/` runs it in a browser with a simulated backend. |
 | `BuildingCollections.Tests/` | xUnit tests for `Core/`. |
+| `BuildingCollections.Simulator/` | Runs the placement over synthetic and real game blocks (`Blocks/`) and writes an HTML report. |
 | `docs/` | Feature spec, implementation rules and investigation notes (Spanish). |
 | `tools/` | Helper scripts (startup log report). |
 
@@ -26,7 +27,11 @@ Find It is optional (only used for "Add all" and tags, via reflection). No other
 dotnet test BuildingCollections.Tests                     # pure logic
 dotnet build BuildingCollections -p:Deploy=true           # DLL + icon to the local Mods folder (game closed)
 BuildingCollections/UI/deploy-ui.sh                       # UI to the local Mods folder
+dotnet run -c Release --project BuildingCollections.Simulator -- report.html [seed] [name filter]
 ```
+
+The simulator uses the `game` catalog by default (no one-cell-deep plain buildings, as in most collections);
+set `SIM_CATALOG=with-2x1` or `SIM_CATALOG=full` to try other assortments, and `SIM_LOG=1` to print the planner log.
 
 Paths default to a WSL setup; override `ManagedPath` / `LocalModsPath` (csproj) and `BC_OUT` (UI).
 

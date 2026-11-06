@@ -279,6 +279,17 @@ namespace BuildingCollections.Core
             return true;
         }
 
+        internal static int ReservedFrontDepth(IReadOnlyList<BuildingInfo> plain)
+        {
+            if (plain.Count == 0)
+            {
+                return 1;
+            }
+
+            int width = plain.Min(b => b.LotWidth);
+            return plain.Where(b => b.LotWidth == width).Min(b => b.LotDepth);
+        }
+
         static List<BuildingInfo> DeepEnough(List<BuildingInfo> fitting, IReadOnlyList<BuildingInfo> plain)
         {
             if (plain.Count == 0)

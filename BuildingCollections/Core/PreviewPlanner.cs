@@ -57,7 +57,7 @@ namespace BuildingCollections.Core
 
         void ReserveFronts()
         {
-            int wanted = request.Plain.Count > 0 ? request.Plain.Min(b => b.LotDepth) : 1;
+            int wanted = GridPlanner.ReservedFrontDepth(request.Plain);
             foreach (var (block, grid) in grids)
             {
                 var st = block.Strip;
