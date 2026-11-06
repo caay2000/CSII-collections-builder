@@ -184,6 +184,26 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void Corners_shallower_than_every_plain_building_are_avoided()
+        {
+            var corners = new[] { B("cl1", 1, 1, CornerKind.Left), B("cl2", 1, 2, CornerKind.Left), B("cr1", 1, 1, CornerKind.Right), B("cr2", 1, 2, CornerKind.Right) };
+            for (int seed = 0; seed < 40; seed++)
+            {
+                var cp = GridPlanner.PlanCorners(PlanGrid.AllFree(10, 3, true, true), Plain, corners, seed);
+                Assert.Equal(2, cp.Count);
+                Assert.All(cp, c => Assert.Equal(2, c.Building.LotDepth));
+            }
+        }
+
+        [Fact]
+        public void Shallow_corner_is_used_when_it_is_the_only_one()
+        {
+            var corners = new[] { B("cl1", 1, 1, CornerKind.Left) };
+            var cp = GridPlanner.PlanCorners(PlanGrid.AllFree(10, 3, true, false), Plain, corners, 3);
+            Assert.Contains(cp, c => c.IsCorner && c.Building.PrefabName == "cl1");
+        }
+
+        [Fact]
         public void Zero_density_places_nothing() =>
             Assert.Empty(GridPlanner.Plan(PlanGrid.AllFree(10, 3, true, true), Plain, Corners, 0, 1));
 

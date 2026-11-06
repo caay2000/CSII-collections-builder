@@ -4,6 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.1.36
+- Menos huecos en la fachada junto a las esquinas: cuando el catálogo no tiene edificios de una celda de fondo, ya no
+  se queda ninguna celda de calle con una sola fila libre (imposible de rellenar).
+  - Los edificios de un lado ya no ocupan las filas de detrás de la fachada de otro lado: se reserva tanto fondo como
+    el edificio normal menos profundo del catálogo (antes solo la primera fila).
+  - Se prefieren esquineros con al menos ese fondo; uno menos profundo (p. ej. un 1x1) solo si no hay otro que quepa.
+- Simulador: catálogo como el del juego (sin edificios normales 1x1, con esquineros 1x1) y cuatro manzanas nuevas del
+  juego. Con 2 m de solape, la acera sin cubrir baja de 2446 m a 1954 m en el conjunto de escenarios.
+
 ## 0.1.35
 - Shift+clic en Find It ya no congela el juego ~0,45 s en cada edificio: las etiquetas de Find It se aplican cuando
   llevas 1 s sin añadir ni quitar (varios clics seguidos = un solo guardado de Find It), y la lista de ids de Find It

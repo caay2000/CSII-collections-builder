@@ -258,7 +258,7 @@ namespace BuildingCollections.Core
                 return;
             }
 
-            var pick = Pick(fitting, rng);
+            var pick = Pick(DeepEnough(fitting, plain), rng);
             int px = atRight ? grid.Width - pick.LotWidth : 0;
             Occupy(used, px, 0, pick);
             result.Add(new Placement { X = px, Y = 0, Building = pick, IsCorner = isCorner });
@@ -277,6 +277,18 @@ namespace BuildingCollections.Core
             Occupy(used, 0, 0, pick);
             result.Add(new Placement { X = 0, Y = 0, Building = pick, IsCorner = true });
             return true;
+        }
+
+        static List<BuildingInfo> DeepEnough(List<BuildingInfo> fitting, IReadOnlyList<BuildingInfo> plain)
+        {
+            if (plain.Count == 0)
+            {
+                return fitting;
+            }
+
+            int minDepth = plain.Min(b => b.LotDepth);
+            var deep = fitting.Where(b => b.LotDepth >= minDepth).ToList();
+            return deep.Count > 0 ? deep : fitting;
         }
 
         internal static BuildingInfo Pick(List<BuildingInfo> options, Random rng)
