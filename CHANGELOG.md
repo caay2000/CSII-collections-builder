@@ -4,6 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.1.38
+- Manzanas estrechas (23–31 m de fondo): los dos lados enfrentados se construyen con los fondos solapados, en vez de
+  dejar uno de ellos con una sola fila libre y vacío. El solape de fondos solo se usa para rescatar celdas que se
+  quedarían sin fondo suficiente para el edificio más estrecho, y solo hasta ese fondo; las manzanas anchas no cambian.
+- Las reservas de fachada que ya cubre un esquinero de otro lado se descartan: no recortan los extremos de los lados
+  largos para proteger una fachada que nunca se construye.
+- Simulador: 23 manzanas nuevas del log del juego. Con 2 m de solape, en ellas la acera sin cubrir baja de 991 m a
+  834 m, y en el conjunto (catálogo `game`) de 2944 m a 2617 m.
+
 ## 0.1.37
 - La reserva de fachada usa el fondo del edificio más estrecho del catálogo (normalmente el 1x2), no el del menos
   profundo: en colecciones con edificios 2x1, una celda aislada de una sola fila no se puede rellenar con un 2x1, y
