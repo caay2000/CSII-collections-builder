@@ -252,7 +252,7 @@ namespace BuildingCollections.Systems
                     }
                 }
 
-                if (TagQueue.Count > 0)
+                if (TagQueue.Count > 0 && TagQueue.Settled)
                 {
                     int before = TagQueue.Count;
                     if (TagQueue.Process(6))

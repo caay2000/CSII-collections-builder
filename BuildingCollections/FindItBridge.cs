@@ -144,9 +144,10 @@ namespace BuildingCollections
             catch (Exception e) { Mod.Log.Warn($"Find It GetAllTags failed: {e.Message}"); return new string[0]; }
         }
 
-        public static bool TryApplyBatch(IReadOnlyList<(bool add, string prefab, string tag)> changes, out int skipped)
+        public static bool TryApplyBatch(IReadOnlyList<(bool add, string prefab, string tag)> changes, out int skipped, out long saveMs)
         {
             skipped = 0;
+            saveMs = 0;
             Resolve();
             if (utilType == null)
             {
@@ -173,17 +174,20 @@ namespace BuildingCollections
                 if (!string.IsNullOrEmpty(t) && !canon.ContainsKey(t)) canon[t] = t;
             }
 
+            bool refreshed = false;
             foreach (var (add, prefab, rawTag) in changes)
             {
-                if (!TryGetId(prefab, out int id) || !(getIndex.Invoke(null, new object[] { id }) is object index))
+                var index = FindIndex(getIndex, prefab);
+                if (index == null && !refreshed)
                 {
-                    skipped++;
-                    continue;
+                    RefreshIds();
+                    refreshed = true;
+                    index = FindIndex(getIndex, prefab);
                 }
 
-                var it = index.GetType();
-                var name = it.GetProperty("PrefabName")?.GetValue(index) as string;
-                var indexTags = it.GetProperty("Tags");
+                var it = index?.GetType();
+                var name = it?.GetProperty("PrefabName")?.GetValue(index) as string;
+                var indexTags = it?.GetProperty("Tags");
                 if (string.IsNullOrEmpty(name) || indexTags == null)
                 {
                     skipped++;
@@ -236,8 +240,21 @@ namespace BuildingCollections
                 indexTags.SetValue(index, new List<string>(tags));
             }
 
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             save.Invoke(null, null);
+            saveMs = watch.ElapsedMilliseconds;
             return true;
+        }
+
+        static object FindIndex(MethodInfo getIndex, string prefab)
+        {
+            if (!TryGetId(prefab, out int id) || !(getIndex.Invoke(null, new object[] { id }) is object index))
+            {
+                return null;
+            }
+
+            var name = index.GetType().GetProperty("PrefabName")?.GetValue(index) as string;
+            return string.Equals(name, prefab, StringComparison.OrdinalIgnoreCase) ? index : null;
         }
 
         public static bool AddTag(int id, string tag) => Tag("AddTag", id, tag);

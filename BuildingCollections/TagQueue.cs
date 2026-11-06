@@ -12,23 +12,35 @@ namespace BuildingCollections
 
         static bool batchFailed;
 
+        static DateTime lastChange;
+
+        const double SettleSeconds = 1.0;
+
+        public static bool Settled => (DateTime.UtcNow - lastChange).TotalSeconds >= SettleSeconds;
+
         public static int Count => queue.Count;
 
         public static bool Enabled => Mod.Settings?.FindItTags ?? true;
 
         public static void Add(string prefab, string tag)
         {
-            if (Enabled && !string.IsNullOrEmpty(tag)) queue.Enqueue((true, prefab, tag));
+            if (Enabled && !string.IsNullOrEmpty(tag)) Enqueue(true, prefab, tag);
         }
 
         public static void Remove(string prefab, string tag)
         {
-            if (Enabled && !string.IsNullOrEmpty(tag)) queue.Enqueue((false, prefab, tag));
+            if (Enabled && !string.IsNullOrEmpty(tag)) Enqueue(false, prefab, tag);
         }
 
         internal static void Force(bool add, string prefab, string tag)
         {
-            if (!string.IsNullOrEmpty(tag)) queue.Enqueue((add, prefab, tag));
+            if (!string.IsNullOrEmpty(tag)) Enqueue(add, prefab, tag);
+        }
+
+        static void Enqueue(bool add, string prefab, string tag)
+        {
+            queue.Enqueue((add, prefab, tag));
+            lastChange = DateTime.UtcNow;
         }
 
         public static bool Process(int max)
@@ -43,12 +55,18 @@ namespace BuildingCollections
                 var all = queue.ToList();
                 try
                 {
-                    FindItBridge.RefreshIds();
-                    if (FindItBridge.TryApplyBatch(all, out int notFound))
+                    var watch = System.Diagnostics.Stopwatch.StartNew();
+                    if (all.Any(c => !FindItBridge.TryGetId(c.prefab, out _)))
+                    {
+                        FindItBridge.RefreshIds();
+                    }
+
+                    long idsMs = watch.ElapsedMilliseconds;
+                    if (FindItBridge.TryApplyBatch(all, out int notFound, out long saveMs))
                     {
                         queue.Clear();
                         skipped += notFound;
-                        Mod.Log.Info($"Tags: {all.Count} changes applied with a single Find It save.");
+                        Mod.Log.Info($"Tags: {all.Count} changes applied with a single Find It save ({watch.ElapsedMilliseconds} ms: ids {idsMs} ms, Find It save {saveMs} ms).");
                         Flush();
                         return true;
                     }
@@ -61,6 +79,7 @@ namespace BuildingCollections
                 batchFailed = true;
             }
 
+            FindItBridge.RefreshIds();
             for (int i = 0; i < max && queue.Count > 0; i++)
             {
                 var (add, prefab, tag) = queue.Dequeue();
