@@ -14,11 +14,20 @@ namespace BuildingCollections.Simulator
             int seed = args.Length > 1 ? int.Parse(args[1]) : 7;
             var overlaps = new[] { FootprintMask.StrictOverlap, 0.5f, 1f, 2f };
             string filter = args.Length > 2 ? args[2] : null;
+            string catalog = Environment.GetEnvironmentVariable("SIM_CATALOG") ?? Simulation.DefaultCatalog;
+            if (!Simulation.Catalogs.TryGetValue(catalog, out var plain))
+            {
+                Console.Error.WriteLine($"Unknown catalog '{catalog}'. Available: {string.Join(", ", Simulation.Catalogs.Keys)}");
+                return 2;
+            }
+
+            Simulation.Plain = plain;
+            Console.WriteLine($"Catalog: {catalog} ({string.Join(", ", plain.Select(b => b.PrefabName))})");
             var runs = Scenarios.All()
                 .Where(s => filter == null || filter.Split('|').Any(f => s.Name.Contains(f)))
                 .SelectMany(s => overlaps.Select(o => Simulation.Simulate(s, o, seed)))
                 .ToList();
-            File.WriteAllText(output, HtmlReport.Render(runs, overlaps, Version(), seed));
+            File.WriteAllText(output, HtmlReport.Render(runs, overlaps, $"{Version()}, catalog {catalog}", seed));
             foreach (var r in runs)
             {
                 Console.WriteLine($"{r.Scenario.Name,-58} overlap {r.Overlap,4:0.0#}: {r.Result.FrontFilled,3}/{r.Result.FrontCells.Count,-3} cells, {r.Gaps.Count,2} gaps, {r.GapMeters,6:0.0} m, max {r.MaxGap,5:0.0} m, corners {r.CornersOk}/{r.Corners.Count} {string.Join(" ", r.Corners.Where(c => c.State != CornerState.Corner).Select(c => $"[{c.Angle:0}° {c.State}]"))}");
