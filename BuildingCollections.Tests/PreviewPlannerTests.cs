@@ -24,7 +24,8 @@ namespace BuildingCollections.Tests
             B("cL", 1, 2, CornerKind.Front | CornerKind.Left), B("cR", 1, 2, CornerKind.Front | CornerKind.Right),
         };
 
-        static PreviewResult Plan(List<List<Pt>> sides, float overlap, int seed = 7, int density = 100, List<BuildingInfo> plain = null)
+        static PreviewResult Plan(List<List<Pt>> sides, float overlap, int seed = 7, int density = 100, List<BuildingInfo> plain = null,
+            List<BuildingInfo> corners = null)
         {
             var strips = VirtualLots.Build(sides, new Quad[0], curveOverlap: overlap > FootprintMask.StrictOverlap ? overlap : 0);
             var blocks = strips.Where(s => s.Grid.FreeCount() > 0).Select(s => new PlanBlock
@@ -34,7 +35,7 @@ namespace BuildingCollections.Tests
             }).ToList();
             return PreviewPlanner.Plan(new PreviewRequest
             {
-                Blocks = blocks, Outline = VirtualLots.Outline(sides), Plain = plain ?? Plain, Corners = Corners,
+                Blocks = blocks, Outline = VirtualLots.Outline(sides), Plain = plain ?? Plain, Corners = corners ?? Corners,
                 Overlap = overlap, Density = density, Seed = seed,
             });
         }
@@ -104,6 +105,22 @@ namespace BuildingCollections.Tests
             var bottom = r.Lots.Where(l => l.Owner.Frame.AxisX.X > 0.99 && l.Owner.Frame.AxisY.Y > 0.99).ToList();
             int bottomCells = bottom.Sum(l => l.Width);
             Assert.True(bottomCells >= 17, $"the bottom street only has {bottomCells} cells with a building");
+        }
+
+        [Fact]
+        public void Without_one_cell_deep_buildings_no_street_cell_is_left_with_a_single_free_row()
+        {
+            var plain = new List<BuildingInfo> { B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3) };
+            var corners = new List<BuildingInfo>
+            {
+                B("cL1", 1, 1, CornerKind.Front | CornerKind.Left), B("cR1", 1, 1, CornerKind.Front | CornerKind.Right),
+                B("cL2", 1, 2, CornerKind.Front | CornerKind.Left), B("cR2", 1, 2, CornerKind.Front | CornerKind.Right),
+            };
+            for (int seed = 1; seed <= 10; seed++)
+            {
+                var r = Plan(Rect(96, 64), 2f, seed: seed, plain: plain, corners: corners);
+                Assert.True(r.FrontFilled == r.FrontCells.Count, $"seed {seed}: {r.FrontFilled} of {r.FrontCells.Count} street cells filled");
+            }
         }
 
         [Fact]

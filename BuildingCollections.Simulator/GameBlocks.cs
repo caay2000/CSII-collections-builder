@@ -27,6 +27,10 @@ namespace BuildingCollections.Simulator
             ["block_17824_-10159"] = "block (17824, -10159), 4 existing in the game",
             ["block_17925_-10139"] = "block (17925, -10139)",
             ["block_18235_-10153"] = "triangle (18235, -10153), 8 existing in the game",
+            ["block_18633_-11042"] = "long block (18633, -11042), 34 existing in the game",
+            ["block_18946_-11057"] = "block (18946, -11057), 21 existing in the game",
+            ["block_19034_-11154"] = "block (19034, -11154), 11 existing in the game",
+            ["block_19101_-11125"] = "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
         };
 
         public static string Folder => Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../Blocks"));

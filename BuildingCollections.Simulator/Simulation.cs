@@ -43,13 +43,14 @@ namespace BuildingCollections.Simulator
     {
         public static readonly IReadOnlyList<BuildingInfo> Plain = new List<BuildingInfo>
         {
-            B("1x1", 1, 1), B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3),
+            B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3),
         };
 
         public static readonly IReadOnlyList<BuildingInfo> Corners = new List<BuildingInfo>
         {
-            B("esq 1x2 L", 1, 2, CornerKind.Front | CornerKind.Left), B("esq 1x2 R", 1, 2, CornerKind.Front | CornerKind.Right),
-            B("esq 2x2 L", 2, 2, CornerKind.Front | CornerKind.Left), B("esq 2x2 R", 2, 2, CornerKind.Front | CornerKind.Right),
+            B("corner 1x1 L", 1, 1, CornerKind.Front | CornerKind.Left), B("corner 1x1 R", 1, 1, CornerKind.Front | CornerKind.Right),
+            B("corner 1x2 L", 1, 2, CornerKind.Front | CornerKind.Left), B("corner 1x2 R", 1, 2, CornerKind.Front | CornerKind.Right),
+            B("corner 2x2 L", 2, 2, CornerKind.Front | CornerKind.Left), B("corner 2x2 R", 2, 2, CornerKind.Front | CornerKind.Right),
         };
 
         static BuildingInfo B(string name, int w, int d, CornerKind corner = CornerKind.Front) =>

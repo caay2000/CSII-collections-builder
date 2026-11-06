@@ -11,7 +11,7 @@ namespace BuildingCollections.Core
         readonly PreviewResult result = new PreviewResult();
         readonly List<(Quad quad, PlanBlock owner)> footprints = new List<(Quad, PlanBlock)>();
         readonly List<(PlanBlock block, PlanGrid grid)> grids = new List<(PlanBlock, PlanGrid)>();
-        readonly List<(Quad quad, PlanBlock owner)> fronts = new List<(Quad, PlanBlock)>();
+        readonly List<(Quad front, Quad deep, PlanBlock owner)> fronts = new List<(Quad, Quad, PlanBlock)>();
         readonly Stopwatch clock = new Stopwatch();
         int seedIndex;
 
@@ -57,6 +57,7 @@ namespace BuildingCollections.Core
 
         void ReserveFronts()
         {
+            int wanted = request.Plain.Count > 0 ? request.Plain.Min(b => b.LotDepth) : 1;
             foreach (var (block, grid) in grids)
             {
                 var st = block.Strip;
@@ -69,13 +70,31 @@ namespace BuildingCollections.Core
                     bool nearEnd = endCorner && x >= grid.Width - exempt;
                     if (grid.Free[x, 0] && !nearStart && !nearEnd)
                     {
-                        fronts.Add((block.Frame.Cell(block.AreaX + x, block.AreaY, 0), block));
+                        int x0 = block.AreaX + x;
+                        fronts.Add((block.Frame.Cell(x0, block.AreaY, 0), block.Frame.Rect(x0, block.AreaY, x0 + 1, block.AreaY + ReservedRows(grid, x, wanted)), block));
                     }
                 }
             }
         }
 
-        List<Quad> OtherFronts(PlanBlock block) => fronts.Where(f => f.owner != block).Select(f => f.quad).ToList();
+        int ReservedRows(PlanGrid grid, int x, int wanted)
+        {
+            int rows = 1;
+            while (rows < wanted && rows < grid.Depth && grid.Free[x, rows])
+            {
+                rows++;
+            }
+
+            return rows;
+        }
+
+        List<Quad> OtherFronts(PlanBlock block) => fronts
+            .Where(f => f.owner != block)
+            .Select(f => SameSide(f.owner, block) ? f.front : f.deep)
+            .ToList();
+
+        static bool SameSide(PlanBlock a, PlanBlock b) =>
+            a.Strip != null && b.Strip != null && a.Strip.BlockIndex == b.Strip.BlockIndex && a.Strip.SideIndex == b.Strip.SideIndex;
 
         void MaskOthers(PlanBlock block, PlanGrid grid, ref int masked)
         {
