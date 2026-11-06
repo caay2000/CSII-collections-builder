@@ -140,6 +140,42 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void Narrow_block_fills_both_long_streets_with_overlapping_backs()
+        {
+            var plain = new List<BuildingInfo> { B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3) };
+            var corners = new List<BuildingInfo>
+            {
+                B("cL2", 1, 2, CornerKind.Front | CornerKind.Left), B("cR2", 1, 2, CornerKind.Front | CornerKind.Right),
+                B("cL22", 2, 2, CornerKind.Front | CornerKind.Left), B("cR22", 2, 2, CornerKind.Front | CornerKind.Right),
+            };
+            for (int seed = 1; seed <= 10; seed++)
+            {
+                var r = Plan(Rect(66, 24), 2f, seed: seed, plain: plain, corners: corners);
+                Assert.True(r.FrontFilled == r.FrontCells.Count, $"seed {seed}: {r.FrontFilled} of {r.FrontCells.Count} street cells filled");
+                AssertOnlyFacingStreetsOverlapBacks(r, 2f);
+            }
+        }
+
+        static void AssertOnlyFacingStreetsOverlapBacks(PreviewResult r, float overlap)
+        {
+            for (int i = 0; i < r.Lots.Count; i++)
+            {
+                for (int j = i + 1; j < r.Lots.Count; j++)
+                {
+                    var a = r.Lots[i];
+                    var b = r.Lots[j];
+                    if (Pt.Dot(a.Owner.Frame.AxisY, b.Owner.Frame.AxisY) < -0.5)
+                    {
+                        continue;
+                    }
+
+                    var inset = overlap + FootprintMask.StrictOverlap;
+                    Assert.False(Quad.Touch(a.Footprint(inset), b.Footprint(inset)), $"{a.Building} and {b.Building} overlap more than {overlap} m");
+                }
+            }
+        }
+
+        [Fact]
         public void Street_with_leftover_and_few_joints_is_filled_with_narrow_buildings()
         {
             var plain = new List<BuildingInfo> { B("1x1", 1, 1), B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3) };

@@ -9,11 +9,12 @@ namespace BuildingCollections.Core
     {
         readonly PreviewRequest request;
         readonly PreviewResult result = new PreviewResult();
-        readonly List<(Quad quad, PlanBlock owner)> footprints = new List<(Quad, PlanBlock)>();
+        readonly List<(Quad quad, Quad front, PlanBlock owner)> footprints = new List<(Quad, Quad, PlanBlock)>();
         readonly List<(PlanBlock block, PlanGrid grid)> grids = new List<(PlanBlock, PlanGrid)>();
-        readonly List<(Quad front, Quad deep, PlanBlock owner)> fronts = new List<(Quad, Quad, PlanBlock)>();
+        readonly List<(Quad front, Quad deep, Pt center, PlanBlock owner)> fronts = new List<(Quad, Quad, Pt, PlanBlock)>();
         readonly Stopwatch clock = new Stopwatch();
         int seedIndex;
+        int frontDepth = 1;
 
         PreviewPlanner(PreviewRequest request)
         {
@@ -48,16 +49,21 @@ namespace BuildingCollections.Core
 
         bool WedgesMayOverlap => request.Overlap > FootprintMask.StrictOverlap;
 
-        List<Quad> Others(PlanBlock block) => footprints
+        List<Quad> Others(PlanBlock block, bool backToBack = false) => footprints
             .Where(f => f.owner != block && !(WedgesMayOverlap && VirtualLots.BacksMayOverlap(f.owner.Strip, block.Strip)))
-            .Select(f => f.quad)
+            .Select(f => backToBack && BackToBack(f.owner, block) ? f.front : f.quad)
             .ToList();
+
+        const double BackToBackCos = -0.5;
+
+        static bool BackToBack(PlanBlock a, PlanBlock b) =>
+            a.Strip != null && b.Strip != null && !SameSide(a, b) && Pt.Dot(a.Frame.AxisY, b.Frame.AxisY) < BackToBackCos;
 
         const int CornerCells = 2;
 
         void ReserveFronts()
         {
-            int wanted = GridPlanner.ReservedFrontDepth(request.Plain);
+            frontDepth = GridPlanner.ReservedFrontDepth(request.Plain);
             foreach (var (block, grid) in grids)
             {
                 var st = block.Strip;
@@ -71,7 +77,8 @@ namespace BuildingCollections.Core
                     if (grid.Free[x, 0] && !nearStart && !nearEnd)
                     {
                         int x0 = block.AreaX + x;
-                        fronts.Add((block.Frame.Cell(x0, block.AreaY, 0), block.Frame.Rect(x0, block.AreaY, x0 + 1, block.AreaY + ReservedRows(grid, x, wanted)), block));
+                        fronts.Add((block.Frame.Cell(x0, block.AreaY, 0), block.Frame.Rect(x0, block.AreaY, x0 + 1, block.AreaY + ReservedRows(grid, x, frontDepth)),
+                            block.Frame.CellCenter(x0, block.AreaY), block));
                     }
                 }
             }
@@ -88,9 +95,9 @@ namespace BuildingCollections.Core
             return rows;
         }
 
-        List<Quad> OtherFronts(PlanBlock block) => fronts
+        List<Quad> OtherFronts(PlanBlock block, bool backToBack = false) => fronts
             .Where(f => f.owner != block)
-            .Select(f => SameSide(f.owner, block) ? f.front : f.deep)
+            .Select(f => SameSide(f.owner, block) || (backToBack && BackToBack(f.owner, block)) ? f.front : f.deep)
             .ToList();
 
         static bool SameSide(PlanBlock a, PlanBlock b) =>
@@ -98,8 +105,30 @@ namespace BuildingCollections.Core
 
         void MaskOthers(PlanBlock block, PlanGrid grid, ref int masked)
         {
-            masked += FootprintMask.Apply(grid, block, Others(block), request.Overlap);
-            masked += FootprintMask.Apply(grid, block, OtherFronts(block), request.Overlap, 1);
+            var strict = Masked(block, grid, false);
+            bool facing = footprints.Any(f => BackToBack(f.owner, block)) || fronts.Any(f => BackToBack(f.owner, block));
+            var relaxed = facing ? Masked(block, grid, true) : strict;
+            for (int x = 0; x < grid.Width; x++)
+            {
+                bool rescue = FreeDepth(strict, x) < frontDepth && FreeDepth(relaxed, x) >= frontDepth;
+                for (int y = 0; y < grid.Depth; y++)
+                {
+                    bool free = rescue ? y < frontDepth && relaxed.Free[x, y] : strict.Free[x, y];
+                    if (grid.Free[x, y] && !free)
+                    {
+                        grid.Free[x, y] = false;
+                        masked++;
+                    }
+                }
+            }
+        }
+
+        PlanGrid Masked(PlanBlock block, PlanGrid grid, bool backToBack)
+        {
+            var g = Clone(grid);
+            FootprintMask.Apply(g, block, Others(block, backToBack), request.Overlap);
+            FootprintMask.Apply(g, block, OtherFronts(block, backToBack), request.Overlap, 1);
+            return g;
         }
 
         int NextSeed() => request.Seed + 7919 * seedIndex++;
@@ -161,6 +190,9 @@ namespace BuildingCollections.Core
             Width = g.Width, Depth = g.Depth, Free = (bool[,])g.Free.Clone(), LeftCorner = g.LeftCorner, RightCorner = g.RightCorner,
         };
 
+        Quad FrontRow(PlanBlock block, Placement p) =>
+            block.Frame.Rect(block.AreaX + p.X, block.AreaY + p.Y, block.AreaX + p.X + p.Building.LotWidth, block.AreaY + p.Y + 1);
+
         Quad Footprint(PlanBlock block, Placement p) =>
             block.Frame.Rect(block.AreaX + p.X, block.AreaY + p.Y, block.AreaX + p.X + p.Building.LotWidth, block.AreaY + p.Y + p.Building.LotDepth);
 
@@ -172,8 +204,10 @@ namespace BuildingCollections.Core
                 FootprintMask.Apply(grid, block, Others(block), request.Overlap);
                 var corners = GridPlanner.PlanCorners(grid, request.Plain, request.Corners, NextSeed());
                 plans[block] = corners;
-                footprints.AddRange(corners.Select(p => (Footprint(block, p), block)));
+                footprints.AddRange(corners.Select(p => (Footprint(block, p), FrontRow(block, p), block)));
             }
+
+            fronts.RemoveAll(f => footprints.Any(fp => fp.owner != f.owner && fp.quad.Contains(f.center)));
 
             return plans;
         }
@@ -189,7 +223,7 @@ namespace BuildingCollections.Core
                 footprints.RemoveAll(f => f.owner == block);
                 foreach (var p in plan)
                 {
-                    footprints.Add((Footprint(block, p), block));
+                    footprints.Add((Footprint(block, p), FrontRow(block, p), block));
                     result.Lots.Add(new PlannedLot
                     {
                         Building = p.Building,
@@ -244,16 +278,21 @@ namespace BuildingCollections.Core
             var chars = new char[grid.Width];
             for (int x = 0; x < grid.Width; x++)
             {
-                int d = 0;
-                while (d < grid.Depth && grid.Free[x, d])
-                {
-                    d++;
-                }
-
-                chars[x] = (char)('0' + d);
+                chars[x] = (char)('0' + FreeDepth(grid, x));
             }
 
             return new string(chars);
+        }
+
+        static int FreeDepth(PlanGrid grid, int x)
+        {
+            int d = 0;
+            while (d < grid.Depth && grid.Free[x, d])
+            {
+                d++;
+            }
+
+            return d;
         }
 
         void ApplyDensity()
