@@ -26,7 +26,7 @@ namespace BuildingCollections.Simulator
                 sb.Append($"<input type=\"radio\" class=\"ov\" name=\"ov\" id=\"ov-{Key(o)}\" value=\"{Key(o)}\"{(Key(o) == "0_5" ? " checked" : string.Empty)}>");
             }
 
-            sb.Append($"<header class=\"top\"><div><h1>Block simulator</h1><p class=\"sub\">Building Collections {Enc(version)} · seed {seed} · same <code>Core</code> code as the mod · dummy buildings 1×1 to 3×3 and corner buildings 1×2 / 2×2</p></div>");
+            sb.Append($"<header class=\"top\"><div><h1>Block simulator</h1><p class=\"sub\">Collections Builder {Enc(version)} · seed {seed} · same <code>Core</code> code as the mod · dummy buildings 1×1 to 3×3 and corner buildings 1×2 / 2×2</p></div>");
             sb.Append("<div class=\"segwrap\"><span class=\"seglabel\">Overlap per joint</span><div class=\"seg\">");
             foreach (var o in overlaps)
             {

@@ -11,13 +11,14 @@ namespace BuildingCollections
 {
     [FileLocation(nameof(BuildingCollections))]
     [SettingsUITabOrder(Section, Keys)]
-    [SettingsUIGroupOrder(Collections, Builder, Shortcuts)]
+    [SettingsUIGroupOrder(Collections, Builder, About, Shortcuts)]
     [SettingsUIShowGroupName(Collections, Builder, Shortcuts)]
     public class BuildingCollectionsSettings : ModSetting
     {
         public const string Section = "Main";
         public const string Collections = "Collections";
         public const string Builder = "Builder";
+        public const string About = "About";
         public const string Keys = "KeyBindings";
         public const string Shortcuts = "Shortcuts";
         public const string ActivateAction = "BuildingCollectionsActivate";
@@ -179,7 +180,7 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public int Density { get; set; } = 100;
 
-        [SettingsUISlider(min = 0f, max = 2f, step = 0.5f, unit = Unit.kFloatSingleFraction)]
+        [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
         public float OverlapMeters { get; set; } = 0.5f;
 
@@ -214,6 +215,10 @@ namespace BuildingCollections
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
         public string Mode { get; set; } = "block";
+
+        [SettingsUIMultilineText]
+        [SettingsUISection(Section, About)]
+        public string VersionLabel => string.Empty;
 
         public DropdownItem<int>[] GetFilterValues() =>
             Enumerable.Range(0, 6).Select(i => new DropdownItem<int> { value = i, displayName = i == 0 ? "All" : i.ToString() }).ToArray();

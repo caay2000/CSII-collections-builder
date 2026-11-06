@@ -4,6 +4,11 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.1.34
+- El mod se llama Collections Builder en Opciones, en el panel y en la publicación.
+- La versión ya no va en el nombre de las opciones: sale como etiqueta al final de la pestaña principal.
+- "Overlap per joint" solo está en el panel del constructor; se quita de Opciones.
+
 ## 0.1.33
 - Atajo nuevo para construir la vista previa (Y por defecto); solo actúa con la herramienta de manzanas activa y una
   vista previa generada.

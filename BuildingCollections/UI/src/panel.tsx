@@ -13,7 +13,7 @@ export const GameTopLeftButton = () => {
     const open = usePanelOpen();
     return (
         <>
-            <Tooltip tooltip="Building Collections" direction="down" delayTime={0}>
+            <Tooltip tooltip="Collections Builder" direction="down" delayTime={0}>
                 <Button variant="floating" src={ICON} selected={open} onSelect={() => actions.setPanelOpen(!open)} />
             </Tooltip>
             {open && <Panel />}
@@ -62,7 +62,7 @@ const Panel = () => {
         <InputActionConsumer actions={back} ignoreFocusState>
             <div className={tab === "collections" ? styles.panelWide : styles.panel} style={drag.style}>
                 <div className={styles.header} onMouseDown={drag.start}>
-                    <span className={styles.title}>Building Collections</span>
+                    <span className={styles.title}>Collections Builder</span>
                     <button className={styles.close} title="Close" onClick={() => actions.setPanelOpen(false)}><img src={icon("close")} /></button>
                 </div>
                 <div className={styles.tabs}>
