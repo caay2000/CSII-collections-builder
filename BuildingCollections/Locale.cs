@@ -14,7 +14,7 @@ namespace BuildingCollections
         {
             return new Dictionary<string, string>
             {
-                { s.GetSettingsLocaleID(), $"Building Collections v{Mod.Version}" },
+                { s.GetSettingsLocaleID(), "Collections Builder" },
                 { s.GetOptionTabLocaleID(BuildingCollectionsSettings.Section), "Main" },
                 { s.GetOptionGroupLocaleID(BuildingCollectionsSettings.Collections), "Collections" },
                 { s.GetOptionGroupLocaleID(BuildingCollectionsSettings.Builder), "Block builder" },
@@ -39,7 +39,7 @@ namespace BuildingCollections
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.Status)), "Status" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.FindItTags)), "Tag collections in Find It" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.FindItTagsNote)), "Turning this on tags all your collections in Find It at once. With many buildings the game may pause for a moment while Find It saves its tags. Turning it off keeps the tags already added." },
-                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.FindItTags)), "On: every building in a collection gets a Find It tag with the collection's name (#name), so you can filter by it in Find It. Turning it on tags all your collections right away: with many buildings the game may freeze for a moment while Find It saves its tags. Off: Building Collections doesn't touch Find It tags (tags already added stay)." },
+                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.FindItTags)), "On: every building in a collection gets a Find It tag with the collection's name (#name), so you can filter by it in Find It. Turning it on tags all your collections right away: with many buildings the game may freeze for a moment while Find It saves its tags. Off: Collections Builder doesn't touch Find It tags (tags already added stay)." },
 
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.WidthOp)), "Lot width: operator" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.WidthValue)), "Lot width: value" },
@@ -49,8 +49,7 @@ namespace BuildingCollections
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.LevelValue)), "Building level: value" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.Density)), "Density" },
                 { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.Density)), "Percentage of free cells to cover with buildings." },
-                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.OverlapMeters)), "Overlap per joint (m)" },
-                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.OverlapMeters)), "How much two new buildings may overlap at each joint (0 = no overlap). Same value as \"Overlap per joint\" in the builder panel. Needs Anarchy: the builder turns it on while its tab is open and this is not Off, and turns it back off when the tab closes if it had been off. Higher values close bigger leftovers at street ends and along curves but can hide part of a facade." },
+                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.VersionLabel)), $"Version {Mod.Version}" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.MaxBlockHectares)), "Largest block for Block mode (hectares)" },
                 { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.MaxBlockHectares)), "Block mode only selects blocks up to this size (1 ha = 10,000 m²). Bigger blocks, especially with curved streets, make the preview slower: use Polygon for those, or raise this limit if your PC handles it." },
 

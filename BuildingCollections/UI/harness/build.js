@@ -4,7 +4,7 @@ const css = fs.readFileSync(path.join(__dirname, "harness.css"), "utf8");
 const iconDir = path.join(__dirname, "..", "icons");
 const icons = Object.fromEntries(fs.readdirSync(iconDir).filter((f) => f.endsWith(".svg"))
     .map((f) => [f.replace(".svg", ""), "data:image/svg+xml;utf8," + encodeURIComponent(fs.readFileSync(path.join(iconDir, f), "utf8"))]));
-const html = `<title>Building Collections Harness</title>
+const html = `<title>Collections Builder Harness</title>
 <script>window.BC_ICONS=${JSON.stringify(icons)};</script>
 <style>${css}</style>
 <div id="root"></div>

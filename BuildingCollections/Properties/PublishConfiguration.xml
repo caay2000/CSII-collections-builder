@@ -1,11 +1,11 @@
 <Publish>
 	<!--Lo rellena el usuario con el número que da la primera publicación (Publish); lo necesitan NewVersion y Update.-->
 	<ModId Value="" />
-	<DisplayName Value="Building Collections" />
+	<DisplayName Value="Collections Builder" />
 	<ShortDescription Value="Group buildings into collections and fill a whole city block with them in one click." />
 	<!--Multilínea: sin espacios al principio de cada línea (lo pide el publicador).-->
 	<LongDescription>
-Building Collections lets you group buildings into named collections and then fill an entire city block with them in one click.
+Collections Builder lets you group buildings into named collections and then fill an entire city block with them in one click.
 
 **Features**
 - Collections of buildings, optionally tagged in Find It.
@@ -22,7 +22,7 @@ Early version (0.1.x): feedback and bug reports are welcome on GitHub.
 	<Tag Value="Code Mod" />
 	<Tag Value="Buildings" />
 	<ForumLink Value="" />
-	<ModVersion Value="0.1.33" />
+	<ModVersion Value="0.1.34" />
 	<GameVersion Value="1.*" />
 	<ChangeLog>
 First test release (private).
