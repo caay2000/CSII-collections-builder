@@ -4,6 +4,13 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.1.35
+- Shift+clic en Find It ya no congela el juego ~0,45 s en cada edificio: las etiquetas de Find It se aplican cuando
+  llevas 1 s sin añadir ni quitar (varios clics seguidos = un solo guardado de Find It), y la lista de ids de Find It
+  solo se vuelve a leer si falta algún edificio o si un id ya no corresponde al mismo edificio (así nunca se etiqueta
+  otro edificio con un id caducado).
+- El log apunta cuánto tarda añadir un edificio y el guardado de etiquetas (ids y guardado de Find It por separado).
+
 ## 0.1.34
 - El mod se llama Collections Builder en Opciones, en el panel y en la publicación.
 - La versión ya no va en el nombre de las opciones: sale como etiqueta al final de la pestaña principal.

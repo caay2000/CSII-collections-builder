@@ -63,6 +63,7 @@ namespace BuildingCollections
 
         public static string AddPrefab(string collectionName, string prefabName)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             var c = CollectionStore.Find(collectionName);
             if (c == null)
             {
@@ -81,7 +82,7 @@ namespace BuildingCollections
 
             TagQueue.Add(prefabName, c.Tag);
             CollectionStore.Save();
-            Mod.Log.Info($"'{c.Name}': added '{prefabName}'. Total {c.Prefabs.Count}.");
+            Mod.Log.Info($"'{c.Name}': added '{prefabName}'. Total {c.Prefabs.Count} ({watch.ElapsedMilliseconds} ms).");
             return null;
         }
 
@@ -94,7 +95,6 @@ namespace BuildingCollections
             }
 
             int removed = 0;
-            FindItBridge.RefreshIds();
             foreach (var name in prefabNames.Where(n => !string.IsNullOrEmpty(n)).ToList())
             {
                 if (CollectionLogic.Remove(c.Prefabs, name))
