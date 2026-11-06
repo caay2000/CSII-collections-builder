@@ -1,5 +1,3 @@
-// Estilo cercano al juego (Transit Planner, Recolor, Find It). Gameface: sin CSS grid ni gap fiable, así que las
-// separaciones van con márgenes. 1rem = 1px en la UI del juego.
 $panel: rgba(20, 28, 43, 0.94);
 $panelLine: rgba(255, 255, 255, 0.08);
 $line: rgba(255, 255, 255, 0.07);
@@ -18,7 +16,6 @@ $soft: rgba(255, 255, 255, 0.07);
 @mixin gradient { background-image: linear-gradient(to bottom, $gradTop, $gradBottom); }
 @mixin secLabel { font-size: 12rem; font-weight: bold; letter-spacing: 1rem; text-transform: uppercase; color: $secLabel; }
 
-// ---------- Panel ----------
 .panel, .panelWide {
     position: fixed; left: 20rem; top: 90rem;
     max-height: calc(100vh - 120rem);
@@ -43,7 +40,6 @@ $soft: rgba(255, 255, 255, 0.07);
 .tabOn { @include gradient; color: #fff; }
 .body { flex: 1; min-height: 0; display: flex; flex-direction: column; border-top: 2rem solid $primary; background-color: rgba(10, 16, 28, 0.35); }
 
-// ---------- Comunes ----------
 .secLabel { @include secLabel; }
 .lbl { font-size: 13rem; font-weight: bold; letter-spacing: 1rem; text-transform: uppercase; color: #c9d4e3; }
 .row { display: flex; flex-direction: row; align-items: center; }
@@ -59,8 +55,6 @@ button:disabled { opacity: 0.4; }
 .iconBtnSmall { width: 28rem; height: 28rem; }
 .iconBtnSmall img { width: 16rem; height: 16rem; }
 
-// Gameface no centra en vertical el texto de un <input>: altura de línea igual a la altura interior, y el mismo
-// sangrado que los nombres de la lista para que el texto quede en la misma columna.
 .inlineInput { width: 100%; height: 36rem; line-height: 34rem; padding: 0 10rem; margin: 0; border: 1rem solid $primary; border-radius: 3rem; background-color: rgba(0, 0, 0, 0.35); color: #fff; font-size: 14rem; font-weight: 600; }
 
 .confirm { display: flex; flex-direction: column; padding: 8rem; border: 1rem solid rgba(255, 138, 128, 0.5); border-radius: 4rem; background-color: rgba(220, 60, 60, 0.12); font-size: 13rem; }
@@ -69,7 +63,6 @@ button:disabled { opacity: 0.4; }
 .smallBtnDanger { background-color: rgba(220, 60, 60, 0.6); }
 .smallBtnPrimary { @include gradient; }
 
-// ---------- Filtros (StepFilter) ----------
 .filterBox { display: flex; flex-direction: column; padding: 6rem 10rem; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.04); }
 .filter { display: flex; flex-direction: row; align-items: center; height: 34rem; }
 .filterLabel { flex: 1; font-size: 14rem; font-weight: bold; color: #e6edf6; }
@@ -82,7 +75,6 @@ button:disabled { opacity: 0.4; }
 .checkOn { @include gradient; border-color: $primary; }
 .check img { width: 20rem; height: 20rem; }
 
-// ---------- Pestaña Collections ----------
 .split { flex: 1; min-height: 0; display: flex; flex-direction: row; }
 .side { width: 206rem; flex: none; display: flex; flex-direction: column; padding: 12rem 10rem; border-right: 1rem solid $line; }
 .side > * { margin-bottom: 8rem; }
@@ -105,7 +97,6 @@ button:disabled { opacity: 0.4; }
 
 .gridScroll { flex: 1; min-height: 0; }
 .grid { display: flex; flex-direction: row; flex-wrap: wrap; }
-// 5 columnas de 80 + 6 = 430: deja sitio a la barra de scroll de Scrollable dentro de los ~467 de ancho útil.
 .card { position: relative; width: 80rem; height: 128rem; margin: 0 6rem 6rem 0; padding: 6rem 4rem 8rem; display: flex; flex-direction: column; align-items: center; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.08); }
 .card:hover { background-color: rgba(255, 255, 255, 0.15); }
 .thumb { width: 64rem; height: 64rem; flex: none; margin-bottom: 4rem; }
@@ -115,7 +106,6 @@ button:disabled { opacity: 0.4; }
 .pipOn { background-color: $levelOn; }
 .cardName { width: 100%; max-height: 42rem; overflow: hidden; font-size: 12rem; line-height: 14rem; font-weight: 600; text-align: center; color: #e6edf6; }
 .remove { position: absolute; right: 3rem; bottom: 3rem; width: 22rem; height: 22rem; padding: 5rem; border: none; border-radius: 3rem; background-color: rgba(200, 60, 50, 0.9); opacity: 0; }
-// Icono como fondo y no como <img>: con cientos de tarjetas son cientos de nodos menos.
 .remove { background-image: url("coui://buildingcollections/icons/remove.svg"); background-size: 12rem 12rem; background-position: center; background-repeat: no-repeat; }
 .card:hover .remove { opacity: 1; }
 .empty { padding: 12rem 4rem; color: $text2; font-size: 13rem; }
@@ -130,7 +120,6 @@ button:disabled { opacity: 0.4; }
 .textDanger { height: 30rem; padding: 0 12rem; border: none; background-color: transparent; color: $danger; font-size: 13rem; font-weight: bold; }
 .textDanger:hover { background-color: rgba(255, 138, 128, 0.12); }
 
-// ---------- Pestaña Builder ----------
 .sec { display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-height: 44rem; padding: 8rem 16rem; border-bottom: 1rem solid $line; }
 .secCol { display: flex; flex-direction: column; padding: 12rem 16rem; border-bottom: 1rem solid $line; }
 .secCol > * { margin-bottom: 8rem; }
@@ -161,7 +150,6 @@ button:disabled { opacity: 0.4; }
 .btn:hover { background-color: rgba(255, 255, 255, 0.16); }
 .btnPrimary { @include gradient; }
 
-// Desplegable de colección
 .dd { position: relative; width: 220rem; }
 .ddToggle { width: 220rem; height: 36rem; display: flex; flex-direction: row; align-items: center; padding: 0 10rem; border: none; border-radius: 3rem; background-color: rgba(0, 0, 0, 0.45); color: #fff; font-size: 14rem; font-weight: 600; }
 .ddLabel { flex: 1; text-align: left; overflow: hidden; white-space: nowrap; }
@@ -174,7 +162,6 @@ button:disabled { opacity: 0.4; }
 .chip img, .chipOn img { width: 20rem; height: 20rem; }
 .filterLabelAnarchy { flex: 1; font-size: 14rem; font-weight: bold; color: #fbbf77; }
 
-// Mezcla de dos colecciones: azul la primera, ámbar la segunda (mismo color en el desplegable y en la barra).
 $mixA: #55aef5;
 $mixB: #f0a64a;
 .addMix { align-self: flex-end; height: 28rem; padding: 0 10rem; display: flex; flex-direction: row; align-items: center; border: none; border-radius: 3rem; background-color: transparent; color: $title; font-size: 13rem; font-weight: bold; }
@@ -200,7 +187,6 @@ $mixB: #f0a64a;
 .mixThumb { position: absolute; top: 2rem; width: 20rem; height: 20rem; margin-left: -10rem; border: 3rem solid rgba(20, 28, 43, 1); border-radius: 10rem; background-color: #fff; }
 .mixRemoveSpacer { width: 34rem; flex: none; }
 .builderMsg { margin: -4rem 16rem 10rem; padding-left: 10rem; border-left: 3rem solid $title; font-size: 13rem; line-height: 18rem; color: $text2; }
-// Error: rojo, con un doble destello al aparecer (la key cambia con cada error y la animación se repite).
 .builderMsgError {
     margin: -4rem 16rem 10rem; padding: 4rem 10rem; border-left: 3rem solid #ff5d52; border-radius: 0 3rem 3rem 0;
     font-size: 13rem; line-height: 18rem; font-weight: bold; color: $danger; background-color: rgba(255, 93, 82, 0.1);

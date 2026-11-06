@@ -1,7 +1,6 @@
 const fs = require("fs"), path = require("path");
 const js = fs.readFileSync(path.join(__dirname, "dist", "harness.js"), "utf8").replace(/<\/script/gi, "<\\/script");
 const css = fs.readFileSync(path.join(__dirname, "harness.css"), "utf8");
-// Iconos reales del mod (coui://buildingcollections/icons/X.svg) como data URIs, para que el arnés se parezca al juego.
 const iconDir = path.join(__dirname, "..", "icons");
 const icons = Object.fromEntries(fs.readdirSync(iconDir).filter((f) => f.endsWith(".svg"))
     .map((f) => [f.replace(".svg", ""), "data:image/svg+xml;utf8," + encodeURIComponent(fs.readFileSync(path.join(iconDir, f), "utf8"))]));

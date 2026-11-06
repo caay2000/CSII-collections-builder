@@ -5,26 +5,24 @@ using Unity.Entities;
 
 namespace BuildingCollections
 {
-    /// <summary>
-    /// Integración opcional con Anarchy (sin dependencia: todo por reflexión). Anarchy desactiva los errores de las
-    /// herramientas de su lista cuando está encendido; <c>AnarchyUISystem.TryAddTool(toolID)</c> permite añadir la
-    /// nuestra, y <c>AnarchyEnabled</c> dice si está encendido. Si Anarchy no está, todo devuelve "apagado".
-    /// </summary>
     public static class AnarchyBridge
     {
-        const string SystemType = "Anarchy.Systems.Common.AnarchyUISystem";
+        const string SystemTypeName = "Anarchy.Systems.Common.AnarchyUISystem";
+        const int MaxTypeLookups = 3;
 
+        static Type systemType;
         static object system;
         static World systemWorld;
         static PropertyInfo enabledProperty;
+        static MethodInfo toggleMethod;
         static int typeLookups;
         static bool registered;
         static bool unsupported;
 
-        /// <summary>Anarchy instalado y nuestra herramienta añadida a su lista.</summary>
         public static bool Available => registered;
 
-        /// <summary>Anarchy instalado, con nuestra herramienta registrada, y encendido.</summary>
+        public static bool CanSwitch => registered && toggleMethod != null;
+
         public static bool Enabled
         {
             get
@@ -39,13 +37,34 @@ namespace BuildingCollections
             }
         }
 
-        /// <summary>
-        /// Intenta registrar la herramienta. Anarchy puede crear su sistema después que nosotros, así que se llama
-        /// periódicamente hasta que funcione (o se rinde tras unos intentos si Anarchy no está).
-        /// </summary>
+        public static bool SetEnabled(bool on)
+        {
+            if (!CanSwitch)
+            {
+                return false;
+            }
+
+            if (Enabled == on)
+            {
+                return true;
+            }
+
+            try
+            {
+                toggleMethod.Invoke(system, null);
+            }
+            catch (Exception e)
+            {
+                var inner = (e as TargetInvocationException)?.InnerException ?? e;
+                Mod.Log.Warn("Anarchy: could not be switched: " + inner.Message);
+                return false;
+            }
+
+            return Enabled == on;
+        }
+
         public static void TryRegister(World world, string toolID)
         {
-            // Partida nueva (otro World): hay que volver a registrar en el sistema de ese mundo.
             if (registered && systemWorld != world)
             {
                 registered = false;
@@ -59,44 +78,52 @@ namespace BuildingCollections
 
             try
             {
-                // El tipo está o no está desde el principio (los ensamblados se cargan antes que el mundo): pocos
-                // intentos. El sistema, en cambio, puede crearse tarde: se sigue probando sin tope.
-                var type = AppDomain.CurrentDomain.GetAssemblies()
-                    .Select(a => { try { return a.GetType(SystemType, false); } catch { return null; } })
-                    .FirstOrDefault(t => t != null);
-                if (type == null)
+                if (systemType == null)
                 {
-                    unsupported = ++typeLookups >= 3;
-                    return;
+                    systemType = FindType();
+                    if (systemType == null)
+                    {
+                        unsupported = ++typeLookups >= MaxTypeLookups;
+                        return;
+                    }
                 }
 
-                system = world.GetExistingSystemManaged(type);
+                system = world.GetExistingSystemManaged(systemType);
                 if (system == null)
                 {
                     return;
                 }
 
-                var add = type.GetMethod("TryAddTool", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
-                enabledProperty = type.GetProperty("AnarchyEnabled", BindingFlags.Public | BindingFlags.Instance);
+                var add = systemType.GetMethod("TryAddTool", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
+                enabledProperty = systemType.GetProperty("AnarchyEnabled", BindingFlags.Public | BindingFlags.Instance);
+                toggleMethod = systemType.GetMethod("AnarchyToggled", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
                 if (add == null || enabledProperty == null)
                 {
-                    Mod.Log.Warn("Anarchy encontrado, pero sin TryAddTool / AnarchyEnabled: integración desactivada.");
+                    Mod.Log.Warn("Anarchy found, but without TryAddTool / AnarchyEnabled: integration disabled.");
                     unsupported = true;
                     return;
                 }
 
-                // TryAddTool devuelve false si la herramienta ya estaba en la lista: también vale.
+                if (toggleMethod == null)
+                {
+                    Mod.Log.Warn("Anarchy found, but without AnarchyToggled: it cannot be turned on automatically.");
+                }
+
                 var result = add.Invoke(system, new object[] { toolID });
                 registered = true;
                 systemWorld = world;
-                Mod.Log.Info($"Anarchy: herramienta '{toolID}' registrada ({(result is bool b && !b ? "ya estaba" : "añadida")}).");
+                Mod.Log.Info($"Anarchy: tool '{toolID}' registered ({(result is bool b && !b ? "already there" : "added")}).");
             }
             catch (Exception e)
             {
                 var inner = (e as TargetInvocationException)?.InnerException ?? e;
-                Mod.Log.Warn("Anarchy: no se pudo registrar la herramienta: " + inner.Message);
+                Mod.Log.Warn("Anarchy: could not register the tool: " + inner.Message);
                 unsupported = true;
             }
         }
+
+        static Type FindType() => AppDomain.CurrentDomain.GetAssemblies()
+            .Select(a => { try { return a.GetType(SystemTypeName, false); } catch { return null; } })
+            .FirstOrDefault(t => t != null);
     }
 }

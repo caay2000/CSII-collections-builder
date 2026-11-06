@@ -8,18 +8,12 @@ using Unity.Mathematics;
 
 namespace BuildingCollections
 {
-    /// <summary>Un prefab tal como lo conoce Find It: su id interno más los datos que necesitamos.</summary>
     public sealed class FindItPrefab
     {
         public int Id;
         public BuildingInfo Info;
     }
 
-    /// <summary>
-    /// Acceso a Find It por reflexión, sin dependencia dura (regla R3.5 / R7). Las partes que no son API
-    /// documentada (FindItUtil.GetFilteredPrefabs, AddTag, RemoveTag, AllPrefabs) pueden cambiar sin aviso, así
-    /// que todo va con try/catch y devuelve "no disponible" en lugar de lanzar.
-    /// </summary>
     public static class FindItBridge
     {
         static Type utilType;
@@ -42,11 +36,11 @@ namespace BuildingCollections
             {
                 var asm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "FindIt");
                 utilType = asm?.GetType("FindIt.Utilities.FindItUtil");
-                Mod.Log.Info(utilType == null ? "Find It no encontrado." : "Find It encontrado.");
+                Mod.Log.Info(utilType == null ? "Find It not found." : "Find It found.");
             }
             catch (Exception e)
             {
-                Mod.Log.Warn($"No se pudo resolver Find It: {e.Message}");
+                Mod.Log.Warn($"Could not resolve Find It: {e.Message}");
             }
         }
 
@@ -62,14 +56,13 @@ namespace BuildingCollections
                     ?? utilType.GetMethods(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(x => x.Name == method && x.GetParameters().Length == args.Length);
             if (m == null)
             {
-                Mod.Log.Warn($"Find It: no existe FindItUtil.{method}.");
+                Mod.Log.Warn($"Find It: FindItUtil.{method} does not exist.");
                 return null;
             }
 
             return m.Invoke(null, args);
         }
 
-        /// <summary>Edificios de la lista filtrada que Find It muestra ahora mismo.</summary>
         public static List<FindItPrefab> GetFilteredBuildings()
         {
             try
@@ -78,12 +71,11 @@ namespace BuildingCollections
             }
             catch (Exception e)
             {
-                Mod.Log.Warn($"Find It GetFilteredPrefabs falló: {e.Message}");
+                Mod.Log.Warn($"Find It GetFilteredPrefabs failed: {e.Message}");
                 return new List<FindItPrefab>();
             }
         }
 
-        /// <summary>Todos los prefabs que Find It tiene indexados (para resolver nombre a id y datos).</summary>
         public static Dictionary<string, FindItPrefab> GetAllByName()
         {
             var result = new Dictionary<string, FindItPrefab>(StringComparer.OrdinalIgnoreCase);
@@ -101,7 +93,7 @@ namespace BuildingCollections
             }
             catch (Exception e)
             {
-                Mod.Log.Warn($"Find It AllPrefabs falló: {e.Message}");
+                Mod.Log.Warn($"Find It AllPrefabs failed: {e.Message}");
             }
 
             return result;
@@ -109,7 +101,6 @@ namespace BuildingCollections
 
         static Dictionary<string, int> idCache;
 
-        /// <summary>Rehace la caché nombre → id de Find It (recorre todos sus prefabs: llamar una vez por operación).</summary>
         public static void RefreshIds()
         {
             var cache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -125,13 +116,12 @@ namespace BuildingCollections
             }
             catch (Exception e)
             {
-                Mod.Log.Warn($"Find It: no se pudo leer la lista de prefabs: {e.Message}");
+                Mod.Log.Warn($"Find It: could not read the prefab list: {e.Message}");
             }
 
             idCache = cache;
         }
 
-        /// <summary>Id de Find It de un prefab por nombre. Si la caché no existe se crea; un nombre ausente no la rehace.</summary>
         public static bool TryGetId(string name, out int id)
         {
             id = 0;
@@ -151,16 +141,9 @@ namespace BuildingCollections
         public static string[] GetAllTags()
         {
             try { return CallStatic("GetAllTags") as string[] ?? new string[0]; }
-            catch (Exception e) { Mod.Log.Warn($"Find It GetAllTags falló: {e.Message}"); return new string[0]; }
+            catch (Exception e) { Mod.Log.Warn($"Find It GetAllTags failed: {e.Message}"); return new string[0]; }
         }
 
-        /// <summary>
-        /// Muchos cambios de etiquetas con un solo guardado. AddTag / RemoveTag de Find It reescriben su fichero
-        /// entero (CustomPrefabData.json) en cada llamada: borrar una colección de 1600 edificios eran 1600 guardados
-        /// y el juego a 2 FPS durante minutos. Aquí se hace lo mismo que esos métodos (por reflexión, sobre sus datos)
-        /// y se guarda una vez con su SaveCustomPrefabData. Devuelve false, sin tocar nada, si Find It no tiene esa
-        /// forma; entonces se usan AddTag / RemoveTag de uno en uno.
-        /// </summary>
         public static bool TryApplyBatch(IReadOnlyList<(bool add, string prefab, string tag)> changes, out int skipped)
         {
             skipped = 0;
@@ -180,11 +163,10 @@ namespace BuildingCollections
             var dataTags = dataType?.GetProperty("Tags");
             if (dict == null || getIndex == null || save == null || dataTags == null || dataTags.PropertyType != typeof(List<string>))
             {
-                Mod.Log.Warn("Find It: su forma interna ha cambiado; etiquetas de una en una.");
+                Mod.Log.Warn("Find It: its internals have changed; tagging one at a time.");
                 return false;
             }
 
-            // Como AddTag: si la etiqueta ya existe con otras mayúsculas, se usa la que hay (una sola llamada por bloque).
             var canon = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in GetAllTags())
             {
@@ -221,7 +203,6 @@ namespace BuildingCollections
                 var tags = data != null ? dataTags.GetValue(data) as List<string> : null;
                 if (add)
                 {
-                    // Como AddTag: una etiqueta que ya pone el autor no se repite.
                     if (it.GetProperty("CreatorTags")?.GetValue(index) is string[] creator && creator.Any(x => string.Equals(x, tag, StringComparison.OrdinalIgnoreCase)))
                     {
                         continue;
@@ -266,7 +247,7 @@ namespace BuildingCollections
         static bool Tag(string method, int id, string tag)
         {
             try { return CallStatic(method, id, tag) is bool b && b; }
-            catch (Exception e) { Mod.Log.Warn($"Find It {method} falló: {e.Message}"); return false; }
+            catch (Exception e) { Mod.Log.Warn($"Find It {method} failed: {e.Message}"); return false; }
         }
 
         static List<FindItPrefab> ToPrefabs(IEnumerable items)
@@ -296,7 +277,6 @@ namespace BuildingCollections
                 int level = t.GetProperty("BuildingLevel") != null ? (int)t.GetProperty("BuildingLevel").GetValue(item) : 0;
                 int corner = t.GetProperty("CornerType") != null ? Convert.ToInt32(t.GetProperty("CornerType").GetValue(item)) : 2;
 
-                // Solo edificios con parcela: el resto (props, árboles...) tiene LotSize 0.
                 if (lot.x <= 0 || lot.y <= 0)
                 {
                     continue;

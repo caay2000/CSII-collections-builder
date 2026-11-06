@@ -1,4 +1,3 @@
-// Simulador del lado C# (BcUISystem) para ejecutar la UI real en un navegador. No es código del mod.
 import type { BuildingDto, BuilderDto, CollectionDto, PlanDto } from "../src/bindings";
 const DEFAULT_BUILDER: BuilderDto = { mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, density: 100 };
 
@@ -30,7 +29,6 @@ FAMILIES.forEach(([n, w, d, zone, pack]) => [1, 2, 3, 4, 5].forEach((lv) => {
     ALL.push({ id: `${n} L${lv}`, name: `${n} - L${lv} ${w}x${d}`, w, d, level: lv, icon: icon(n, lv, w, d) });
 }));
 export const CATALOG = ALL.slice();
-// Colección grande para probar el rendimiento de la rejilla (como la de 1600 de la partida de pruebas).
 const BIG = Array.from({ length: 1600 }, (_, i) => ({ ...CATALOG[i % CATALOG.length], id: `${CATALOG[i % CATALOG.length].id} #${i}` }));
 ALL.push(...BIG);
 const BY_ID = new Map<string, BuildingDto>();
@@ -83,8 +81,8 @@ export function read(key: string): string {
 
 export function addToCurrent(id: string) {
     const c = cur();
-    if (!c) { S.status = "No hay colección seleccionada."; emit(); return; }
-    if (c.ids.includes(id)) { S.status = "Ya estaba en la colección."; emit(); return; }
+    if (!c) { S.status = "No collection selected."; emit(); return; }
+    if (c.ids.includes(id)) { S.status = "Already in the collection."; emit(); return; }
     c.ids.push(id); S.status = "OK"; emit();
 }
 
@@ -95,8 +93,8 @@ export function trigger(name: string, ...args: any[]) {
         case "select": S.selected = args[0]; break;
         case "create": {
             const n = String(args[0] ?? "").trim();
-            if (!n) { S.status = "El nombre está vacío."; break; }
-            if (S.cols.some((x) => x.name.toLowerCase() === n.toLowerCase())) { S.status = `Ya existe la colección '${n}'.`; break; }
+            if (!n) { S.status = "The name is empty."; break; }
+            if (S.cols.some((x) => x.name.toLowerCase() === n.toLowerCase())) { S.status = `Collection '${n}' already exists.`; break; }
             S.cols.push({ name: n, ids: [] }); S.selected = n; S.status = "OK"; break;
         }
         case "clear": if (c) { c.ids = []; S.status = "OK"; } break;
@@ -108,10 +106,9 @@ export function trigger(name: string, ...args: any[]) {
         case "generatePreview": if (S.plan.previewing) S.seed++; S.plan = { ...S.plan, previewing: true }; break;
         case "clearSelection": S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
         case "AnarchyToggled": S.anarchy = !S.anarchy; break;
-        case "build": S.status = `Construidos ${S.plan.lots} edificios (simulado).`; S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
+        case "build": S.status = `Built ${S.plan.lots} buildings (simulated).`; S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
     }
     emit();
 }
 
-/** La escena simulada avisa de que se ha elegido una zona. */
 export function areaPicked(lots: number) { S.plan = { areaSelected: true, previewing: false, lots }; emit(); }

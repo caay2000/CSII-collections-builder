@@ -3,18 +3,8 @@ using System.Collections.Generic;
 
 namespace BuildingCollections.Core
 {
-    /// <summary>
-    /// Decoración del espacio sobrante de una manzana (patios, huecos entre edificios): puntos repartidos en una
-    /// rejilla con desplazamiento al azar, dentro del contorno, lejos de la acera y de los edificios.
-    /// </summary>
     public static class Decor
     {
-        /// <param name="outline">Contorno de la manzana (acera).</param>
-        /// <param name="blockers">Huellas de edificios (planificados y existentes).</param>
-        /// <param name="existing">Árboles que ya hay: no se pone otro encima.</param>
-        /// <param name="spacing">Separación media entre puntos (m).</param>
-        /// <param name="curbMargin">Distancia mínima a la acera (m).</param>
-        /// <param name="clearance">Distancia mínima a un edificio (m).</param>
         public static List<Pt> Scatter(IReadOnlyList<Pt> outline, IReadOnlyList<Quad> blockers, IReadOnlyList<Pt> existing,
             double spacing, double curbMargin, double clearance, int seed, int max = 2000, IReadOnlyList<Pt> clip = null)
         {
@@ -31,8 +21,6 @@ namespace BuildingCollections.Core
                 minY = Math.Min(minY, p.Y); maxY = Math.Max(maxY, p.Y);
             }
 
-            // Con el tope de puntos, una rejilla recorrida por filas dejaría vacía la parte de arriba: se abre la
-            // separación lo justo para que quepa toda el área.
             spacing = Math.Max(spacing, Math.Sqrt((maxX - minX) * (maxY - minY) / max));
             var rng = new Random(seed);
             double jitter = spacing * 0.35;
@@ -83,12 +71,6 @@ namespace BuildingCollections.Core
             return result;
         }
 
-        /// <summary>
-        /// Elige qué planta va en un punto: una al azar entre las que caben sin tocar ningún edificio (su radio más
-        /// <paramref name="margin"/> no llega a la huella más cercana). Un árbol que toca un edificio sale en rojo y,
-        /// con él, el edificio: mejor un árbol más pequeño o ninguno. Devuelve el índice en <paramref name="radii"/>,
-        /// o -1 si no cabe ninguna.
-        /// </summary>
         public static int PickFitting(Pt q, IReadOnlyList<Quad> blockers, IReadOnlyList<double> radii, double margin, Random rng)
         {
             double room = double.MaxValue;
@@ -109,7 +91,6 @@ namespace BuildingCollections.Core
             return fits.Count == 0 ? -1 : fits[rng.Next(fits.Count)];
         }
 
-        /// <summary>Separación de la rejilla para una densidad (10 a 100 %): 5 m al 100 %, más ancha cuanto menor.</summary>
         public static double SpacingFor(int density) => 5.0 / Math.Sqrt(Math.Max(10, Math.Min(100, density)) / 100.0);
 
         static double DistanceToOutline(IReadOnlyList<Pt> outline, Pt q)
@@ -124,7 +105,6 @@ namespace BuildingCollections.Core
         }
     }
 
-    /// <summary>Punto enganchado a un bordillo: qué bordillo y en qué posición (índice de segmento + fracción).</summary>
     public struct CurbHit
     {
         public int Curb;
@@ -133,10 +113,6 @@ namespace BuildingCollections.Core
         public double Distance;
     }
 
-    /// <summary>
-    /// Bordillos (borde exterior de cada calle, como polilíneas) para dibujar un polígono que se adapta a las calles:
-    /// el cursor se engancha al bordillo cercano y, si dos vértices seguidos están en el mismo, el lado lo sigue.
-    /// </summary>
     public static class CurbSnap
     {
         public static bool TrySnap(IReadOnlyList<List<Pt>> curbs, Pt q, double maxDistance, out CurbHit hit)
@@ -157,8 +133,6 @@ namespace BuildingCollections.Core
                 }
             }
 
-            // Cerca del final de un bordillo (la esquina de la acera) se engancha al extremo exacto, solo si el cursor
-            // ya está casi encima del bordillo (si no, el punto saltaría lejos de donde se hizo clic).
             if (hit.Curb >= 0 && hit.Distance < 2)
             {
                 var pts = curbs[hit.Curb];
@@ -176,7 +150,6 @@ namespace BuildingCollections.Core
             return hit.Curb >= 0 && hit.Distance <= maxDistance;
         }
 
-        /// <summary>Puntos del bordillo entre dos posiciones, en el sentido de <paramref name="from"/> a <paramref name="to"/>.</summary>
         public static List<Pt> Path(List<Pt> curb, double from, double to)
         {
             var result = new List<Pt> { At(curb, from) };
@@ -205,7 +178,6 @@ namespace BuildingCollections.Core
             return result;
         }
 
-        /// <summary>El segmento a-b va pegado a algún bordillo (sus puntos intermedios a menos de <paramref name="tolerance"/>).</summary>
         public static bool Hugs(IReadOnlyList<List<Pt>> curbs, Pt a, Pt b, double tolerance)
         {
             foreach (double f in new[] { 0.25, 0.5, 0.75 })
@@ -220,11 +192,6 @@ namespace BuildingCollections.Core
             return true;
         }
 
-        /// <summary>
-        /// Lados de un polígono dibujado: entre dos vértices enganchados al mismo bordillo el lado lo sigue (y da a la
-        /// calle); si no, es recto, y da a la calle solo si va pegado a un bordillo. Se devuelven en sentido
-        /// antihorario (la manzana a la izquierda), como espera <see cref="VirtualLots"/>.
-        /// </summary>
         public static void Sides(IReadOnlyList<Pt> verts, IReadOnlyList<int> curbOf, IReadOnlyList<double> arcOf, IReadOnlyList<List<Pt>> curbs,
             double hugTolerance, out List<List<Pt>> sides, out List<bool> frontage)
         {

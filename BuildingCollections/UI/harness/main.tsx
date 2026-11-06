@@ -27,9 +27,9 @@ function Scene() {
         const x = ((e.clientX - r.left) / r.width) * 1000, y = ((e.clientY - r.top) / r.height) * 600;
         if (b.mode === "block") {
             const i = blocks.findIndex(([bx, by]) => x >= bx && x <= bx + 260 && y >= by && y <= by + 230);
-            if (i >= 0) { setSel(i); areaPicked(Math.round(18 * (0.6 + 0.4 * (b.density / 100)))); note("Bloque " + (i + 1) + " seleccionado"); }
+            if (i >= 0) { setSel(i); areaPicked(Math.round(18 * (0.6 + 0.4 * (b.density / 100)))); note("Block " + (i + 1) + " selected"); }
         } else {
-            if (pts.length >= 3 && Math.hypot(x - pts[0][0], y - pts[0][1]) < 20) { areaPicked(Math.round(14 * (0.6 + 0.4 * (b.density / 100)))); note("Polígono cerrado"); return; }
+            if (pts.length >= 3 && Math.hypot(x - pts[0][0], y - pts[0][1]) < 20) { areaPicked(Math.round(14 * (0.6 + 0.4 * (b.density / 100)))); note("Polygon closed"); return; }
             if (!plan.areaSelected) setPts([...pts, [x, y]]);
         }
     };
@@ -91,7 +91,6 @@ function Harness() {
     );
 }
 
-// El icono real sale de coui://; en el navegador lo sustituimos por un data URI.
 const origCreate = document.createElement.bind(document);
 document.createElement = ((tag: string, o?: any) => origCreate(tag, o)) as any;
 const ICONS: Record<string, string> = (window as any).BC_ICONS ?? {};
@@ -104,7 +103,6 @@ const mo = new MutationObserver(() => document.querySelectorAll<HTMLImageElement
 mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["src"] });
 createRoot(document.getElementById("root")!).render(<Harness />);
 
-// #builder / #tab=builder en la URL: abre esa pestaña (para capturas automáticas).
 setTimeout(() => {
     const want = location.hash.replace("#", "");
     if (want === "builder") [...document.querySelectorAll("button")].find((b) => b.textContent === "Builder")?.click();
@@ -148,7 +146,6 @@ setTimeout(() => {
     }, 80);
 }, 200);
 
-// #big: colección de 1600 edificios, desplazada a la mitad (prueba de la rejilla virtual).
 setTimeout(() => {
     if (location.hash !== "#big") return;
     trigger("select", "Big 1600");
@@ -159,7 +156,6 @@ setTimeout(() => {
     }, 300);
 }, 200);
 
-// #big-switch: desplazada a la mitad de la grande, se cambia a una pequeña (no debe quedar en blanco).
 setTimeout(() => {
     if (location.hash !== "#big-switch") return;
     trigger("select", "Big 1600");

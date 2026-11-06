@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
 
-// Aproximaciones de los componentes de cs2/ui para el navegador. La apariencia real la pone el motor del juego.
 export const Button = (p: any) => (
     <button disabled={p.disabled} className={`mock-btn v-${p.variant ?? "default"}${p.selected ? " sel" : ""} ${p.className ?? ""}${p.variant === "floating" ? " gameBtn" : ""}`}
         onClick={() => p.onSelect && p.onSelect()}>
@@ -24,7 +23,6 @@ export const Scrollable = (p: any) => (
         ref={(el) => { if (p.controller) p.controller.container = el; }}>{p.children}</div>
 );
 
-// Aproximación del Dropdown del juego (la apariencia real la pone el motor): toggle negro con borde azul y menú gris.
 const Ctx = createContext<{ open: boolean; setOpen: (v: boolean) => void }>({ open: false, setOpen: () => {} });
 export const Dropdown = (p: any) => {
     const [open, setOpen] = useState(false);

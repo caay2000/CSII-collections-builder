@@ -19,7 +19,6 @@ const TREE_SET_NAMES: Record<string, string> = {
     "YYTC-custom-set-4": "Custom set 4 (Tree Controller)",
     "YYTC-custom-set-5": "Custom set 5 (Tree Controller)",
 };
-// Mismos bits que Game.Tools.AgeMask; iconos del juego (los que usa Tree Controller).
 const AGES = [
     { bit: 1, name: "Child", icon: "Media/Tools/Vegetation Options/TreeChild.svg" },
     { bit: 2, name: "Teen", icon: "Media/Tools/Vegetation Options/TreeTeen.svg" },
@@ -37,7 +36,6 @@ export const BuilderTab = () => {
     const messageError = useBuilderMessageError();
     const set = (patch: Partial<BuilderDto>) => actions.setBuilder({ ...b, ...patch });
 
-    // Abrir la pestaña activa la herramienta de selección; cerrarla la desactiva (como StreetBuilder).
     useEffect(() => {
         actions.setToolActive(true);
         return () => actions.setToolActive(false);
@@ -46,20 +44,16 @@ export const BuilderTab = () => {
     const mixBuildings = useMixBuildings();
     const passes = (x: BuildingDto) =>
         matches(b.widthOp, b.widthValue, x.w) && matches(b.depthOp, b.depthValue, x.d) && matches(b.levelOp, b.levelValue, x.level);
-    // La mezcla solo cuenta si la segunda colección existe y no es la misma que la primera.
     const mix = b.mix && b.mix !== selected && collections.some((c) => c.name === b.mix) ? b.mix : "";
     const candidates = buildings.filter(passes);
     const mixCandidates = mix ? mixBuildings.filter(passes) : [];
     const canGenerate = plan.areaSelected && !!selected && candidates.length + mixCandidates.length > 0;
-    // Por qué Preview está desactivado. Los problemas de la colección van en la línea de mensaje (tienen prioridad
-    // sobre el último mensaje de la herramienta); "elige zona" ya lo dice el resumen, así que solo va en el tooltip.
     const collectionProblem = !selected ? null
         : buildings.length + (mix ? mixBuildings.length : 0) === 0 ? (mix ? "Both collections are empty." : "The collection is empty.")
         : candidates.length + mixCandidates.length === 0 ? "No building in the collection passes the filters."
         : null;
     const previewWhy = canGenerate ? undefined : !selected ? "Choose a collection." : collectionProblem ?? "Select an area in the world.";
     const line = collectionProblem ?? message;
-    // Elegir como primera la que estaba de segunda las intercambia (y el reparto se invierte con ellas).
     const selectFirst = (n: string) => {
         if (mix && n === mix) set({ mix: selected, mixShare: 100 - b.mixShare });
         actions.select(n);
@@ -131,16 +125,12 @@ export const BuilderTab = () => {
                             onUp={() => set({ density: Math.min(100, density + 10) })} />
                     </div>
                     {plan.anarchyAvailable && (
-                        // El interruptor del propio Anarchy (el mismo que su botón en las opciones de herramienta, que
-                        // con esta herramienta no aparece). Cambia la siguiente vista previa: pulsa Reshuffle.
-                        <CheckRow label="Anarchy" accent checked={plan.anarchy} onChange={() => actions.toggleAnarchy()}
-                            title="Turns the Anarchy mod on or off (same as its own button). With it on, new buildings may overlap a little, so street ends close up. Existing buildings are never removed; at most the last joint touches them by the same overlap." />
-                    )}
-                    {plan.anarchy && (
-                        // Con Anarchy, los edificios nuevos pueden pisarse para cerrar el sobrante de cada calle; cuánto
-                        // (0,5 a 2 m por junta) se elige en las opciones del mod. Pulsa Reshuffle para aplicarlo.
-                        <CheckRow label="Overlap buildings" accent checked={b.overlap > 0} onChange={(v) => set({ overlap: v ? 0.5 : 0 })}
-                            title="Street lengths are rarely a multiple of 8 m. On: to close the leftover at the end of a street, one building is made a cell wider and the row is squeezed, each joint overlapping by up to the amount set in the mod's options (0.5 m by default). Off: no overlap, a single gap stays. Press Reshuffle to apply." />
+                        <div className={styles.filter} title="Street lengths are rarely a multiple of 8 m. Each joint between two new buildings may overlap up to this much to close the leftover at street ends and along curves (curves usually need 0.5-1 m to fit one more building). Off: no overlap, small gaps stay. Existing buildings are never removed. Needs Anarchy: the builder turns it on while this tab is open and overlap is not Off, and turns it back off when you leave. Press Reshuffle to apply.">
+                            <span className={styles.filterLabelAnarchy}>Overlap per joint{(b.overlapMeters ?? 0.5) > 0 && !plan.anarchy ? " (Anarchy off: not applied)" : ""}</span>
+                            <Stepper value={(b.overlapMeters ?? 0.5) > 0 ? `${(b.overlapMeters ?? 0.5).toFixed(1)} m` : "Off"}
+                                onDown={() => set({ overlapMeters: Math.max(0, (b.overlapMeters ?? 0.5) - 0.5) })}
+                                onUp={() => set({ overlapMeters: Math.min(2, (b.overlapMeters ?? 0.5) + 0.5) })} />
+                        </div>
                     )}
                 </div>
             </div>
@@ -150,7 +140,6 @@ export const BuilderTab = () => {
                     <CheckRow label="Trees in leftover space" checked={b.trees} onChange={(v) => set({ trees: v })}
                         title="Base-game trees fill the leftover space (courtyards, gaps), away from sidewalks and buildings." />
                     {b.trees && plan.treeSets.length > 0 && (
-                        // Dos filas: arriba "todos" y los sets con nombre (con icono); abajo los personalizados (1-5).
                         <>
                             <div className={styles.filter} title="Tree Controller set the trees are picked from (All: every base-game tree).">
                                 <span className={styles.filterLabel}>Set</span>

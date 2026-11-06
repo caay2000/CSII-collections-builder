@@ -1,33 +1,46 @@
+using System;
 using Game;
 using Game.Input;
 
 namespace BuildingCollections.Systems
 {
-    /// <summary>
-    /// Atajo (Ctrl+B por defecto): abre o cierra el panel. La herramienta la activa la pestaña Builder al abrirse, así
-    /// que el atajo nunca deja la herramienta encendida sin panel.
-    /// </summary>
     public partial class ToolActivatorSystem : GameSystemBase
     {
         BcUISystem ui;
-        ProxyAction action;
+        (ProxyAction action, Action run)[] shortcuts;
 
         protected override void OnCreate()
         {
             base.OnCreate();
             ui = World.GetOrCreateSystemManaged<BcUISystem>();
-            action = Mod.Settings?.GetAction(BuildingCollectionsSettings.ActivateAction);
+            shortcuts = new (ProxyAction, Action)[]
+            {
+                (Enable(BuildingCollectionsSettings.ActivateAction), ui.TogglePanel),
+                (Enable(BuildingCollectionsSettings.ReshuffleAction), ui.ReshufflePreview),
+                (Enable(BuildingCollectionsSettings.BuildAction), ui.BuildPreview),
+            };
+        }
+
+        static ProxyAction Enable(string name)
+        {
+            var action = Mod.Settings?.GetAction(name);
             if (action != null)
             {
                 action.shouldBeEnabled = true;
             }
+
+            return action;
         }
 
         protected override void OnUpdate()
         {
-            if (action != null && action.WasPressedThisFrame())
+            foreach (var (action, run) in shortcuts)
             {
-                ui.TogglePanel();
+                if (action != null && action.WasPressedThisFrame())
+                {
+                    run();
+                    return;
+                }
             }
         }
     }

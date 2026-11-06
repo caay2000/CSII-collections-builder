@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace BuildingCollections.Core
 {
-    /// <summary>Punto 2D en el plano del suelo (x, z del juego).</summary>
     public readonly struct Pt
     {
         public readonly double X;
@@ -13,16 +12,20 @@ namespace BuildingCollections.Core
 
         public static Pt operator -(Pt a, Pt b) => new Pt(a.X - b.X, a.Y - b.Y);
 
+        public static Pt operator +(Pt a, Pt b) => new Pt(a.X + b.X, a.Y + b.Y);
+
+        public static Pt operator *(Pt a, double k) => new Pt(a.X * k, a.Y * k);
+
         public static double Cross(Pt a, Pt b) => a.X * b.Y - a.Y * b.X;
 
         public static double Dot(Pt a, Pt b) => a.X * b.X + a.Y * b.Y;
     }
 
-    /// <summary>Cuadrilátero convexo (el contorno de un bloque de zona), con los vértices en orden.</summary>
     public sealed class Quad
     {
         public readonly Pt[] P;
         public readonly double MinX, MinY, MaxX, MaxY;
+        readonly bool degenerate;
 
         public Quad(Pt a, Pt b, Pt c, Pt d)
         {
@@ -31,11 +34,18 @@ namespace BuildingCollections.Core
             MaxX = Math.Max(Math.Max(a.X, b.X), Math.Max(c.X, d.X));
             MinY = Math.Min(Math.Min(a.Y, b.Y), Math.Min(c.Y, d.Y));
             MaxY = Math.Max(Math.Max(a.Y, b.Y), Math.Max(c.Y, d.Y));
+            degenerate = Math.Abs(Pt.Cross(c - a, d - b)) < MinArea;
         }
 
-        /// <summary>Punto dentro (o en el borde), sea cual sea el sentido de los vértices.</summary>
+        const double MinArea = 1e-9;
+
         public bool Contains(Pt q)
         {
+            if (degenerate)
+            {
+                return OnOutline(q);
+            }
+
             bool pos = false, neg = false;
             for (int i = 0; i < 4; i++)
             {
@@ -47,7 +57,19 @@ namespace BuildingCollections.Core
             return !(pos && neg);
         }
 
-        /// <summary>Distancia de un punto al cuadrilátero (0 si está dentro).</summary>
+        bool OnOutline(Pt q)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (PointSegment(q, P[i], P[(i + 1) % 4]) < 1e-9)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public double DistanceTo(Pt q)
         {
             if (Contains(q))
@@ -64,14 +86,9 @@ namespace BuildingCollections.Core
             return best;
         }
 
-        /// <summary>
-        /// Se tocan o se solapan (Distance &lt;= 0), descartando antes por la caja: casi todos los pares están lejos y
-        /// así no se calculan sus 16 distancias entre lados.
-        /// </summary>
         public static bool Touch(Quad a, Quad b) =>
             a.MaxX >= b.MinX && b.MaxX >= a.MinX && a.MaxY >= b.MinY && b.MaxY >= a.MinY && Distance(a, b) <= 0;
 
-        /// <summary>Distancia mínima entre dos cuadriláteros (0 si se tocan o se solapan).</summary>
         public static double Distance(Quad a, Quad b)
         {
             for (int i = 0; i < 4; i++)
@@ -124,7 +141,6 @@ namespace BuildingCollections.Core
 
     public static class Polygon
     {
-        /// <summary>Área (m², sin signo) de un polígono simple.</summary>
         public static double Area(IReadOnlyList<Pt> poly)
         {
             double a = 0;
@@ -136,7 +152,6 @@ namespace BuildingCollections.Core
             return System.Math.Abs(a) / 2;
         }
 
-        /// <summary>Punto dentro de un polígono simple (convexo o cóncavo), por paridad de cruces.</summary>
         public static bool Contains(IReadOnlyList<Pt> poly, Pt q)
         {
             bool inside = false;
@@ -156,11 +171,6 @@ namespace BuildingCollections.Core
 
     public static class BlockGrouping
     {
-        /// <summary>
-        /// Agrupa bloques por sus celdas visibles: dos bloques son de la misma manzana si alguna celda de uno tiene el
-        /// centro a menos de <paramref name="maxCenterDistance"/> metros de alguna del otro (celdas contiguas: 8 m). Una
-        /// calle en medio, aunque sea diagonal, los separa más; las curvas, con huecos en cuña entre bloques, no.
-        /// </summary>
         public static List<int> FloodByCells(IReadOnlyList<Pt[]> cells, int start, double maxCenterDistance, int maxBlocks = 256)
         {
             var result = new List<int>();
@@ -231,11 +241,6 @@ namespace BuildingCollections.Core
             return false;
         }
 
-        /// <summary>
-        /// Índices de los bloques conectados con el de partida: dos bloques están conectados si sus contornos están a
-        /// menos de <paramref name="tolerance"/> metros. Los bloques del otro lado de una calle quedan fuera porque la
-        /// calle los separa más que la tolerancia.
-        /// </summary>
         public static List<int> Flood(IReadOnlyList<Quad> quads, int start, double tolerance, int maxBlocks = 256)
         {
             var result = new List<int>();

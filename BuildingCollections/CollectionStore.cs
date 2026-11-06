@@ -8,12 +8,10 @@ using Newtonsoft.Json;
 
 namespace BuildingCollections
 {
-    /// <summary>Colección de prefabs de edificios, guardada por nombre de prefab.</summary>
     public class BuildingCollection
     {
         public string Name { get; set; }
 
-        /// <summary>Etiqueta de Find It asociada (nombre normalizado).</summary>
         public string Tag { get; set; }
 
         public List<string> Prefabs { get; set; } = new List<string>();
@@ -48,7 +46,6 @@ namespace BuildingCollections
             catch (Exception e) { Mod.Log.Error(e); }
         }
 
-        /// <summary>Escritura atómica: fichero temporal y renombrado (regla R9.2).</summary>
         public static void Save()
         {
             try

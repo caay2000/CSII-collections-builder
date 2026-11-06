@@ -4,7 +4,6 @@ import { actions, BuildingDto, useBuildings, useCollections, useFindIt, useSelec
 import { icon, IconButton, InlineInput, StepFilter } from "./widgets";
 import { Scrollable, ScrollController } from "cs2/ui";
 
-/** Nombre legible como el de Find It: "CCP5_ResidentialMediumLeft01_L1_2x2" -> "CCP5 Residential Medium Left01 L1 2x2". */
 export function prettyName(n: string): string {
     return n.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+/g, " ").trim();
 }
@@ -16,7 +15,6 @@ export function matches(op: number, value: number, n: number): boolean {
 
 type Editing = "" | "new" | "rename" | "delete" | "removeAll";
 
-/** Tarjeta de un edificio. memo: al pintar la tanda siguiente, las ya pintadas no se vuelven a renderizar. */
 const Card = memo(({ b, label }: { b: BuildingDto; label: string }) => (
     <div className={styles.card} title={`${b.name} · level ${b.level}`}>
         <img className={styles.thumb} src={b.icon} />
@@ -27,19 +25,15 @@ const Card = memo(({ b, label }: { b: BuildingDto; label: string }) => (
         <div className={styles.cardName}>{label}</div>
         <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])} />
     </div>
-// Al recibir la lista otra vez (quitar uno, catálogo refrescado) los objetos son nuevos: se compara por contenido.
 ), (a, c) => a.label === c.label && a.b.id === c.b.id && a.b.icon === c.b.icon && a.b.level === c.b.level && a.b.w === c.b.w && a.b.d === c.b.d);
 
-// Pintar cientos de tarjetas con miniatura de golpe congela el panel 1-2 s: se pintan por tandas, una por fotograma.
 const FIRST_BATCH = 40;
 const BATCH = 60;
 
-// Rejilla virtual: solo se pintan las filas visibles (más un margen). Tarjeta 80x128 + 6 de margen (panel.module.scss).
 const CARD_W = 86;
 const CARD_H = 134;
 const SPARE_ROWS = 2;
 
-/** Controlador del Scrollable del juego; si en esta versión no existe, la rejilla vuelve a pintar por tandas. */
 function useScrollController(): ScrollController | undefined {
     return useMemo(() => {
         try { return new ScrollController(); } catch { return undefined; }
@@ -57,12 +51,10 @@ export const CollectionsTab = () => {
     const [f, setF] = useState({ wOp: 0, wV: 0, dOp: 0, dV: 0, lOp: 0, lV: 0 });
     const cancel = useCallback(() => setEditing(""), []);
 
-    // Nombre visible y texto de búsqueda, una vez por lista (no en cada render ni en cada tecla).
     const indexed = useMemo(() => buildings.map((b) => {
         const pretty = prettyName(b.name);
         return {
             b,
-            // El tamaño y el nivel ya van en la tarjeta: se quitan del final del nombre.
             label: pretty.replace(/(\s+(L\d|\d+x\d+))+$/, ""),
             search: (b.name + "\u0000" + pretty).toLowerCase(),
         };
@@ -72,21 +64,18 @@ export const CollectionsTab = () => {
         return indexed.filter(({ b, search }) =>
             matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) && search.includes(needle));
     }, [indexed, f, q]);
-    // El tope va ligado a la lista que se pinta: al cambiar de colección, filtro o búsqueda vuelve a la primera
-    // tanda en ese mismo render (con un efecto, el primer render aún usaría el tope viejo y pintaría todo).
     const listKey = `${selected}\u0000${q}\u0000${JSON.stringify(f)}`;
     const [batch, setBatch] = useState({ key: listKey, limit: FIRST_BATCH });
     const limit = batch.key === listKey ? batch.limit : FIRST_BATCH;
     const virtualRef = useRef(false);
     useEffect(() => {
-        if (virtualRef.current || limit >= shown.length) return; // con la rejilla virtual no hacen falta tandas
+        if (virtualRef.current || limit >= shown.length) return;
         const id = requestAnimationFrame(() => setBatch({ key: listKey, limit: limit + BATCH }));
         return () => cancelAnimationFrame(id);
     }, [listKey, limit, shown.length]);
     const current = collections.find((c) => c.name === selected);
     const filtered = !!q || f.wV > 0 || f.dV > 0 || f.lV > 0;
 
-    // Vista de la rejilla: desplazamiento, alto visible y ancho (columnas). Se mide al hacer scroll y tras pintar.
     const controller = useScrollController();
     const gridRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState({ key: listKey, top: 0, height: 0, width: 0, pitchW: 0, pitchH: 0 });
@@ -94,8 +83,6 @@ export const CollectionsTab = () => {
         const c = controller?.container;
         const g = gridRef.current;
         if (!c || !g) return;
-        // El juego escala los rem con la resolución: el paso de la rejilla se mide en una tarjeta real (en px). Sin
-        // tarjetas pintadas se conserva el último paso, pero el desplazamiento y el tamaño se leen siempre.
         const card = g.querySelector(`.${styles.card}`) as HTMLElement | null;
         const hasCard = !!card && card.offsetWidth > 0;
         setView((v) => {
@@ -108,17 +95,13 @@ export const CollectionsTab = () => {
         });
     }, [controller, listKey]);
     useEffect(() => {
-        // El panel tarda un fotograma en tener tamaño: se mide en el siguiente.
         const id = requestAnimationFrame(measure);
         return () => cancelAnimationFrame(id);
     });
-    // Otra colección, filtro o búsqueda: arriba del todo.
     useEffect(() => {
-        try { controller?.scrollTo(0, 0); } catch { /* el Scrollable aún no se ha enganchado */ }
+        try { controller?.scrollTo(0, 0); } catch { }
     }, [listKey, controller]);
-    // En el mismo render del cambio, la vista vieja no vale: se empieza desde arriba (si no, quedaba en blanco).
     const top = view.key === listKey ? view.top : 0;
-    // Hasta medir una tarjeta (primer fotograma) se pinta la primera tanda, como antes.
     const virtual = !!controller && view.width > 0 && view.height > 0 && view.pitchH > 0;
     const cols = virtual ? Math.max(1, Math.floor((view.width + 1) / view.pitchW)) : 1;
     const rows = Math.ceil(shown.length / cols);

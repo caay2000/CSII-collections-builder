@@ -22,6 +22,10 @@ namespace BuildingCollections
                 { s.GetOptionGroupLocaleID(BuildingCollectionsSettings.Shortcuts), "Shortcuts" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.ActivateBinding)), "Toggle block builder tool" },
                 { s.GetBindingKeyLocaleID(BuildingCollectionsSettings.ActivateAction), "Toggle block builder tool" },
+                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.ReshuffleBinding)), "Reshuffle block preview" },
+                { s.GetBindingKeyLocaleID(BuildingCollectionsSettings.ReshuffleAction), "Reshuffle block preview" },
+                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.BuildBinding)), "Build block preview" },
+                { s.GetBindingKeyLocaleID(BuildingCollectionsSettings.BuildAction), "Build block preview" },
 
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.SelectedCollection)), "Collection" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.NewCollectionName)), "New collection name" },
@@ -46,7 +50,7 @@ namespace BuildingCollections
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.Density)), "Density" },
                 { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.Density)), "Percentage of free cells to cover with buildings." },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.OverlapMeters)), "Overlap per joint (m)" },
-                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.OverlapMeters)), "How much two new buildings may overlap at each joint when \"Overlap buildings\" is ticked in the builder panel (needs Anarchy). Higher values close bigger leftovers at street ends but can hide part of a facade." },
+                { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.OverlapMeters)), "How much two new buildings may overlap at each joint (0 = no overlap). Same value as \"Overlap per joint\" in the builder panel. Needs Anarchy: the builder turns it on while its tab is open and this is not Off, and turns it back off when the tab closes if it had been off. Higher values close bigger leftovers at street ends and along curves but can hide part of a facade." },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.MaxBlockHectares)), "Largest block for Block mode (hectares)" },
                 { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.MaxBlockHectares)), "Block mode only selects blocks up to this size (1 ha = 10,000 m²). Bigger blocks, especially with curved streets, make the preview slower: use Polygon for those, or raise this limit if your PC handles it." },
 

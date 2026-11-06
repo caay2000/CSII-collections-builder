@@ -1,0 +1,316 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+
+namespace BuildingCollections.Core
+{
+    public sealed class PreviewPlanner
+    {
+        readonly PreviewRequest request;
+        readonly PreviewResult result = new PreviewResult();
+        readonly List<(Quad quad, PlanBlock owner)> footprints = new List<(Quad, PlanBlock)>();
+        readonly List<(PlanBlock block, PlanGrid grid)> grids = new List<(PlanBlock, PlanGrid)>();
+        readonly List<(Quad quad, PlanBlock owner)> fronts = new List<(Quad, PlanBlock)>();
+        readonly Stopwatch clock = new Stopwatch();
+        int seedIndex;
+
+        PreviewPlanner(PreviewRequest request)
+        {
+            this.request = request;
+        }
+
+        public static PreviewResult Plan(PreviewRequest request) => new PreviewPlanner(request).Run();
+
+        PreviewResult Run()
+        {
+            clock.Start();
+            BuildGrids();
+            ReserveFronts();
+            Lap("grids");
+            var cornerPlans = ReserveCorners();
+            Fill(cornerPlans);
+            Lap($"corners and fill ({grids.Count} strips)");
+            ApplyDensity();
+            CloseEndGaps();
+            FillFrontGaps();
+            Lap("density and gaps");
+            Measure();
+            Lap("frontage and diagnostics");
+            return result;
+        }
+
+        void Lap(string phase)
+        {
+            result.Timings.Add($"{phase} {clock.ElapsedMilliseconds} ms");
+            clock.Restart();
+        }
+
+        bool WedgesMayOverlap => request.Overlap > FootprintMask.StrictOverlap;
+
+        List<Quad> Others(PlanBlock block) => footprints
+            .Where(f => f.owner != block && !(WedgesMayOverlap && VirtualLots.BacksMayOverlap(f.owner.Strip, block.Strip)))
+            .Select(f => f.quad)
+            .ToList();
+
+        const int CornerCells = 2;
+
+        void ReserveFronts()
+        {
+            foreach (var (block, grid) in grids)
+            {
+                var st = block.Strip;
+                bool startCorner = st != null && st.ChunkIndex == 0;
+                bool endCorner = st != null && st.ChunkIndex == st.ChunkCount - 1;
+                int exempt = startCorner && endCorner ? Math.Min(CornerCells, (grid.Width - 1) / 2) : CornerCells;
+                for (int x = 0; x < grid.Width; x++)
+                {
+                    bool nearStart = startCorner && x < exempt;
+                    bool nearEnd = endCorner && x >= grid.Width - exempt;
+                    if (grid.Free[x, 0] && !nearStart && !nearEnd)
+                    {
+                        fronts.Add((block.Frame.Cell(block.AreaX + x, block.AreaY, 0), block));
+                    }
+                }
+            }
+        }
+
+        List<Quad> OtherFronts(PlanBlock block) => fronts.Where(f => f.owner != block).Select(f => f.quad).ToList();
+
+        void MaskOthers(PlanBlock block, PlanGrid grid, ref int masked)
+        {
+            masked += FootprintMask.Apply(grid, block, Others(block), request.Overlap);
+            masked += FootprintMask.Apply(grid, block, OtherFronts(block), request.Overlap, 1);
+        }
+
+        int NextSeed() => request.Seed + 7919 * seedIndex++;
+
+        void BuildGrids()
+        {
+            var seen = new Dictionary<(long, long), List<Pt>>();
+            foreach (var block in request.Blocks.OrderByDescending(b => b.Priority))
+            {
+                var grid = Clone(block.Grid);
+                FootprintMask.Apply(grid, block, request.Existing, FootprintMask.StrictOverlap);
+                grids.Add((block, grid));
+                for (int x = 0; x < grid.Width; x++)
+                {
+                    if (!grid.Free[x, 0])
+                    {
+                        continue;
+                    }
+
+                    var pt = block.Frame.CellCenter(block.AreaX + x, block.AreaY);
+                    if (!NearSeen(seen, pt))
+                    {
+                        result.FrontCells.Add(pt);
+                        var key = Bucket(pt);
+                        if (!seen.TryGetValue(key, out var bucket))
+                        {
+                            seen[key] = bucket = new List<Pt>();
+                        }
+
+                        bucket.Add(pt);
+                    }
+                }
+            }
+        }
+
+        const double SameCell = 2;
+
+        static (long, long) Bucket(Pt p) => ((long)Math.Floor(p.X / SameCell), (long)Math.Floor(p.Y / SameCell));
+
+        static bool NearSeen(Dictionary<(long, long), List<Pt>> seen, Pt pt)
+        {
+            var (bx, by) = Bucket(pt);
+            for (long dx = -1; dx <= 1; dx++)
+            {
+                for (long dy = -1; dy <= 1; dy++)
+                {
+                    if (seen.TryGetValue((bx + dx, by + dy), out var bucket) && bucket.Any(o => Pt.Dot(o - pt, o - pt) < SameCell * SameCell))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        static PlanGrid Clone(PlanGrid g) => new PlanGrid
+        {
+            Width = g.Width, Depth = g.Depth, Free = (bool[,])g.Free.Clone(), LeftCorner = g.LeftCorner, RightCorner = g.RightCorner,
+        };
+
+        Quad Footprint(PlanBlock block, Placement p) =>
+            block.Frame.Rect(block.AreaX + p.X, block.AreaY + p.Y, block.AreaX + p.X + p.Building.LotWidth, block.AreaY + p.Y + p.Building.LotDepth);
+
+        Dictionary<PlanBlock, List<Placement>> ReserveCorners()
+        {
+            var plans = new Dictionary<PlanBlock, List<Placement>>();
+            foreach (var (block, grid) in grids)
+            {
+                FootprintMask.Apply(grid, block, Others(block), request.Overlap);
+                var corners = GridPlanner.PlanCorners(grid, request.Plain, request.Corners, NextSeed());
+                plans[block] = corners;
+                footprints.AddRange(corners.Select(p => (Footprint(block, p), block)));
+            }
+
+            return plans;
+        }
+
+        void Fill(Dictionary<PlanBlock, List<Placement>> cornerPlans)
+        {
+            foreach (var (block, grid) in grids)
+            {
+                int masked = 0;
+                MaskOthers(block, grid, ref masked);
+                string depths = FreeDepths(grid);
+                var plan = GridPlanner.Plan(grid, PlainFor(block, grid), request.Corners, 100, NextSeed(), cornerPlans[block]);
+                footprints.RemoveAll(f => f.owner == block);
+                foreach (var p in plan)
+                {
+                    footprints.Add((Footprint(block, p), block));
+                    result.Lots.Add(new PlannedLot
+                    {
+                        Building = p.Building,
+                        Owner = block,
+                        MinX = block.AreaX + p.X,
+                        MinY = block.AreaY + p.Y,
+                        MaxX = block.AreaX + p.X + p.Building.LotWidth,
+                        MaxY = block.AreaY + p.Y + p.Building.LotDepth,
+                        Corner = p.IsCorner,
+                    });
+                }
+
+                result.Log.Add($"  {block.Label}: grid {grid.Width}x{grid.Depth}, {grid.FreeCount()} free ({masked} covered by other blocks), corners L={grid.LeftCorner} R={grid.RightCorner}, free depth {depths} -> {string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [corner]" : string.Empty)}"))}");
+            }
+        }
+
+        const double TypicalWidth = 2;
+        const double MinSlack = 1;
+
+        IReadOnlyList<BuildingInfo> PlainFor(PlanBlock block, PlanGrid grid)
+        {
+            var st = block.Strip;
+            if (st == null || st.Slack < MinSlack)
+            {
+                return request.Plain;
+            }
+
+            var narrow = request.Plain.Where(b => b.LotWidth == 1).ToList();
+            if (narrow.Count == 0)
+            {
+                return request.Plain;
+            }
+
+            int free = Enumerable.Range(0, grid.Width).Count(x => grid.Free[x, 0]);
+            double movable = free / TypicalWidth;
+            double spread = Math.Ceiling(st.Slack / EndGapCloser.MaxSpreadSliver) - 1;
+            double insert = request.Overlap > FootprintMask.StrictOverlap
+                ? Math.Ceiling((CellFrame.Size - st.Slack) / request.Overlap) - 2
+                : double.MaxValue;
+            double needed = Math.Min(spread, insert);
+            if (needed <= movable || needed > free)
+            {
+                return request.Plain;
+            }
+
+            result.Log.Add($"  {block.Label}: {st.Slack:F1} m left over and {needed:F0} movable buildings needed; using only one-cell-wide buildings.");
+            return narrow;
+        }
+
+        static string FreeDepths(PlanGrid grid)
+        {
+            var chars = new char[grid.Width];
+            for (int x = 0; x < grid.Width; x++)
+            {
+                int d = 0;
+                while (d < grid.Depth && grid.Free[x, d])
+                {
+                    d++;
+                }
+
+                chars[x] = (char)('0' + d);
+            }
+
+            return new string(chars);
+        }
+
+        void ApplyDensity()
+        {
+            if (request.Density >= 100)
+            {
+                return;
+            }
+
+            var frontCells = result.FrontCells;
+            var taken = new bool[frontCells.Count];
+            var front = new List<(PlannedLot lot, int cells)>();
+            foreach (var lot in result.Lots)
+            {
+                var q = lot.Footprint(0.5);
+                int n = 0;
+                for (int i = 0; i < frontCells.Count; i++)
+                {
+                    if (!taken[i] && q.Contains(frontCells[i]))
+                    {
+                        taken[i] = true;
+                        n++;
+                    }
+                }
+
+                if (n > 0)
+                {
+                    front.Add((lot, n));
+                }
+            }
+
+            var removed = GridPlanner.Thin(front.Select(f => (f.cells, f.lot.Corner)).ToList(), frontCells.Count, request.Density,
+                new Random(request.Seed ^ 0x1b873593));
+            var gone = new HashSet<PlannedLot>(removed.Select(i => front[i].lot));
+            result.Thinned.AddRange(gone.Select(p => p.Footprint(0)).Select(q => new Pt(q.P.Average(v => v.X), q.P.Average(v => v.Y))));
+            result.Lots.RemoveAll(gone.Contains);
+            result.Log.Add($"  density {request.Density}%: removed {gone.Count} buildings ({removed.Sum(i => front[i].cells)} street cells) of {frontCells.Count} cells.");
+        }
+
+        void CloseEndGaps()
+        {
+            var closer = new EndGapCloser(result.Lots, request.Blocks, request.Existing, result.Thinned, request.Outline,
+                request.Plain, request.Overlap, new Random(request.Seed ^ 0x2545f491), result.Log);
+            foreach (var (block, _) in grids)
+            {
+                closer.Close(block);
+            }
+        }
+
+        void FillFrontGaps()
+        {
+            if (request.Density < 100)
+            {
+                return;
+            }
+
+            var filler = new FrontGapFiller(result.Lots, request.Existing, result.Thinned, request.Outline, request.Plain, request.Overlap,
+                new Random(request.Seed ^ 0x3c6ef372), result.Log);
+            foreach (var (block, _) in grids)
+            {
+                filler.Fill(block);
+            }
+        }
+
+        void Measure()
+        {
+            result.FrontFilled = FrontCoverage.CountFilled(result.Lots, result.FrontCells);
+            result.Log.Add($"  frontage: {result.FrontFilled} of {result.FrontCells.Count} street cells filled.");
+            try
+            {
+                result.Log.AddRange(FrontCoverage.Uncovered(result.Lots, request.Existing, request.Blocks));
+            }
+            catch (Exception e)
+            {
+                result.Log.Add($"  sidewalk diagnostics failed: {e.Message}");
+            }
+        }
+    }
+}

@@ -36,7 +36,6 @@ module.exports = {
   plugins: [
     new MiniCssExtractPlugin(),
     {
-      // El juego pide que el módulo exporte si trae CSS.
       apply(compiler) {
         compiler.hooks.compilation.tap("CSSPresence", (compilation) => {
           compilation.hooks.processAssets.tap({ name: "CSSPresence", stage: compilation.PROCESS_ASSETS_STAGE_ADDITIONS }, () => {

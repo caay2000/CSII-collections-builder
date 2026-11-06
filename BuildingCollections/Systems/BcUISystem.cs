@@ -11,10 +11,6 @@ using UnityEngine.InputSystem;
 
 namespace BuildingCollections.Systems
 {
-    /// <summary>
-    /// Puente entre el panel React y el mod (grupo "BuildingCollections", contrato en UI/src/bindings.ts). Las listas
-    /// viajan como JSON y solo se vuelven a enviar cuando cambian.
-    /// </summary>
     public partial class BcUISystem : UISystemBase
     {
         public const string Group = "BuildingCollections";
@@ -36,7 +32,7 @@ namespace BuildingCollections.Systems
         ValueBinding<string> status;
         ValueBinding<string> builderBinding;
         ValueBinding<string> plan;
-        ValueBinding<int> escapes;   // se incrementa con cada Esc con el panel abierto: la UI decide qué cerrar
+        ValueBinding<int> escapes;
 
         bool collectionsDirty = true;
         bool buildingsDirty = true;
@@ -46,10 +42,12 @@ namespace BuildingCollections.Systems
         int anarchyTick;
         int seedCounter;
         int saveCountdown = -1;
-        bool wantTool;   // la pestaña Builder está abierta y quiere la herramienta
+        bool wantTool;
+        readonly AnarchyKeeper anarchy = new AnarchyKeeper();
+        const int AnarchyCheckFrames = 10;
         ToolBaseSystem lastTool;
-        ToolBaseSystem lastNonDefault;   // última herramienta activa que no era la normal
-        int defaultFrames;               // fotogramas seguidos con la herramienta normal activa
+        ToolBaseSystem lastNonDefault;
+        int defaultFrames;
         const int ExitFrames = 30;
         const int ReactivateFrames = 3;
 
@@ -61,14 +59,11 @@ namespace BuildingCollections.Systems
             public bool trees;
             public int decorDensity = 50;
 
-            /// <summary>Solape máximo (m) entre edificios nuevos con Anarchy.</summary>
-            public float overlap = 0.5f;
+            public float overlapMeters = 0.5f;
 
-            /// <summary>Set de Tree Controller ("" = todos los árboles del juego base) y edades (bits de AgeMask).</summary>
             public string treeSet = string.Empty;
             public int treeAges = 4;
 
-            /// <summary>Mezcla: segunda colección ("" = ninguna) y porcentaje de la primera.</summary>
             public string mix = string.Empty;
             public int mixShare = 50;
         }
@@ -89,7 +84,6 @@ namespace BuildingCollections.Systems
             AddBinding(buildings = new ValueBinding<string>(Group, "buildings", "[]"));
             AddBinding(mixBuildings = new ValueBinding<string>(Group, "mixBuildings", "[]"));
             AddBinding(builderMessage = new ValueBinding<string>(Group, "builderMessage", string.Empty));
-            // 0 = no es error; si no, un número distinto en cada error (el panel repite el destello aunque el texto sea igual).
             AddBinding(builderMessageError = new ValueBinding<int>(Group, "builderMessageError", 0));
             AddBinding(selected = new ValueBinding<string>(Group, "selected", string.Empty));
             AddBinding(status = new ValueBinding<string>(Group, "status", string.Empty));
@@ -172,6 +166,7 @@ namespace BuildingCollections.Systems
                 toolSystem.EventPrefabChanged -= OnPrefabChanged;
             }
 
+            anarchy.Restore();
             base.OnDestroy();
         }
 
@@ -180,22 +175,16 @@ namespace BuildingCollections.Systems
             base.OnUpdate();
             try
             {
-                // Esc con el panel abierto: la acción "Back" de la UI no le llega al panel, así que se lee aquí la
-                // tecla y se avisa a la UI (que cancela un campo abierto o cierra el panel).
                 var keyboard = Keyboard.current;
                 if (panelOpen.value && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
                 {
                     escapes.Update(escapes.value + 1);
                 }
 
-                // Si el usuario usó otra herramienta (p. ej. una carretera) y volvió a la normal con la pestaña Builder
-                // abierta, se reactiva la nuestra. Al elegir otra herramienta desde la barra el juego pasa a veces por
-                // la normal un fotograma (nuestra -> normal -> carretera): por eso salir de la nuestra a la normal
-                // solo cuenta como salida a propósito (Esc) si la normal sigue activa unos fotogramas.
                 var active = toolSystem.activeTool;
                 if (active != lastTool)
                 {
-                    Mod.Log.Info($"[herramienta] {lastTool?.toolID ?? "-"} -> {active?.toolID ?? "-"}");
+                    Mod.Log.Info($"[tool] {lastTool?.toolID ?? "-"} -> {active?.toolID ?? "-"}");
                 }
 
                 if (active == defaultTool)
@@ -213,8 +202,6 @@ namespace BuildingCollections.Systems
 
                 if (wantTool && panelOpen.value && active == defaultTool)
                 {
-                    // Se espera unos fotogramas: al cambiar de una herramienta a otra (carretera -> zonas) el juego
-                    // también puede pasar un instante por la normal, y no hay que quitarle la herramienta nueva.
                     if (lastNonDefault != null && lastNonDefault != builder && defaultFrames >= ReactivateFrames)
                     {
                         toolSystem.activeTool = builder;
@@ -224,7 +211,7 @@ namespace BuildingCollections.Systems
                     }
                     else if (lastNonDefault == builder && defaultFrames > ExitFrames)
                     {
-                        wantTool = false; // salió de la nuestra a propósito (Esc): no se reactiva hasta volver a la pestaña
+                        wantTool = false;
                     }
                 }
 
@@ -242,8 +229,11 @@ namespace BuildingCollections.Systems
                     builderMessageError.Update(builder.MessageIsError ? builder.MessageSerial : 0);
                 }
 
-                // Cada ~2 s (o al abrir el panel) se comprueba si han llegado prefabs nuevos.
-                // Anarchy puede crear su sistema después que nosotros: se reintenta cada ~2 s hasta registrarse.
+                if (anarchyTick % AnarchyCheckFrames == 0)
+                {
+                    anarchy.Update(panelOpen.value && wantTool && OverlapWanted);
+                }
+
                 if (anarchyTick++ % 120 == 0)
                 {
                     AnarchyBridge.TryRegister(World, builder.toolID);
@@ -262,13 +252,12 @@ namespace BuildingCollections.Systems
                     }
                 }
 
-                // Etiquetas de Find It repartidas entre fotogramas (cada una guarda el fichero de Find It).
                 if (TagQueue.Count > 0)
                 {
                     int before = TagQueue.Count;
                     if (TagQueue.Process(6))
                     {
-                        Mod.Log.Info("Etiquetas de Find It actualizadas.");
+                        Mod.Log.Info("Find It tags updated.");
                         status.Update("OK");
                     }
                     else if (before / 25 != TagQueue.Count / 25)
@@ -277,7 +266,6 @@ namespace BuildingCollections.Systems
                     }
                 }
 
-                // Guardado de ajustes agrupado: el deslizador manda muchos cambios seguidos.
                 if (saveCountdown >= 0 && --saveCountdown < 0)
                 {
                     Mod.Settings?.ApplyAndSave();
@@ -312,7 +300,6 @@ namespace BuildingCollections.Systems
 
         static string Js(bool b) => b ? "true" : "false";
 
-        /// <summary>La mezcla se guarda por nombre: si su colección cambia de nombre o se borra, se sigue o se quita.</summary>
         void FollowMix(string oldName, string newName)
         {
             var s = Mod.Settings;
@@ -325,14 +312,12 @@ namespace BuildingCollections.Systems
             }
         }
 
-        /// <summary>Segunda colección de la mezcla, si existe y no es la seleccionada.</summary>
         BuildingCollection MixOf(BuildingCollectionsSettings s)
         {
             var m = string.IsNullOrEmpty(s?.MixCollection) ? null : CollectionStore.Find(s.MixCollection);
             return m == null || string.Equals(m.Name, selected.value, StringComparison.OrdinalIgnoreCase) ? null : m;
         }
 
-        /// <summary>Edificios cargados de la segunda colección: solo lo que el panel necesita para contar candidatos.</summary>
         List<object> MixBuildings()
         {
             var list = new List<object>();
@@ -371,7 +356,6 @@ namespace BuildingCollections.Systems
                 }
                 else
                 {
-                    // Aún sin cargar (assets que llegan tarde) o ya no instalado: se muestra pero no se borra.
                     missing++;
                     list.Add(new { id = name, name = name + " (not loaded)", w = 0, d = 0, level = 0, icon = string.Empty });
                 }
@@ -379,15 +363,31 @@ namespace BuildingCollections.Systems
 
             if (missing > 0)
             {
-                Mod.Log.Info($"'{c.Name}': {missing} de {c.Prefabs.Count} edificios sin datos en el juego (aún no cargados o desinstalados).");
+                Mod.Log.Info($"'{c.Name}': {missing} of {c.Prefabs.Count} buildings have no game data (not loaded yet or uninstalled).");
             }
 
             return list;
         }
 
-        // ---------------- Panel y herramienta ----------------
+        static bool OverlapWanted => (Mod.Settings?.OverlapMeters ?? 0.5f) > FootprintMask.StrictOverlap;
 
         public void TogglePanel() => SetPanelOpen(!panelOpen.value);
+
+        public void ReshufflePreview()
+        {
+            if (toolSystem.activeTool == builder && builder.AreaSelected)
+            {
+                Safe(GeneratePreview);
+            }
+        }
+
+        public void BuildPreview()
+        {
+            if (toolSystem.activeTool == builder && builder.Previewing)
+            {
+                Safe(builder.RequestBuild);
+            }
+        }
 
         void SetPanelOpen(bool open)
         {
@@ -411,12 +411,10 @@ namespace BuildingCollections.Systems
             }
             else if (toolSystem.activeTool == builder)
             {
-                // Solo se quita si es la nuestra: si el usuario cogió otra herramienta, se respeta.
                 toolSystem.activeTool = defaultTool;
             }
         }
 
-        /// <summary>Vista previa y Build solo con la herramienta activa (si no, el juego no tiene dónde aplicarlos).</summary>
         void IfToolActive(Action action)
         {
             if (toolSystem.activeTool != builder)
@@ -433,13 +431,13 @@ namespace BuildingCollections.Systems
             name = name ?? string.Empty;
             selected.Update(name);
             builderMessageError.Update(0);
-            builderMessage.Update(string.Empty); // el mensaje anterior ya no aplica
+            builderMessage.Update(string.Empty);
             buildingsDirty = true;
             collectionsDirty = true;
             if (Mod.Settings != null)
             {
                 Mod.Settings.SelectedCollection = name;
-                saveCountdown = 60; // se guarda en diferido: escribir el fichero en el mismo clic frena el cambio
+                saveCountdown = 60;
             }
         }
 
@@ -468,8 +466,6 @@ namespace BuildingCollections.Systems
             }
         }
 
-        // ---------------- Shift+clic en Find It o en el menú del juego ----------------
-
         void OnPrefabChanged(PrefabBase prefab)
         {
             try
@@ -496,8 +492,6 @@ namespace BuildingCollections.Systems
             }
         }
 
-        // ---------------- Constructor ----------------
-
         void PushBuilder()
         {
             var s = Mod.Settings;
@@ -515,7 +509,7 @@ namespace BuildingCollections.Systems
                 density = s.Density,
                 trees = s.Trees,
                 decorDensity = s.DecorDensity,
-                overlap = s.AnarchyOverlap,
+                overlapMeters = s.OverlapMeters,
                 treeSet = s.TreeSet ?? string.Empty,
                 treeAges = s.TreeAges,
                 mix = s.MixCollection ?? string.Empty,
@@ -539,14 +533,14 @@ namespace BuildingCollections.Systems
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
-            s.AnarchyOverlap = f.overlap > 0 ? 0.5f : 0f; // casilla: marcada o no (la cantidad, en OverlapMeters)
+            s.OverlapMeters = Math.Min(2f, Math.Max(0f, (float)Math.Round(f.overlapMeters * 2, MidpointRounding.AwayFromZero) / 2));
             s.TreeSet = TreeControllerBridge.SetIds.Contains(f.treeSet) ? f.treeSet : string.Empty;
             s.TreeAges = (f.treeAges & 15) == 0 ? 4 : f.treeAges & 15;
             s.MixCollection = CollectionStore.Find(f.mix ?? string.Empty)?.Name ?? string.Empty;
             s.MixShare = Clamp((int)Math.Round(f.mixShare / 5.0, MidpointRounding.AwayFromZero) * 5, 5, 95);
             mixDirty = true;
             builderMessageError.Update(0);
-            builderMessage.Update(string.Empty); // cambian los ajustes: el mensaje anterior ya no aplica
+            builderMessage.Update(string.Empty);
             builder.SetMode(s.Mode);
             saveCountdown = 60;
             PushBuilder();
@@ -572,8 +566,6 @@ namespace BuildingCollections.Systems
                 .ToList();
             var candidates = Matching(c);
 
-            // Mezcla: cada edificio lleva su colección y la parte que le toca; el planificador elige primero la
-            // colección según esa parte. Un edificio que está en las dos cuenta como de la primera.
             var mix = MixOf(s);
             if (mix != null)
             {
@@ -582,14 +574,13 @@ namespace BuildingCollections.Systems
                 var second = Matching(mix).Where(e => !firstNames.Contains(e.Info.PrefabName)).ToList();
                 candidates = candidates.Select(e => Tagged(e, 0, share))
                     .Concat(second.Select(e => Tagged(e, 1, 1 - share))).ToList();
-                Mod.Log.Info($"[vista previa] mezcla: {c.Name} {s.MixShare}% ({firstNames.Count} edificios) + {mix.Name} {100 - s.MixShare}% ({second.Count}).");
+                Mod.Log.Info($"[preview] mix: {c.Name} {s.MixShare}% ({firstNames.Count} buildings) + {mix.Name} {100 - s.MixShare}% ({second.Count}).");
             }
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
-            // Decoración: árboles del juego base en el espacio sobrante, o los de un set de Tree Controller.
             var decor = s.Trees ? TreeDecor(s.TreeSet) : new List<CatalogEntry>();
             long prep = clock.ElapsedMilliseconds;
             builder.GeneratePreview(candidates, s.Density, seed, decor, s.DecorDensity, s.TreeAges);
-            Mod.Log.Info($"[vista previa] total {clock.ElapsedMilliseconds} ms (catálogo y filtros {prep} ms).");
+            Mod.Log.Info($"[preview] total {clock.ElapsedMilliseconds} ms (catalog and filters {prep} ms).");
         }
 
         static CatalogEntry Tagged(CatalogEntry e, int group, double share) => new CatalogEntry
@@ -614,7 +605,7 @@ namespace BuildingCollections.Systems
                 }
             }
 
-            Mod.Log.Info($"[árboles] set {set} de Tree Controller: {result.Count} de {names.Length} prefabs encontrados.");
+            Mod.Log.Info($"[trees] Tree Controller set {set}: {result.Count} of {names.Length} prefabs found.");
             return result.Count > 0 ? result : PrefabCatalog.Trees.ToList();
         }
 

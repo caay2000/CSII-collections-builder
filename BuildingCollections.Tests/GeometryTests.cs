@@ -29,13 +29,12 @@ namespace BuildingCollections.Tests
         [Fact]
         public void Flood_groups_touching_blocks_and_skips_the_other_side_of_the_road()
         {
-            // Manzana: cuatro bloques en L que se tocan; al otro lado de una calle de 12 m, otro bloque.
             var quads = new[]
             {
-                Rect(0, 0, 48, 48),     // 0 inicio
-                Rect(48, 0, 96, 48),    // 1 tocando a 0
-                Rect(96.5, 0, 140, 48), // 2 a 0,5 m de 1
-                Rect(0, 60, 48, 108),   // 3 al otro lado de la calle (12 m)
+                Rect(0, 0, 48, 48),
+                Rect(48, 0, 96, 48),
+                Rect(96.5, 0, 140, 48),
+                Rect(0, 60, 48, 108),
             };
             var g = BlockGrouping.Flood(quads, 0, 2.0).OrderBy(i => i).ToArray();
             Assert.Equal(new[] { 0, 1, 2 }, g);
@@ -84,7 +83,6 @@ namespace BuildingCollections.Tests
         [Fact]
         public void Concave_polygon_contains()
         {
-            // "L": el hueco de arriba a la derecha queda fuera.
             var poly = new[] { new Pt(0, 0), new Pt(20, 0), new Pt(20, 10), new Pt(10, 10), new Pt(10, 20), new Pt(0, 20) };
             Assert.True(Polygon.Contains(poly, new Pt(5, 15)));
             Assert.True(Polygon.Contains(poly, new Pt(15, 5)));
@@ -96,10 +94,10 @@ namespace BuildingCollections.Tests
         {
             var blocks = new[]
             {
-                Cells(0, 0, 6, 6),      // 0
-                Cells(48, 0, 4, 6),     // 1 contiguo (centros a 8 m)
-                Cells(0, 48 + 16, 6, 6),// 2 al otro lado de una calle de 16 m
-                Cells(81, 0, 2, 2),     // 3 contiguo a 1 con 1 m de cuña (centros a 9 m)
+                Cells(0, 0, 6, 6),
+                Cells(48, 0, 4, 6),
+                Cells(0, 48 + 16, 6, 6),
+                Cells(81, 0, 2, 2),
             };
             var g = BlockGrouping.FloodByCells(blocks, 0, 11).OrderBy(i => i).ToArray();
             Assert.Equal(new[] { 0, 1, 3 }, g);

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Colossal.Serialization.Entities;
 using Game;
@@ -11,19 +12,10 @@ using Unity.Entities;
 
 namespace BuildingCollections.Systems
 {
-    /// <summary>
-    /// Marca de los edificios construidos por el mod. Se guarda en la partida (vacía, como el PloppedBuilding de
-    /// Plop the Growables, Apache-2.0) para que la protección siga después de cargar.
-    /// </summary>
     public struct BcBuilt : IComponentData, IQueryTypeParameter, IEmptySerializable
     {
     }
 
-    /// <summary>
-    /// Protege los edificios del mod: un edificio de crecimiento puesto sin zonificar (o en otra zona) recibe
-    /// <c>Condemned</c> y se demuele. Aquí se les quita la marca y el icono. No se desactiva el ZoneCheckSystem del
-    /// juego, para no chocar con Plop the Growables ni con otros mods.
-    /// </summary>
     public partial class BuiltGuardSystem : GameSystemBase
     {
         readonly List<(Entity entity, int frames)> pending = new List<(Entity, int)>();
@@ -41,7 +33,6 @@ namespace BuildingCollections.Systems
             iconSystem = World.GetOrCreateSystemManaged<IconCommandSystem>();
         }
 
-        /// <summary>Entidades Temp que se acaban de aplicar: al perder Temp se les pone la marca.</summary>
         public void Track(IEnumerable<Entity> entities, int reportAfterFrames)
         {
             foreach (var e in entities)
@@ -95,9 +86,11 @@ namespace BuildingCollections.Systems
 
             if (tagged > 0 || lost > 0)
             {
-                Mod.Log.Info($"[build] {tagged} edificios marcados como propios, {lost} sin aplicar o borrados, {pending.Count} pendientes.");
+                Mod.Log.Info($"[build] {tagged} buildings tagged as ours, {lost} not applied or deleted, {pending.Count} pending.");
             }
         }
+
+        readonly ThrottledLog unflagLog = new ThrottledLog(TimeSpan.FromSeconds(30));
 
         void Unflag()
         {
@@ -124,7 +117,7 @@ namespace BuildingCollections.Systems
                     }
                 }
 
-                Mod.Log.Info($"[build] Quitado Condemned a {entities.Length} edificios propios.");
+                unflagLog.Info("unflag", $"[build] Removed Condemned from {entities.Length} of our buildings.");
             }
         }
 
@@ -150,7 +143,7 @@ namespace BuildingCollections.Systems
                 if (EntityManager.HasComponent<BcBuilt>(e)) tagged++;
             }
 
-            Mod.Log.Info($"[build] Estado tras la espera: {alive} de {report.Count} siguen en pie, {tagged} con marca, {condemned} con Condemned, {construction} en obras.");
+            Mod.Log.Info($"[build] State after waiting: {alive} of {report.Count} still standing, {tagged} tagged, {condemned} with Condemned, {construction} under construction.");
             report.Clear();
         }
     }
