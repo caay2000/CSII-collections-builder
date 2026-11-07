@@ -5,14 +5,14 @@ La versión se define en `<Version>` de `BuildingCollections/BuildingCollections
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
 ## 0.1.40
-- Calles curvas: el relleno de último recurso mide el solape en la fachada (una franja de 1 m junto a la acera) en lugar
-  de en toda la primera fila. En una curva los fondos de edificios contiguos convergen de forma inevitable; ahora los
+- Calles curvas: el relleno de último recurso mide el solape en la fachada (una franja de 0,25 m junto a la acera) en
+  lugar de en toda la primera fila, y busca primero una posición que toque a los dos vecinos y si no a uno. En una curva los fondos de edificios contiguos convergen de forma inevitable; ahora los
   tramos de una sola celda que quedaban vacíos en la curva se rellenan, tocando a sus vecinos en la acera con como mucho
   el solape permitido. El fondo sigue sin poder pisar edificios existentes, la fachada de otro lado ni salir de la manzana.
 - Con solape, la decisión de usar solo edificios de una celda de ancho en un lado se basa en cuántas juntas hacen falta
   para cerrar el sobrante con solape (ya no se reparte en rendijas), así que más lados quedan cerrados hasta la esquina.
-- Simulador (catálogo `game`, 3 semillas): la acera sin cubrir baja de 8749 m a 7189 m (solape 0.5) y de 7960 m a
-  6812 m (solape 1). La curva de 60 m, la curva cerrada de Prospect, la S marcada y la ondulada dejan de tener tramos
+- Simulador (catálogo `game`, 3 semillas): la acera sin cubrir baja de 8749 m a 7105 m (solape 0.5) y de 7960 m a
+  6768 m (solape 1). La curva de 60 m, la curva cerrada de Prospect, la S marcada y la ondulada dejan de tener tramos
   vacíos entre edificios. Quedan casos en curvas muy cerradas donde los vecinos, muy girados, dejan menos de 8 m de acera
   libre, y lados cuyo sobrante necesitaría más solape por junta del permitido.
 
