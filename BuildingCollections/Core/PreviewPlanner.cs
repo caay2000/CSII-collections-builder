@@ -103,10 +103,9 @@ namespace BuildingCollections.Core
         static bool SameSide(PlanBlock a, PlanBlock b) =>
             a.Strip != null && b.Strip != null && a.Strip.BlockIndex == b.Strip.BlockIndex && a.Strip.SideIndex == b.Strip.SideIndex;
 
-        void MaskOthers(PlanBlock block, PlanGrid grid, ref int masked) => MaskOthers(block, grid, true, ref masked);
-
-        void MaskOthers(PlanBlock block, PlanGrid grid, bool withFronts, ref int masked)
+        int MaskOthers(PlanBlock block, PlanGrid grid, bool withFronts)
         {
+            int masked = 0;
             var strict = Masked(block, grid, false, withFronts);
             bool facing = footprints.Any(f => BackToBack(f.owner, block)) || (withFronts && fronts.Any(f => BackToBack(f.owner, block)));
             var relaxed = facing ? Masked(block, grid, true, withFronts) : strict;
@@ -123,6 +122,8 @@ namespace BuildingCollections.Core
                     }
                 }
             }
+
+            return masked;
         }
 
         PlanGrid Masked(PlanBlock block, PlanGrid grid, bool backToBack, bool withFronts)
@@ -207,8 +208,7 @@ namespace BuildingCollections.Core
             var plans = new Dictionary<PlanBlock, List<Placement>>();
             foreach (var (block, grid) in grids)
             {
-                int masked = 0;
-                MaskOthers(block, grid, false, ref masked);
+                MaskOthers(block, grid, withFronts: false);
                 var corners = GridPlanner.PlanCorners(grid, request.Plain, request.Corners, NextSeed());
                 plans[block] = corners;
                 footprints.AddRange(corners.Select(p => (Footprint(block, p), FrontRow(block, p), block)));
@@ -223,8 +223,7 @@ namespace BuildingCollections.Core
         {
             foreach (var (block, grid) in grids)
             {
-                int masked = 0;
-                MaskOthers(block, grid, ref masked);
+                int masked = MaskOthers(block, grid, withFronts: true);
                 string depths = FreeDepths(grid);
                 var plan = GridPlanner.Plan(grid, PlainFor(block, grid), request.Corners, 100, NextSeed(), cornerPlans[block]);
                 footprints.RemoveAll(f => f.owner == block);

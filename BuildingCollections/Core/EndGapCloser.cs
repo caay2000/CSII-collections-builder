@@ -121,44 +121,26 @@ namespace BuildingCollections.Core
 
         bool TrySlidingTheFarCorner(EndGap gap)
         {
-            var chain = gap.Chain;
-            int dir = gap.Dir;
-            if (tools.Overlap <= StrictOverlap || chain.CornerOnly || chain.Own != chain.Lots.Count)
-            {
-                return false;
-            }
-
-            var far = chain.Lots[chain.Lots.Count - 1];
-            var anchor = lots.FirstOrDefault(p => p.Owner == gap.Block && p.Corner && p.Shift == 0
-                && (dir > 0 ? p.MaxX == far.MinX : p.MinX == far.MaxX));
+            var anchor = FarCorner(gap);
             if (anchor == null)
             {
                 return false;
             }
 
+            int dir = gap.Dir;
             float room = gap.Block.Strip == null ? 0 : (float)Math.Min(MaxSlide, EndSlack(gap.Block.Strip, -dir));
-            var rest = lots.Where(p => p != anchor && !chain.Lots.Contains(p)).Select(p => p.Footprint(0)).ToList();
+            var rest = lots.Where(p => p != anchor && !gap.Chain.Lots.Contains(p)).Select(p => p.Footprint(0)).ToList();
             var back = new LotFitTest(existing, thinned, outline, rest, -dir);
             var besideAnchor = Beside(anchor, rest, -dir);
             for (float slide = SlideStep; slide <= room + 1e-3f; slide += SlideStep)
             {
                 float baseShift = -dir * slide;
-                if (!back.Fits(anchor, anchor.Box, baseShift, StrictOverlap, besideAnchor) || !Inside(anchor, baseShift) || HitsAFront(anchor, baseShift))
+                if (!CanSlide(anchor, baseShift, back, besideAnchor))
                 {
                     return false;
                 }
 
-                var others = rest.Append(anchor.Footprint(anchor.Box, baseShift, 0)).ToList();
-                var slid = new EndGap
-                {
-                    Block = gap.Block,
-                    Chain = chain,
-                    Dir = dir,
-                    Base = baseShift,
-                    Fits = new LotFitTest(existing, thinned, outline, others, dir),
-                    Beside = Beside(chain.End, others, dir),
-                };
-                slid.Gap = Measure(slid);
+                var slid = Slid(gap, anchor, rest, baseShift);
                 if (slid.Gap >= CellSize - Step - 1e-3f)
                 {
                     return false;
@@ -173,6 +155,38 @@ namespace BuildingCollections.Core
             }
 
             return false;
+        }
+
+        PlannedLot FarCorner(EndGap gap)
+        {
+            var chain = gap.Chain;
+            if (tools.Overlap <= StrictOverlap || chain.CornerOnly || chain.Own != chain.Lots.Count)
+            {
+                return null;
+            }
+
+            var far = chain.Lots[chain.Lots.Count - 1];
+            return lots.FirstOrDefault(p => p.Owner == gap.Block && p.Corner && p.Shift == 0
+                && (gap.Dir > 0 ? p.MaxX == far.MinX : p.MinX == far.MaxX));
+        }
+
+        bool CanSlide(PlannedLot anchor, float shift, LotFitTest back, List<Quad> beside) =>
+            back.Fits(anchor, anchor.Box, shift, StrictOverlap, beside) && Inside(anchor, shift) && !HitsAFront(anchor, shift);
+
+        EndGap Slid(EndGap gap, PlannedLot anchor, List<Quad> rest, float baseShift)
+        {
+            var others = rest.Append(anchor.Footprint(anchor.Box, baseShift, 0)).ToList();
+            var slid = new EndGap
+            {
+                Block = gap.Block,
+                Chain = gap.Chain,
+                Dir = gap.Dir,
+                Base = baseShift,
+                Fits = new LotFitTest(existing, thinned, outline, others, gap.Dir),
+                Beside = Beside(gap.Chain.End, others, gap.Dir),
+            };
+            slid.Gap = Measure(slid);
+            return slid;
         }
 
         bool HitsAFront(PlannedLot lot, float shift)
