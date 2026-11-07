@@ -265,11 +265,9 @@ namespace BuildingCollections.Core
 
             int free = Enumerable.Range(0, grid.Width).Count(x => grid.Free[x, 0]);
             double movable = free / TypicalWidth;
-            double spread = Math.Ceiling(st.Slack / EndGapCloser.MaxSpreadSliver) - 1;
-            double insert = request.Overlap > FootprintMask.StrictOverlap
+            double needed = request.Overlap > FootprintMask.StrictOverlap
                 ? Math.Ceiling((CellFrame.Size - st.Slack) / request.Overlap) - 2
-                : double.MaxValue;
-            double needed = Math.Min(spread, insert);
+                : Math.Ceiling(st.Slack / EndGapCloser.MaxSpreadSliver) - 1;
             if (needed <= movable || needed > free)
             {
                 return request.Plain;

@@ -40,6 +40,16 @@ namespace BuildingCollections.Tests
             });
         }
 
+        static List<List<Pt>> Sector(double radius, double sweepDeg, double inner)
+        {
+            Pt Polar(double r, double deg) => new Pt(r * System.Math.Cos(deg * System.Math.PI / 180), r * System.Math.Sin(deg * System.Math.PI / 180));
+            double half = sweepDeg / 2;
+            var arc = Enumerable.Range(0, 41).Select(i => Polar(radius, -half + sweepDeg * i / 40)).ToList();
+            var innerEnd = Polar(inner, half);
+            var innerStart = Polar(inner, -half);
+            return new List<List<Pt>> { arc, new List<Pt> { arc[arc.Count - 1], innerEnd }, new List<Pt> { innerEnd, innerStart }, new List<Pt> { innerStart, arc[0] } };
+        }
+
         static List<List<Pt>> Rect(double w, double h) => new List<List<Pt>> { L(0, 0, w, 0), L(w, 0, w, h), L(w, h, 0, h), L(0, h, 0, 0) };
 
         [Fact]
@@ -113,6 +123,7 @@ namespace BuildingCollections.Tests
                 ["99.9x35.8"] = Rect(99.9, 35.8),
                 ["57.6x48.4"] = Rect(57.6, 48.4),
                 ["parallelogram"] = new List<List<Pt>> { L(0, 0, 100, 0), L(100, 0, 120, 60), L(120, 60, 20, 60), L(20, 60, 0, 0) },
+                ["curve R 60 m"] = Sector(60, 90, 20),
             };
             foreach (var shape in shapes)
             {
