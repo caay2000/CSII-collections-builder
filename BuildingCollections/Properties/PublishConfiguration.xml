@@ -20,7 +20,6 @@ Early version (0.1.x): feedback and bug reports are welcome on GitHub.
 	<Screenshot Value="Properties/Screenshots/cobblestone.jpg" />
 	<Screenshot Value="Properties/Screenshots/mill-lane.jpg" />
 	<Tag Value="Code Mod" />
-	<Tag Value="Buildings" />
 	<ForumLink Value="" />
 	<ModVersion Value="0.1.40" />
 	<GameVersion Value="1.*" />
