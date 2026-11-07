@@ -26,7 +26,7 @@ namespace BuildingCollections.Systems
     {
         void DrawSelection()
         {
-            bool snapMarker = mode == "polygon" && selection.Count == 0 && hasHover && hoverSnapped;
+            bool snapMarker = mode == "polygon" && (selection.Count == 0 || dragging) && hasHover && hoverSnapped;
             if (selection.Count == 0 && polygon.Count == 0 && !snapMarker)
             {
                 return;
@@ -67,6 +67,7 @@ namespace BuildingCollections.Systems
             if (polygon.Count > 0)
             {
                 var lineColor = new UnityEngine.Color(0.4f, 0.75f, 1f, 0.95f);
+                var hotColor = new UnityEngine.Color(1f, 1f, 1f, 1f);
                 void Path(List<float3> pts, float width, UnityEngine.Color color)
                 {
                     for (int k = 1; k < pts.Count; k++)
@@ -83,7 +84,7 @@ namespace BuildingCollections.Systems
                         Path(PolygonSegment(polygon[i - 1], polyCurb[i - 1], polyArc[i - 1], polygon[i], polyCurb[i], polyArc[i]), 1f, polyCurb[i] >= 0 && polyCurb[i] == polyCurb[i - 1] ? snapColor : lineColor);
                     }
 
-                    if (hasHover)
+                    if (hasHover && !dragging)
                     {
                         int last = polygon.Count - 1;
                         bool follows = hoverSnapped && polyCurb[last] >= 0 && polyCurb[last] == hoverHit.Curb;
@@ -91,11 +92,37 @@ namespace BuildingCollections.Systems
                     }
                 }
 
-                bool nearFirst = !closed && hasHover && polygon.Count >= 3 && math.distance(hoverPos.xz, polygon[0].xz) <= 12f;
-                buffer.DrawCircle(nearFirst ? new UnityEngine.Color(0.3f, 0.9f, 0.4f, 1f) : lineColor, polygon[0], nearFirst ? 8f : 5f);
-                for (int i = 1; i < polygon.Count; i++)
+                else
                 {
-                    buffer.DrawCircle(lineColor, polygon[i], 3f);
+                    for (int i = 0; i < polygon.Count; i++)
+                    {
+                        int j = (i + 1) % polygon.Count;
+                        Path(PolygonSegment(polygon[i], polyCurb[i], polyArc[i], polygon[j], polyCurb[j], polyArc[j]), 0.6f, polyCurb[i] >= 0 && polyCurb[i] == polyCurb[j] ? snapColor : lineColor);
+                    }
+
+                    if (!dragging)
+                    {
+                        foreach (var m in PolygonMidpoints())
+                        {
+                            bool hot = hoverHandle.Kind == HandleKind.Midpoint && hoverHandle.Index == m.Index;
+                            buffer.DrawCircle(hot ? hotColor : lineColor, Ground(m.Point), hot ? 4f : 2f);
+                        }
+                    }
+                }
+
+                bool nearFirst = !closed && !dragging && hasHover && polygon.Count >= 3 && math.distance(hoverPos.xz, polygon[0].xz) <= 12f;
+                for (int i = 0; i < polygon.Count; i++)
+                {
+                    bool hot = dragging ? i == dragIndex : hoverHandle.Kind == HandleKind.Vertex && hoverHandle.Index == i;
+                    if (i == 0 && nearFirst)
+                    {
+                        buffer.DrawCircle(new UnityEngine.Color(0.3f, 0.9f, 0.4f, 1f), polygon[0], 8f);
+                    }
+                    else
+                    {
+                        float size = i == 0 && !closed ? 5f : 3f;
+                        buffer.DrawCircle(hot ? hotColor : lineColor, polygon[i], hot ? size + 2f : size);
+                    }
                 }
             }
 

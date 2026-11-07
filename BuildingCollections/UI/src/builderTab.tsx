@@ -109,7 +109,7 @@ export const BuilderTab = () => {
                 <span className={styles.hint}>
                     {b.mode === "block"
                         ? "Click inside a block enclosed by roads: everything inside is selected. Right-click clears."
-                        : "Click to place corners (they snap to the sidewalk), click the first one to close. Right-click undoes the last corner."}
+                        : "Click to place corners (they snap to the sidewalk), click the first one to close. Right-click undoes the last corner. Drag a corner to move it, drag the dot in the middle of a side to add one, right-click a corner to remove it."}
                 </span>
             </div>
 

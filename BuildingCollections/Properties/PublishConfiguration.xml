@@ -35,9 +35,12 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/mill-lane.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="" />
-	<ModVersion Value="0.1.40" />
+	<ModVersion Value="0.2.0" />
 	<GameVersion Value="1.*" />
 	<ChangeLog>
+0.2.0
+- Editable polygon, like the game's areas: drag a corner to move it (it still snaps to the sidewalk), drag the dot in the middle of a side to add a corner, right-click a corner to remove it. The selection and preview update when you release.
+
 0.1.40 - first test release (private).
 - With overlap enabled, neighbouring buildings along a sidewalk touch each other (overlapping at most the configured value) instead of leaving gaps between them; any leftover stays at the corner.
 - Curved streets: the short segments of a curve are filled, with the overlap measured at the facade, so buildings follow the curve with far fewer empty spots (some very tight curves still leave gaps).

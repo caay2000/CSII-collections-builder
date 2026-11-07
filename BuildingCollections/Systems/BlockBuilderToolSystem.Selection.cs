@@ -214,9 +214,9 @@ namespace BuildingCollections.Systems
             Say(polygon.Count < 3 ? $"{polygon.Count} points. Keep clicking corners." : $"{polygon.Count} points. Click the first point to close.");
         }
 
-        void SelectPolygon()
+        bool SelectPolygon()
         {
-            reselect = SelectPolygon;
+            reselect = () => SelectPolygon();
             stripsOverlap = CurveOverlap(CurrentOverlap());
             var cfg = DevConfig.Load();
             var verts = polygon.Select(p => new Pt(p.x, p.z)).ToList();
@@ -224,24 +224,27 @@ namespace BuildingCollections.Systems
 
             if (cfg.UseVirtualLots && SelectFacesInPolygon(VirtualLots.Outline(sides), $"polygon of {polygon.Count} vertices"))
             {
-                return;
+                return true;
             }
 
             if (cfg.UseVirtualLots && frontage.Any(f => f) &&
                 SelectVirtualSides(sides, frontage, $"polygon of {polygon.Count} vertices ({frontage.Count(f => f)} sides with a street)"))
             {
-                return;
+                return true;
             }
 
             var poly = VirtualLots.Outline(sides);
-            if (!SelectInside(poly, $"polygon of {polygon.Count} vertices"))
+            if (SelectInside(poly, $"polygon of {polygon.Count} vertices"))
             {
-                reselect = null;
-                polygon.Clear();
-                polyCurb.Clear();
-                polyArc.Clear();
-                Say("The polygon touches no street and contains no zoned cells.", error: true);
+                return true;
             }
+
+            reselect = null;
+            polygon.Clear();
+            polyCurb.Clear();
+            polyArc.Clear();
+            Say("The polygon touches no street and contains no zoned cells.", error: true);
+            return false;
         }
 
         void SnapHover()
