@@ -12,6 +12,7 @@ namespace BuildingCollections.Core
         public int Dir;
         public LotFitTest Fits;
         public List<Quad> Beside;
+        public float Base;
 
         public float Missing => (float)CellFrame.Size - Gap;
 
@@ -64,8 +65,8 @@ namespace BuildingCollections.Core
             float JointShift(int j) => -dir * missing * (n - j) / (n + 1);
             var stayOk = new bool?[n];
             var moveOk = new bool?[n];
-            bool Stays(int j) => stayOk[j] ??= gap.Fits.Fits(chain[j], chain[j].Box, JointShift(j), perJoint + StrictOverlap, null);
-            bool Moves(int j) => moveOk[j] ??= gap.Fits.Fits(chain[j], chain[j].Box.Moved(dir), JointShift(j), perJoint + StrictOverlap, null);
+            bool Stays(int j) => stayOk[j] ??= gap.Fits.Fits(chain[j], chain[j].Box, gap.Base + JointShift(j), perJoint + StrictOverlap, null);
+            bool Moves(int j) => moveOk[j] ??= gap.Fits.Fits(chain[j], chain[j].Box.Moved(dir), gap.Base + JointShift(j), perJoint + StrictOverlap, null);
 
             foreach (int k in Enumerable.Range(0, gap.Chain.Own).OrderBy(_ => tools.Rng.Next()))
             {
@@ -95,7 +96,7 @@ namespace BuildingCollections.Core
             foreach (var b in options)
             {
                 var box = new LotBox(dir > 0 ? cur.MinX : cur.MinX - 1, cur.MinY, dir > 0 ? cur.MaxX + 1 : cur.MaxX, cur.MinY + b.LotDepth);
-                if (!gap.Fits.Fits(cur, box, jointShift(k), perJoint + StrictOverlap, null))
+                if (!gap.Fits.Fits(cur, box, gap.Base + jointShift(k), perJoint + StrictOverlap, null))
                 {
                     continue;
                 }
@@ -111,7 +112,7 @@ namespace BuildingCollections.Core
                         p.MaxX += dir;
                     }
 
-                    p.Shift = jointShift(j);
+                    p.Shift = gap.Base + jointShift(j);
                 }
 
                 cur.Building = b;
@@ -184,7 +185,7 @@ namespace BuildingCollections.Core
             float Shift(int j) => -dir * missing * (count - j) / (count + 1);
             for (int j = 0; j < moving.Count; j++)
             {
-                if (!gap.Fits.Fits(moving[j], moving[j].Box, Shift(j + 1), perJoint + StrictOverlap, null))
+                if (!gap.Fits.Fits(moving[j], moving[j].Box, gap.Base + Shift(j + 1), perJoint + StrictOverlap, null))
                 {
                     return false;
                 }
@@ -194,12 +195,12 @@ namespace BuildingCollections.Core
             foreach (var b in options)
             {
                 var box = new LotBox(minX, minY, minX + 1, minY + b.LotDepth);
-                if (!gap.Fits.Fits(probe, box, Shift(0), perJoint + StrictOverlap, gap.Beside))
+                if (!gap.Fits.Fits(probe, box, gap.Base + Shift(0), perJoint + StrictOverlap, gap.Beside))
                 {
                     continue;
                 }
 
-                var loose = probe.Footprint(box, Shift(0), tools.Overlap + StrictOverlap);
+                var loose = probe.Footprint(box, gap.Base + Shift(0), tools.Overlap + StrictOverlap);
                 if (gap.Beside.Any(q => Quad.Touch(q, loose)))
                 {
                     continue;
@@ -207,7 +208,7 @@ namespace BuildingCollections.Core
 
                 for (int j = 0; j < moving.Count; j++)
                 {
-                    moving[j].Shift = Shift(j + 1);
+                    moving[j].Shift = gap.Base + Shift(j + 1);
                 }
 
                 tools.Lots.Add(new PlannedLot
@@ -218,7 +219,7 @@ namespace BuildingCollections.Core
                     MinY = box.MinY,
                     MaxX = box.MaxX,
                     MaxY = box.MaxY,
-                    Shift = Shift(0),
+                    Shift = gap.Base + Shift(0),
                 });
                 tools.Log.Add($"  {gap.Gap:F1} m gap at the {gap.Where} closed: inserted {b.PrefabName} (1x{b.LotDepth}) after {end.Building.PrefabName}, {moving.Count} buildings squeezed, {perJoint:F2} m overlap per joint.");
                 return true;
@@ -242,6 +243,11 @@ namespace BuildingCollections.Core
 
         public bool TryClose(EndGap gap)
         {
+            if (tools.Overlap > StrictOverlap)
+            {
+                return false;
+            }
+
             var moving = gap.Chain.Moving;
             int least = Math.Max(1, (int)Math.Ceiling(gap.Gap / MaxSliver) - 1);
             for (int m = moving.Count; m >= least; m--)

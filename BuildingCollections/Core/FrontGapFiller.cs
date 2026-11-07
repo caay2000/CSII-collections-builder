@@ -44,7 +44,7 @@ namespace BuildingCollections.Core
             for (int x = 0; x < block.Grid.Width; x++)
             {
                 int minX = block.AreaX + x;
-                if (Covered(block, minX) || !TryInsert(block, minX))
+                if (Covered(block, minX) || !(TryInsert(block, minX) || TryInsertOverlappingBacks(block, minX)))
                 {
                     continue;
                 }
@@ -89,13 +89,61 @@ namespace BuildingCollections.Core
                         continue;
                     }
 
-                    lots.Add(new PlannedLot { Building = b, Owner = block, MinX = box.MinX, MinY = box.MinY, MaxX = box.MaxX, MaxY = box.MaxY, Shift = shift });
-                    log.Add($"  {block.Label}: uncovered cell {minX - block.AreaX} filled with {b.PrefabName} ({b.LotWidth}x{b.LotDepth}), shifted {shift:F1} m.");
+                    Add(block, b, box, shift, string.Empty);
                     return true;
                 }
             }
 
             return false;
+        }
+
+        bool TryInsertOverlappingBacks(PlanBlock block, int minX)
+        {
+            if (overlap <= StrictOverlap)
+            {
+                return false;
+            }
+
+            var others = lots.Select(p => p.Footprint(0)).ToList();
+            var ahead = new LotFitTest(existing, thinned, outline, others, +1);
+            var behind = new LotFitTest(existing, thinned, outline, others, -1);
+            var probe = new PlannedLot { Owner = block };
+            var options = plain.Where(b => b.LotWidth == 1 && b.LotDepth <= block.Grid.Depth)
+                .OrderBy(b => b.LotDepth).ThenBy(_ => rng.Next()).ToList();
+            foreach (var b in options)
+            {
+                var front = new LotBox(minX, block.AreaY, minX + 1, block.AreaY + 1);
+                var box = new LotBox(minX, block.AreaY, minX + 1, block.AreaY + b.LotDepth);
+                foreach (float shift in Shifts())
+                {
+                    if (!ahead.Fits(probe, front, shift, overlap + StrictOverlap, null) || !behind.Fits(probe, front, shift, overlap + StrictOverlap, null)
+                        || !Clear(probe, box, shift))
+                    {
+                        continue;
+                    }
+
+                    Add(block, b, box, shift, ", backs overlapping");
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        bool Clear(PlannedLot probe, LotBox box, float shift)
+        {
+            var q = probe.Footprint(box, shift, StrictOverlap);
+            var loose = probe.Footprint(box, shift, overlap + StrictOverlap);
+            return !existing.Any(e => Quad.Touch(e, q))
+                && !lots.Any(p => Quad.Touch(p.Footprint(p.MinX, p.MinY, p.MaxX, p.MinY + 1, p.Shift, 0), loose))
+                && !thinned.Any(q.Contains)
+                && q.P.Select((c, i) => (c, n: q.P[(i + 1) % q.P.Length])).All(e => Polygon.Contains(outline, e.c) && Polygon.Contains(outline, (e.c + e.n) * 0.5));
+        }
+
+        void Add(PlanBlock block, BuildingInfo b, LotBox box, float shift, string note)
+        {
+            lots.Add(new PlannedLot { Building = b, Owner = block, MinX = box.MinX, MinY = box.MinY, MaxX = box.MaxX, MaxY = box.MaxY, Shift = shift });
+            log.Add($"  {block.Label}: uncovered cell {box.MinX - block.AreaX} filled with {b.PrefabName} ({b.LotWidth}x{b.LotDepth}), shifted {shift:F1} m{note}.");
         }
     }
 }

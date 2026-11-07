@@ -103,11 +103,13 @@ namespace BuildingCollections.Core
         static bool SameSide(PlanBlock a, PlanBlock b) =>
             a.Strip != null && b.Strip != null && a.Strip.BlockIndex == b.Strip.BlockIndex && a.Strip.SideIndex == b.Strip.SideIndex;
 
-        void MaskOthers(PlanBlock block, PlanGrid grid, ref int masked)
+        void MaskOthers(PlanBlock block, PlanGrid grid, ref int masked) => MaskOthers(block, grid, true, ref masked);
+
+        void MaskOthers(PlanBlock block, PlanGrid grid, bool withFronts, ref int masked)
         {
-            var strict = Masked(block, grid, false);
-            bool facing = footprints.Any(f => BackToBack(f.owner, block)) || fronts.Any(f => BackToBack(f.owner, block));
-            var relaxed = facing ? Masked(block, grid, true) : strict;
+            var strict = Masked(block, grid, false, withFronts);
+            bool facing = footprints.Any(f => BackToBack(f.owner, block)) || (withFronts && fronts.Any(f => BackToBack(f.owner, block)));
+            var relaxed = facing ? Masked(block, grid, true, withFronts) : strict;
             for (int x = 0; x < grid.Width; x++)
             {
                 bool rescue = FreeDepth(strict, x) < frontDepth && FreeDepth(relaxed, x) >= frontDepth;
@@ -123,11 +125,15 @@ namespace BuildingCollections.Core
             }
         }
 
-        PlanGrid Masked(PlanBlock block, PlanGrid grid, bool backToBack)
+        PlanGrid Masked(PlanBlock block, PlanGrid grid, bool backToBack, bool withFronts)
         {
             var g = Clone(grid);
             FootprintMask.Apply(g, block, Others(block, backToBack), request.Overlap);
-            FootprintMask.Apply(g, block, OtherFronts(block, backToBack), request.Overlap, 1);
+            if (withFronts)
+            {
+                FootprintMask.Apply(g, block, OtherFronts(block, backToBack), request.Overlap, 1);
+            }
+
             return g;
         }
 
@@ -201,7 +207,8 @@ namespace BuildingCollections.Core
             var plans = new Dictionary<PlanBlock, List<Placement>>();
             foreach (var (block, grid) in grids)
             {
-                FootprintMask.Apply(grid, block, Others(block), request.Overlap);
+                int masked = 0;
+                MaskOthers(block, grid, false, ref masked);
                 var corners = GridPlanner.PlanCorners(grid, request.Plain, request.Corners, NextSeed());
                 plans[block] = corners;
                 footprints.AddRange(corners.Select(p => (Footprint(block, p), FrontRow(block, p), block)));
