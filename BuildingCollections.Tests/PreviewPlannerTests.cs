@@ -98,6 +98,51 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void With_overlap_the_leftover_is_not_spread_between_buildings()
+        {
+            var r = Plan(Rect(123, 76), 0.5f);
+            Assert.DoesNotContain(r.Log, l => l.Contains(" spread:"));
+        }
+
+        public static IEnumerable<object[]> GapFreeCases()
+        {
+            var shapes = new Dictionary<string, List<List<Pt>>>
+            {
+                ["123x76"] = Rect(123, 76),
+                ["101x67"] = Rect(101, 67),
+                ["99.9x35.8"] = Rect(99.9, 35.8),
+                ["57.6x48.4"] = Rect(57.6, 48.4),
+                ["parallelogram"] = new List<List<Pt>> { L(0, 0, 100, 0), L(100, 0, 120, 60), L(120, 60, 20, 60), L(20, 60, 0, 0) },
+            };
+            foreach (var shape in shapes)
+            {
+                foreach (var overlap in new[] { 0.5f, 1f })
+                {
+                    yield return new object[] { shape.Key, shape.Value, overlap };
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(GapFreeCases))]
+        public void With_overlap_no_sidewalk_gap_is_left_between_two_buildings_of_the_same_side(string name, List<List<Pt>> sides, float overlap)
+        {
+            var plain = new List<BuildingInfo> { B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3) };
+            var corners = new List<BuildingInfo>
+            {
+                B("cL1", 1, 1, CornerKind.Front | CornerKind.Left), B("cR1", 1, 1, CornerKind.Front | CornerKind.Right),
+                B("cL2", 1, 2, CornerKind.Front | CornerKind.Left), B("cR2", 1, 2, CornerKind.Front | CornerKind.Right),
+                B("cL22", 2, 2, CornerKind.Front | CornerKind.Left), B("cR22", 2, 2, CornerKind.Front | CornerKind.Right),
+            };
+            for (int seed = 1; seed <= 10; seed++)
+            {
+                var r = Plan(sides, overlap, seed: seed, plain: plain, corners: corners);
+                var gaps = r.Log.Where(l => l.Contains(FrontCoverage.BetweenOwn)).ToList();
+                Assert.True(gaps.Count == 0, $"{name}, overlap {overlap}, seed {seed}: {string.Join(" | ", gaps)}");
+            }
+        }
+
+        [Fact]
         public void Deep_buildings_of_one_street_leave_the_front_row_of_the_other_free()
         {
             var plain = new List<BuildingInfo> { B("1x1", 1, 1), B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3) };

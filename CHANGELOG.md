@@ -4,6 +4,23 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.1.39
+- Con solape activado ya no quedan huecos entre edificios de un mismo lado: lo que sobra de un lado se deja al final,
+  en la esquina, en lugar de repartirse en rendijas entre edificios. Sin solape se sigue repartiendo como antes.
+- Una celda de fachada vacía entre dos edificios se rellena, como último recurso, con un edificio de una celda de
+  ancho cuya fila delantera respeta el solape aunque su fondo se monte sobre el de otros edificios. Nunca sobre
+  edificios existentes, ni fuera de la manzana, ni sobre la fachada de otro edificio.
+- Los esquineros se eligen con el mismo rescate de fondos enfrentados que el resto de edificios, en vez de con la
+  máscara estricta, que dejaba sin fondo las celdas junto a la esquina en manzanas estrechas.
+- Si un hueco al final de un lado no se puede cerrar por falta de solape, el esquinero del otro extremo puede
+  desplazarse hacia su esquina, dentro del margen libre de la acera, para dejar sitio a un edificio más.
+- El diagnóstico de acera sin cubrir distingue los huecos entre dos edificios del mismo lado de los que quedan junto
+  a un edificio de otro lado (la esquina) o junto a uno existente.
+- Simulador: una manzana nueva del log. Con el catálogo `game` y 3 semillas, los huecos de menos de 8 m entre
+  edificios del mismo lado bajan de 343 m a 18 m (solape 0.5) y de 138 m a 4 m (solape 1). Las celdas vacías a media
+  calle bajan de unos 300 m a unos 120 m, y la acera sin cubrir total de 9728 m a 8749 m (0.5) y de 8932 m a
+  7960 m (1).
+
 ## 0.1.38
 - Manzanas estrechas (23–31 m de fondo): los dos lados enfrentados se construyen con los fondos solapados, en vez de
   dejar uno de ellos con una sola fila libre y vacío. El solape de fondos solo se usa para rescatar celdas que se
