@@ -36,7 +36,7 @@ const BY_ID = new Map<string, BuildingDto>();
 interface State {
     panelOpen: boolean; toolActive: boolean; findIt: boolean;
     cols: { name: string; ids: string[] }[]; selected: string; status: string;
-    builder: BuilderDto; plan: PlanDto; seed: number; log: string[]; anarchy: boolean;
+    builder: BuilderDto; plan: PlanDto; seed: number; log: string[]; anarchy: boolean; plopping?: string;
 }
 const S: State = {
     panelOpen: true, toolActive: false, findIt: true,
@@ -65,6 +65,7 @@ export function read(key: string): string {
         case "findItAvailable": return JSON.stringify(S.findIt);
         case "selected": return S.selected;
         case "status": return S.status;
+        case "plopping": return S.plopping ?? "";
         case "builderMessage": return S.plan.previewing ? `Preview: ${S.plan.lots} buildings.` : S.plan.areaSelected ? "1 blocks selected, 18 free roadside cells." : "";
         case "collections": return JSON.stringify(S.cols.map((c): CollectionDto => ({ name: c.name, tag: c.name.replace(/\s+/g, "-"), count: c.ids.length })));
         case "buildings": return JSON.stringify((cur()?.ids ?? []).map((id) => byId(id)).filter(Boolean));
@@ -106,6 +107,8 @@ export function trigger(name: string, ...args: any[]) {
         case "generatePreview": if (S.plan.previewing) S.seed++; S.plan = { ...S.plan, previewing: true }; break;
         case "clearSelection": S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
         case "AnarchyToggled": S.anarchy = !S.anarchy; break;
+        case "plop": S.plopping = args[0]; break;
+        case "setShown": break;
         case "build": S.status = `Built ${S.plan.lots} buildings (simulated).`; S.plan = { areaSelected: false, previewing: false, lots: 0 }; break;
     }
     emit();

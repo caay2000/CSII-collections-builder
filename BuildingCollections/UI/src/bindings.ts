@@ -44,6 +44,7 @@ const plan$ = bindValue<string>(G, "plan", "{}");
 const escapes$ = bindValue<number>(G, "escapes", 0);
 const builderMessage$ = bindValue<string>(G, "builderMessage", "");
 const builderMessageError$ = bindValue<number>(G, "builderMessageError", 0);
+const plopping$ = bindValue<string>(G, "plopping", "");
 
 function parse<T>(raw: string, fallback: T): T {
     try { return JSON.parse(raw) as T; } catch { return fallback; }
@@ -57,6 +58,7 @@ export const useSelected = () => useValue(selected$);
 export const useStatus = () => useValue(status$);
 export const useBuilderMessage = () => useValue(builderMessage$);
 export const useBuilderMessageError = () => useValue(builderMessageError$);
+export const usePlopping = () => useValue(plopping$);
 function useJson<T>(raw: string, fallback: T): T {
     return useMemo(() => parse(raw, fallback), [raw]);
 }
@@ -82,4 +84,6 @@ export const actions = {
     generatePreview: () => trigger(G, "generatePreview"),
     clearSelection: () => trigger(G, "clearSelection"),
     build: () => trigger(G, "build"),
+    plop: (id: string) => trigger(G, "plop", id),
+    setShown: (ids: string[]) => trigger(G, "setShown", JSON.stringify(ids)),
 };

@@ -4,6 +4,13 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.0
+- Colocar edificios desde la colección: un clic en la tarjeta de un edificio activa la herramienta de colocación del
+  juego con ese edificio, sin pasar por Find It. La tarjeta del edificio que se está colocando queda resaltada.
+- Mientras se coloca un edificio de la colección seleccionada, la tecla de Reshuffle (T por defecto) cambia a otro al
+  azar entre los que muestra la pestaña Collections (respetando la búsqueda y los filtros; si no hay ninguno, toda la
+  colección), sin repetir el actual. En la pestaña Builder la tecla sigue rebarajando la vista previa.
+
 ## 0.2.0
 - Polígono editable, como las áreas del juego: arrastra un vértice para moverlo (se sigue ajustando a la acera),
   arrastra el punto del centro de un lado para añadir un vértice (en un lado que sigue un bordillo curvo, el punto está

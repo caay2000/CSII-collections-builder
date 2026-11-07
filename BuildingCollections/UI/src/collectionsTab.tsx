@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./panel.module.scss";
-import { actions, BuildingDto, useBuildings, useCollections, useFindIt, useSelected, useStatus } from "./bindings";
+import { actions, BuildingDto, useBuildings, useCollections, useFindIt, usePlopping, useSelected, useStatus } from "./bindings";
 import { icon, IconButton, InlineInput, StepFilter } from "./widgets";
 import { Scrollable, ScrollController } from "cs2/ui";
 
@@ -15,17 +15,18 @@ export function matches(op: number, value: number, n: number): boolean {
 
 type Editing = "" | "new" | "rename" | "delete" | "removeAll";
 
-const Card = memo(({ b, label }: { b: BuildingDto; label: string }) => (
-    <div className={styles.card} title={`${b.name} · level ${b.level}`}>
+const Card = memo(({ b, label, on }: { b: BuildingDto; label: string; on: boolean }) => (
+    <div className={on ? `${styles.card} ${styles.cardOn}` : styles.card} title={`${b.name} · level ${b.level}. Click to place it.`}
+        onClick={() => { if (b.w > 0) actions.plop(b.id); }}>
         <img className={styles.thumb} src={b.icon} />
         {b.w > 0 && <span className={styles.sizeTag}>{`${b.w}×${b.d}`}</span>}
         <div className={styles.pips}>
             {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= b.level ? styles.pipOn : styles.pip} />)}
         </div>
         <div className={styles.cardName}>{label}</div>
-        <button className={styles.remove} title="Remove from collection" onClick={() => actions.removeBuildings([b.id])} />
+        <button className={styles.remove} title="Remove from collection" onClick={(e) => { e.stopPropagation(); actions.removeBuildings([b.id]); }} />
     </div>
-), (a, c) => a.label === c.label && a.b.id === c.b.id && a.b.icon === c.b.icon && a.b.level === c.b.level && a.b.w === c.b.w && a.b.d === c.b.d);
+), (a, c) => a.on === c.on && a.label === c.label && a.b.id === c.b.id && a.b.icon === c.b.icon && a.b.level === c.b.level && a.b.w === c.b.w && a.b.d === c.b.d);
 
 const FIRST_BATCH = 40;
 const BATCH = 60;
@@ -46,6 +47,7 @@ export const CollectionsTab = () => {
     const buildings = useBuildings();
     const findIt = useFindIt();
     const status = useStatus();
+    const plopping = usePlopping();
     const [editing, setEditing] = useState<Editing>("");
     const [q, setQ] = useState("");
     const [f, setF] = useState({ wOp: 0, wV: 0, dOp: 0, dV: 0, lOp: 0, lV: 0 });
@@ -64,6 +66,8 @@ export const CollectionsTab = () => {
         return indexed.filter(({ b, search }) =>
             matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) && search.includes(needle));
     }, [indexed, f, q]);
+    const shownIds = useMemo(() => shown.map(({ b }) => b.id), [shown]);
+    useEffect(() => { actions.setShown(shownIds); }, [shownIds]);
     const listKey = `${selected}\u0000${q}\u0000${JSON.stringify(f)}`;
     const [batch, setBatch] = useState({ key: listKey, limit: FIRST_BATCH });
     const limit = batch.key === listKey ? batch.limit : FIRST_BATCH;
@@ -171,7 +175,7 @@ export const CollectionsTab = () => {
                 <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable" controller={controller} onScroll={measure}>
                     <div className={styles.grid} ref={gridRef}>
                         {virtual && firstRow > 0 && visible.length > 0 && <div className={styles.gridSpacer} style={{ height: `${firstRow * view.pitchH}px` }} />}
-                        {visible.map(({ b, label }) => <Card key={b.id} b={b} label={label} />)}
+                        {visible.map(({ b, label }) => <Card key={b.id} b={b} label={label} on={b.id === plopping} />)}
                         {virtual && lastRow < rows && <div className={styles.gridSpacer} style={{ height: `${(rows - lastRow) * view.pitchH}px` }} />}
                         {current && shown.length === 0 && (
                             <div className={styles.empty}>{buildings.length === 0 ? "Empty collection. Add buildings with Shift+click in Find It." : "Nothing matches these filters."}</div>
@@ -198,6 +202,9 @@ export const CollectionsTab = () => {
                             <div className={styles.footerHint}>
                                 <span className={styles.kbd}>Shift</span>
                                 <span>+ click in Find It adds one building</span>
+                            </div>
+                            <div className={styles.footerHint}>
+                                <span title="While placing a building from this list, the Reshuffle key (T by default) switches to another random one from the buildings shown here.">Click places it · Reshuffle key: random one</span>
                             </div>
                         </div>
                         <button className={styles.textDanger} disabled={shown.length === 0}
