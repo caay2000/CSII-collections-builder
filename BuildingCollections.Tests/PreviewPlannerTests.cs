@@ -153,6 +153,29 @@ namespace BuildingCollections.Tests
             }
         }
 
+        [Theory]
+        [InlineData(0.5f)]
+        [InlineData(1f)]
+        public void On_a_curve_neighbours_overlap_at_the_facade_by_at_most_the_allowed_overlap(float overlap)
+        {
+            const double facadeDepth = 0.25;
+            const double tolerance = 0.06;
+            var plain = new List<BuildingInfo> { B("1x2", 1, 2), B("2x2", 2, 2), B("3x2", 3, 2), B("2x3", 2, 3), B("3x3", 3, 3) };
+            for (int seed = 1; seed <= 10; seed++)
+            {
+                var r = Plan(Sector(60, 90, 20), overlap, seed: seed, plain: plain);
+                foreach (var lot in r.Lots)
+                {
+                    var q = lot.Footprint(0);
+                    var ax = lot.Owner.Frame.AxisX * (overlap + tolerance);
+                    var ay = lot.Owner.Frame.AxisY * facadeDepth;
+                    var facade = new Quad(q.P[0] + ax, q.P[1] - ax, q.P[1] - ax + ay, q.P[0] + ax + ay);
+                    var intruder = r.Lots.FirstOrDefault(o => o != lot && Quad.Touch(o.Footprint(0), facade));
+                    Assert.True(intruder == null, $"seed {seed}: {intruder?.Building} enters the facade of {lot.Building} by more than {overlap} m");
+                }
+            }
+        }
+
         [Fact]
         public void Deep_buildings_of_one_street_leave_the_front_row_of_the_other_free()
         {

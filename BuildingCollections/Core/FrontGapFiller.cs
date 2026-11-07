@@ -10,7 +10,7 @@ namespace BuildingCollections.Core
         const float ShiftStep = 0.1f;
         const float MaxShift = 4f;
         const int MaxWidth = 2;
-        const double FacadeDepth = 1;
+        const double FacadeDepth = 0.25;
 
         readonly List<PlannedLot> lots;
         readonly IReadOnlyList<Quad> existing;
@@ -109,18 +109,21 @@ namespace BuildingCollections.Core
             var probe = new PlannedLot { Owner = block };
             var options = plain.Where(b => b.LotWidth == 1 && b.LotDepth <= block.Grid.Depth)
                 .OrderBy(b => b.LotDepth).ThenBy(_ => rng.Next()).ToList();
-            foreach (var b in options)
+            foreach (int wanted in new[] { 2, 1 })
             {
-                var box = new LotBox(minX, block.AreaY, minX + 1, block.AreaY + b.LotDepth);
-                foreach (float shift in Shifts())
+                foreach (var b in options)
                 {
-                    if (!FacadeClear(probe, box, shift, others) || !Clear(probe, box, shift))
+                    var box = new LotBox(minX, block.AreaY, minX + 1, block.AreaY + b.LotDepth);
+                    foreach (float shift in Shifts())
                     {
-                        continue;
-                    }
+                        if (!FacadeClear(probe, box, shift, others) || TouchedSides(probe, box, shift, others) < wanted || !Clear(probe, box, shift))
+                        {
+                            continue;
+                        }
 
-                    Add(block, b, box, shift, ", backs overlapping");
-                    return true;
+                        Add(block, b, box, shift, ", backs overlapping");
+                        return true;
+                    }
                 }
             }
 
@@ -136,6 +139,22 @@ namespace BuildingCollections.Core
             var right = q.P[1] - ax;
             var facade = new Quad(left, right, right + ay, left + ay);
             return !others.Any(o => Quad.Touch(o, facade));
+        }
+
+        int TouchedSides(PlannedLot probe, LotBox box, float shift, List<Quad> others)
+        {
+            var q = probe.Footprint(box, shift, 0);
+            var ax = probe.Owner.Frame.AxisX;
+            var ay = probe.Owner.Frame.AxisY * FacadeDepth;
+            bool Reaches(Pt edge, Pt outward, double reach)
+            {
+                var far = edge + outward * reach;
+                var strip = new Quad(edge, far, far + ay, edge + ay);
+                return others.Any(o => Quad.Touch(o, strip));
+            }
+
+            int SideScore(Pt edge, Pt outward) => !Reaches(edge, outward, CellFrame.Size) || Reaches(edge, outward, StrictOverlap) ? 1 : 0;
+            return SideScore(q.P[0], ax * -1) + SideScore(q.P[1], ax);
         }
 
         bool Clear(PlannedLot probe, LotBox box, float shift)
