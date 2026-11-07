@@ -4,6 +4,14 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.2.0
+- Polígono editable, como las áreas del juego: arrastra un vértice para moverlo (se sigue ajustando a la acera),
+  arrastra el punto del centro de un lado para añadir un vértice (en un lado que sigue un bordillo curvo, el punto está
+  sobre la curva) y haz clic derecho sobre un vértice para quitarlo (mínimo 3 con el polígono cerrado). Al soltar se
+  recalculan la selección y la vista previa; durante el arrastre solo se redibuja el contorno. Clic derecho durante el
+  arrastre lo cancela. Si el cambio deja el polígono sin nada que construir, se deshace. Mientras se dibuja, los
+  vértices ya puestos también se pueden arrastrar. Un clic lejos del polígono cerrado sigue empezando uno nuevo.
+
 ## 0.1.40
 - Calles curvas: el relleno de último recurso mide el solape en la fachada (una franja de 0,25 m junto a la acera) en
   lugar de en toda la primera fila, y busca primero una posición que toque a los dos vecinos y si no a uno. En una curva los fondos de edificios contiguos convergen de forma inevitable; ahora los

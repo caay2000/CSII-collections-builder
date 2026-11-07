@@ -187,6 +187,12 @@ namespace BuildingCollections.Systems
 
         protected override void OnStopRunning()
         {
+            if (dragging)
+            {
+                RestoreSnapshot();
+            }
+
+            ResetPress();
             preview.Clear();
             applyMode = ApplyMode.Clear;
             base.OnStopRunning();
@@ -205,6 +211,7 @@ namespace BuildingCollections.Systems
         public void ClearSelection()
         {
             reselect = null;
+            ResetPress();
             polygon.Clear();
             polyCurb.Clear();
             polyArc.Clear();
@@ -243,32 +250,37 @@ namespace BuildingCollections.Systems
                 hoverSnapped = false;
                 if (hasHover)
                 {
-                    hoverPos = hit.m_HitPosition;
+                    rawHover = hoverPos = hit.m_HitPosition;
                     if (mode == "polygon" && selection.Count == 0)
                     {
                         SnapHover();
                     }
                 }
 
+                if (!pressing)
+                {
+                    hoverHandle = hasHover ? HandleAt(rawHover) : PolygonHandle.None;
+                }
+
                 if (cancelAction.WasPressedThisFrame())
                 {
-                    if (mode == "polygon" && polygon.Count > 0 && selection.Count == 0)
+                    if (!PolygonEditable || !TryCancelOnPolygon())
                     {
-                        polygon.RemoveAt(polygon.Count - 1);
-                        polyCurb.RemoveAt(polyCurb.Count - 1);
-                        polyArc.RemoveAt(polyArc.Count - 1);
-                        Say(polygon.Count == 0 ? "Polygon cleared." : $"{polygon.Count} points.");
+                        Cancel();
                     }
-                    else
-                    {
-                        ClearSelection();
-                    }
+                }
+                else if (pressing)
+                {
+                    UpdatePress();
                 }
                 else if (applyAction.WasPressedThisFrame() && hasHover)
                 {
                     if (mode == "polygon")
                     {
-                        PolygonClick(hoverPos);
+                        if (!TryPressHandle())
+                        {
+                            PolygonClick(hoverPos);
+                        }
                     }
                     else
                     {
@@ -299,6 +311,21 @@ namespace BuildingCollections.Systems
 
             applyMode = ApplyMode.None;
             return inputDeps;
+        }
+
+        void Cancel()
+        {
+            if (mode == "polygon" && polygon.Count > 0 && selection.Count == 0)
+            {
+                polygon.RemoveAt(polygon.Count - 1);
+                polyCurb.RemoveAt(polyCurb.Count - 1);
+                polyArc.RemoveAt(polyArc.Count - 1);
+                Say(polygon.Count == 0 ? "Polygon cleared." : $"{polygon.Count} points.");
+            }
+            else
+            {
+                ClearSelection();
+            }
         }
 
         float CurrentOverlap()
