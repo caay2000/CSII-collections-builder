@@ -9,15 +9,15 @@ Collections Builder does two things: it lets you keep your own **collections** o
 
 **Collections**
 - A collection is a named list of buildings you pick yourself: a style, a theme, a street mood, anything.
-- Add buildings with Shift+click in Find It or in the game's asset menu, or add everything Find It is currently showing with one button.
-- Every collection is also a **Find It tag**, so you can browse it straight from Find It. You can also turn an existing Find It tag into a collection.
+- With the panel open and a collection selected, Shift+click a building in Find It or in the game's asset menu to add it, or add everything Find It is currently showing with one button.
+- With the "Tag collections in Find It" option on, every collection is also a **Find It tag**, so you can browse it straight from Find It.
 - Browse a collection as cards (thumbnail, name, lot size, level), search it, filter it, and remove buildings you no longer want.
 
 **Block builder**
 - Click a block surrounded by roads, or draw a polygon, and pick a collection.
 - The mod lays buildings from that collection along every sidewalk, facing the street, with corner buildings on the corners when the collection has them. It also handles curved streets.
 - Filter by lot width, depth and level, and set the density (how much of the street front gets built).
-- Preview the result as a transparent plan, press New combination for another random layout with the same rules, and Build when you like it. No zoning needed, and growables placed this way are protected from being condemned.
+- Preview the result as a transparent plan, press Reshuffle for another random layout with the same rules, and press Build when you like it. No zoning needed, and growables placed this way are protected from being condemned.
 - Optional trees in the leftover space inside the block.
 
 **Mixing two collections**
@@ -25,8 +25,8 @@ Collections Builder does two things: it lets you keep your own **collections** o
 
 **Overlap**
 - Street lengths are rarely a multiple of the 8 m lot grid, so a strict layout leaves gaps at street ends and along curves.
-- With "Overlap per joint" (0.5 to 2 m), neighbouring buildings may overlap each other by up to that much, so they always touch and the leftover goes to the corner instead of showing as gaps between buildings. Existing buildings are never touched.
-- Overlap needs the **Anarchy** mod: the builder turns Anarchy on while its tab is open and turns it back off when you leave. Set it to Off to build without overlap.
+- With "Overlap per joint" (0.5 to 2 m), neighbouring buildings may overlap each other by up to that much, so they always touch and the leftover goes to the corner instead of showing as gaps between buildings. Existing buildings are never removed or overlapped.
+- Overlap needs the **Anarchy** mod: the builder turns Anarchy on while its tab is open and turns it back off when you leave (only if it was the one that turned it on). Set it to Off to build without overlap.
 
 Find It is optional (it is only used for adding buildings and for tags). Early version (0.1.x): feedback and bug reports are welcome on GitHub.
 	</LongDescription>
