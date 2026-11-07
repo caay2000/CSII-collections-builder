@@ -1,9 +1,9 @@
 <Publish>
-	<!--Lo rellena el usuario con el número que da la primera publicación (Publish); lo necesitan NewVersion y Update.-->
+	<!--Filled in with the number returned by the first Publish; NewVersion and Update need it.-->
 	<ModId Value="" />
 	<DisplayName Value="Collections Builder" />
 	<ShortDescription Value="Group buildings into collections and fill a whole city block with them in one click." />
-	<!--Multilínea: sin espacios al principio de cada línea (lo pide el publicador).-->
+	<!--Multi-line: no leading spaces on each line (required by the publisher).-->
 	<LongDescription>
 Collections Builder lets you group buildings into named collections and then fill an entire city block with them in one click.
 
@@ -25,9 +25,13 @@ Early version (0.1.x): feedback and bug reports are welcome on GitHub.
 	<ModVersion Value="0.1.40" />
 	<GameVersion Value="1.*" />
 	<ChangeLog>
-First test release (private).
+0.1.40 - first test release (private).
+- With overlap enabled, neighbouring buildings along a sidewalk touch each other (overlapping at most the configured value) instead of leaving gaps between them; any leftover stays at the corner.
+- Curved streets: the short segments of a curve are filled, with the overlap measured at the facade, so buildings follow the curve without empty spots.
+- Narrow blocks: facing streets are both built, with backs allowed to overlap.
+- Empty street cells between buildings are filled as a last resort with a one-cell-wide building.
 	</ChangeLog>
 	<ExternalLink Type="github" Url="https://github.com/caay2000/CSII-collections-builder" />
-	<!--Public, Private o Unlisted. Privado mientras se prueba.-->
+	<!--Public, Private or Unlisted. Private while testing.-->
 	<AccessLevel Value="Private" />
 </Publish>
