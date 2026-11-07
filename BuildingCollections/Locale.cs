@@ -22,8 +22,8 @@ namespace BuildingCollections
                 { s.GetOptionGroupLocaleID(BuildingCollectionsSettings.Shortcuts), "Shortcuts" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.ActivateBinding)), "Toggle block builder tool" },
                 { s.GetBindingKeyLocaleID(BuildingCollectionsSettings.ActivateAction), "Toggle block builder tool" },
-                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.ReshuffleBinding)), "Reshuffle block preview" },
-                { s.GetBindingKeyLocaleID(BuildingCollectionsSettings.ReshuffleAction), "Reshuffle block preview" },
+                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.ReshuffleBinding)), "Reshuffle block preview / placed building" },
+                { s.GetBindingKeyLocaleID(BuildingCollectionsSettings.ReshuffleAction), "Reshuffle block preview / placed building" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.BuildBinding)), "Build block preview" },
                 { s.GetBindingKeyLocaleID(BuildingCollectionsSettings.BuildAction), "Build block preview" },
 

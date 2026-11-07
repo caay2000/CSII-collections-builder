@@ -15,7 +15,7 @@ namespace BuildingCollections.Systems
         PrefabSystem prefabSystem;
         List<string> shown = new List<string>();
         readonly Random plopRandom = new Random();
-        bool activatingPlop;
+        string plopName = string.Empty;
 
         void CreatePlopBindings()
         {
@@ -32,7 +32,18 @@ namespace BuildingCollections.Systems
             return active != null && active != builder && active.GetPrefab() is BuildingPrefab p ? p.name : string.Empty;
         }
 
-        void UpdatePlopping() => plopping.Update(ActivePrefabName());
+        void UpdatePlopping()
+        {
+            var active = ActivePrefabName();
+            if (!string.Equals(active, plopName, StringComparison.OrdinalIgnoreCase))
+            {
+                plopName = string.Empty;
+            }
+
+            plopping.Update(plopName);
+        }
+
+        bool IsOwnPlop(PrefabBase prefab) => prefab != null && string.Equals(prefab.name, plopName, StringComparison.OrdinalIgnoreCase);
 
         bool Plop(string name)
         {
@@ -42,17 +53,18 @@ namespace BuildingCollections.Systems
                 return false;
             }
 
-            wantTool = false;
-            activatingPlop = true;
-            try
+            var previous = plopName;
+            plopName = prefab.name;
+            if (!toolSystem.ActivatePrefabTool(prefab))
             {
-                toolSystem.ActivatePrefabTool(prefab);
-            }
-            finally
-            {
-                activatingPlop = false;
+                plopName = previous;
+                status.Update($"The game cannot place {prefab.name} with its placement tool.");
+                Mod.Log.Warn($"[plop] {prefab.name}: no tool took it (active tool {toolSystem.activeTool?.toolID ?? "-"}).");
+                return false;
             }
 
+            wantTool = false;
+            plopping.Update(plopName);
             Mod.Log.Info($"[plop] {prefab.name} from '{selected.value}'.");
             return true;
         }
@@ -61,7 +73,7 @@ namespace BuildingCollections.Systems
         {
             var current = ActivePrefabName();
             var collection = CollectionStore.Find(selected.value);
-            if (string.IsNullOrEmpty(current) || collection == null ||
+            if (string.IsNullOrEmpty(current) || !string.Equals(current, plopName, StringComparison.OrdinalIgnoreCase) || collection == null ||
                 !collection.Prefabs.Contains(current, StringComparer.OrdinalIgnoreCase))
             {
                 return false;
