@@ -11,7 +11,7 @@ namespace BuildingCollections.Core
         const float MaxShift = 4f;
         const int MaxWidth = 2;
         const double FacadeDepth = 0.25;
-        const double Reach = 16;
+        const double Reach = CellFrame.Size * MaxWidth + MaxShift;
 
         readonly List<PlannedLot> lots;
         readonly IReadOnlyList<Quad> existing;

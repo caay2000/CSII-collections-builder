@@ -16,7 +16,7 @@ namespace BuildingCollections.Core
         const float SlideStep = 0.25f;
         const float MaxSlide = 4f;
         const double InsideInset = 0.1;
-        const double Reach = 16;
+        const double Reach = CellSize + 2 * MaxSlide;
         public const float MaxSpreadSliver = SpreadStrategy.MaxSliver;
 
         readonly List<PlannedLot> lots;
