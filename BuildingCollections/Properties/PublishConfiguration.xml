@@ -27,9 +27,9 @@ Early version (0.1.x): feedback and bug reports are welcome on GitHub.
 	<ChangeLog>
 0.1.40 - first test release (private).
 - With overlap enabled, neighbouring buildings along a sidewalk touch each other (overlapping at most the configured value) instead of leaving gaps between them; any leftover stays at the corner.
-- Curved streets: the short segments of a curve are filled, with the overlap measured at the facade, so buildings follow the curve without empty spots.
+- Curved streets: the short segments of a curve are filled, with the overlap measured at the facade, so buildings follow the curve with far fewer empty spots (some very tight curves still leave gaps).
 - Narrow blocks: facing streets are both built, with backs allowed to overlap.
-- Empty street cells between buildings are filled as a last resort with a one-cell-wide building.
+- Empty facade cells between buildings are filled as a last resort with a one-cell-wide building.
 	</ChangeLog>
 	<ExternalLink Type="github" Url="https://github.com/caay2000/CSII-collections-builder" />
 	<!--Public, Private or Unlisted. Private while testing.-->
