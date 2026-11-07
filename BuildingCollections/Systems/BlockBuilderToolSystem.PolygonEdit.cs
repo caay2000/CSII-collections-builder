@@ -10,7 +10,7 @@ namespace BuildingCollections.Systems
     public partial class BlockBuilderToolSystem : ObjectToolBaseSystem
     {
         const float HandleRadius = 6f;
-        const float DragThreshold = 1.5f;
+        const float DragThreshold = 2.5f;
 
         float3 rawHover;
         PolygonHandle hoverHandle = PolygonHandle.None;
@@ -117,7 +117,7 @@ namespace BuildingCollections.Systems
             ResetPress();
             if (moved)
             {
-                FinishEdit("Point moved.");
+                FinishEdit(pressedHandle.Kind == HandleKind.Midpoint ? "Point added." : "Point moved.");
                 return;
             }
 
@@ -148,8 +148,7 @@ namespace BuildingCollections.Systems
 
             if (PolygonClosed && polygon.Count <= 3)
             {
-                Say("A polygon needs at least 3 points.", error: true);
-                return true;
+                return false;
             }
 
             int index = hoverHandle.Index;
@@ -176,7 +175,12 @@ namespace BuildingCollections.Systems
             }
 
             RestoreSnapshot();
-            SelectPolygon();
+            if (!SelectPolygon())
+            {
+                ClearSelection();
+                return;
+            }
+
             Say("That change leaves nothing to build, so it was undone.", error: true);
         }
 
