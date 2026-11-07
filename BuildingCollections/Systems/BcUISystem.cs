@@ -476,7 +476,7 @@ namespace BuildingCollections.Systems
         {
             try
             {
-                if (activatingPlop || !panelOpen.value || string.IsNullOrEmpty(selected.value) || !(prefab is BuildingPrefab))
+                if (IsOwnPlop(prefab) || !panelOpen.value || string.IsNullOrEmpty(selected.value) || !(prefab is BuildingPrefab))
                 {
                     return;
                 }

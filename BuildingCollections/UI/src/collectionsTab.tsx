@@ -16,7 +16,7 @@ export function matches(op: number, value: number, n: number): boolean {
 type Editing = "" | "new" | "rename" | "delete" | "removeAll";
 
 const Card = memo(({ b, label, on }: { b: BuildingDto; label: string; on: boolean }) => (
-    <div className={on ? `${styles.card} ${styles.cardOn}` : styles.card} title={`${b.name} · level ${b.level}. Click to place it.`}
+    <div className={on ? `${styles.card} ${styles.cardOn}` : styles.card} title={b.w > 0 ? `${b.name} · level ${b.level}. Click to place it.` : b.name}
         onClick={() => { if (b.w > 0) actions.plop(b.id); }}>
         <img className={styles.thumb} src={b.icon} />
         {b.w > 0 && <span className={styles.sizeTag}>{`${b.w}×${b.d}`}</span>}
