@@ -146,6 +146,7 @@ namespace BuildingCollections.Systems
             AddBinding(new TriggerBinding(Group, "clearSelection", () => Safe(builder.ClearSelection)));
             AddBinding(new TriggerBinding(Group, "build", () => Safe(() => IfToolActive(builder.RequestBuild))));
 
+            CreatePlopBindings();
             toolSystem.EventPrefabChanged += OnPrefabChanged;
 
             var saved = Mod.Settings?.SelectedCollection;
@@ -218,6 +219,7 @@ namespace BuildingCollections.Systems
                 lastTool = active;
 
                 toolActive.Update(toolSystem.activeTool == builder);
+                UpdatePlopping();
 
                 plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)},\"anarchyAvailable\":{Js(AnarchyBridge.Available)},\"filled\":{builder.FrontFilled},\"front\":{builder.FrontTotal},\"treeSets\":{treeSetsJson}}}");
 
@@ -379,6 +381,10 @@ namespace BuildingCollections.Systems
             {
                 Safe(GeneratePreview);
             }
+            else if (toolSystem.activeTool != builder)
+            {
+                Safe(() => TryPlopAnother());
+            }
         }
 
         public void BuildPreview()
@@ -470,7 +476,7 @@ namespace BuildingCollections.Systems
         {
             try
             {
-                if (!panelOpen.value || string.IsNullOrEmpty(selected.value) || !(prefab is BuildingPrefab))
+                if (activatingPlop || !panelOpen.value || string.IsNullOrEmpty(selected.value) || !(prefab is BuildingPrefab))
                 {
                     return;
                 }

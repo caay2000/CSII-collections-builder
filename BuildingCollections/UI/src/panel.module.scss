@@ -99,6 +99,8 @@ button:disabled { opacity: 0.4; }
 .grid { display: flex; flex-direction: row; flex-wrap: wrap; }
 .card { position: relative; width: 80rem; height: 128rem; margin: 0 6rem 6rem 0; padding: 6rem 4rem 8rem; display: flex; flex-direction: column; align-items: center; border-radius: 4rem; background-color: rgba(255, 255, 255, 0.08); }
 .card:hover { background-color: rgba(255, 255, 255, 0.15); }
+.card.cardOn { background-color: rgba(120, 190, 255, 0.28); box-shadow: inset 0 0 0 2rem rgba(120, 190, 255, 0.9); }
+.card:hover .remove { opacity: 1; }
 .thumb { width: 64rem; height: 64rem; flex: none; margin-bottom: 4rem; }
 .sizeTag { position: absolute; left: 5rem; top: 5rem; padding: 1rem 5rem; border-radius: 2rem; background-color: rgba(0, 0, 0, 0.55); font-size: 11rem; font-weight: bold; color: $title; }
 .pips { position: absolute; right: 5rem; top: 6rem; display: flex; flex-direction: row; }
@@ -107,7 +109,6 @@ button:disabled { opacity: 0.4; }
 .cardName { width: 100%; max-height: 42rem; overflow: hidden; font-size: 12rem; line-height: 14rem; font-weight: 600; text-align: center; color: #e6edf6; }
 .remove { position: absolute; right: 3rem; bottom: 3rem; width: 22rem; height: 22rem; padding: 5rem; border: none; border-radius: 3rem; background-color: rgba(200, 60, 50, 0.9); opacity: 0; }
 .remove { background-image: url("coui://buildingcollections/icons/remove.svg"); background-size: 12rem 12rem; background-position: center; background-repeat: no-repeat; }
-.card:hover .remove { opacity: 1; }
 .empty { padding: 12rem 4rem; color: $text2; font-size: 13rem; }
 
 .footer { display: flex; flex-direction: row; align-items: center; padding-top: 8rem; border-top: 1rem solid $line; margin-bottom: 0; }
