@@ -44,7 +44,7 @@ namespace BuildingCollections.Simulator
                 }
             }
 
-            var pts = blocks.SelectMany(b => b.Strip.Grid == null ? new Pt[0] : new[] { b.Frame.CellCenter(b.AreaX, b.AreaY) }).ToList();
+            var pts = blocks.Select(b => b.Frame.CellCenter(b.AreaX, b.AreaY)).ToList();
             double ox = -500, oy = -500, ex = pts.Max(p => p.X) + 500, ey = pts.Max(p => p.Y) + 500;
             var outline = new List<Pt> { new Pt(ox, oy), new Pt(ex, oy), new Pt(ex, ey), new Pt(ox, ey) };
             Console.WriteLine($"Bench: {scenarios.Count} game blocks, {blocks.Count} strips, {existing.Count} existing buildings.");
