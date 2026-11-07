@@ -84,7 +84,7 @@ namespace BuildingCollections.Systems
                         Path(PolygonSegment(polygon[i - 1], polyCurb[i - 1], polyArc[i - 1], polygon[i], polyCurb[i], polyArc[i]), 1f, polyCurb[i] >= 0 && polyCurb[i] == polyCurb[i - 1] ? snapColor : lineColor);
                     }
 
-                    if (hasHover && !dragging)
+                    if (hasHover && !pressing)
                     {
                         int last = polygon.Count - 1;
                         bool follows = hoverSnapped && polyCurb[last] >= 0 && polyCurb[last] == hoverHit.Curb;
