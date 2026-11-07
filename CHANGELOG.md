@@ -4,6 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.1
+- Vista previa más rápida con selecciones grandes: el relleno de huecos de fachada, el cierre de huecos en los extremos,
+  el enmascarado de la rejilla y el diagnóstico de acera solo comparan cada tira con los edificios de su entorno, en vez
+  de con todos los de la selección. En un banco de pruebas con las 42 manzanas del juego juntas (339 tiras) baja de
+  900-1500 ms a 270-360 ms, con exactamente los mismos edificios (simulador idéntico en 3 semillas).
+- El log desglosa los tiempos de la vista previa (densidad, huecos de extremo, huecos de fachada, cobertura y
+  diagnóstico por separado).
+- Simulador: modo `bench [manzanas] [semillas]` que junta manzanas reales del juego y mide la vista previa.
+
 ## 0.3.0
 - Colocar edificios desde la colección: un clic en la tarjeta de un edificio activa la herramienta de colocación del
   juego con ese edificio, sin pasar por Find It. La tarjeta del edificio que se está colocando queda resaltada.

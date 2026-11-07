@@ -13,6 +13,7 @@ namespace BuildingCollections.Core
         public LotFitTest Fits;
         public List<Quad> Beside;
         public float Base;
+        public Bounds Area;
 
         public float Missing => (float)CellFrame.Size - Gap;
 

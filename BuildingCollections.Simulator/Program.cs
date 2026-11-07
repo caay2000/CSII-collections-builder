@@ -10,6 +10,12 @@ namespace BuildingCollections.Simulator
     {
         public static int Main(string[] args)
         {
+            if (args.Length > 0 && args[0] == "bench")
+            {
+                Bench.Run(args.Length > 1 ? int.Parse(args[1]) : 10, args.Length > 2 ? int.Parse(args[2]) : 3);
+                return 0;
+            }
+
             string output = args.Length > 0 ? args[0] : "simulation.html";
             int seed = args.Length > 1 ? int.Parse(args[1]) : 7;
             var overlaps = new[] { FootprintMask.StrictOverlap, 0.5f, 1f, 2f };

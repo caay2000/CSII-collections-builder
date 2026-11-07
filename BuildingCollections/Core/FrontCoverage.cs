@@ -14,15 +14,25 @@ namespace BuildingCollections.Core
 
         public static IEnumerable<string> Uncovered(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks)
         {
-            var owned = lots.Select(p => (q: p.Footprint(0), strip: p.Owner?.Strip)).Concat(existing.Select(q => (q, strip: (LotStrip)null))).ToList();
-            var quads = owned.Select(o => o.q).ToList();
+            var all = lots.Select(p => (q: p.Footprint(0), strip: p.Owner?.Strip)).Concat(existing.Select(q => (q, strip: (LotStrip)null))).ToList();
             foreach (var st in blocks.Where(b => b.Strip != null).Select(b => b.Strip))
             {
+                var area = Reach(st);
+                var owned = all.Where(o => area.Overlaps(o.q)).ToList();
+                var quads = owned.Select(o => o.q).ToList();
                 var runs = UncoveredRuns(quads, st, u => Neighbour(owned, st, u));
                 yield return runs.Count == 0
                     ? $"  sidewalk side {st.SideIndex} segment {st.ChunkIndex + 1}/{st.ChunkCount} ({st.ChunkLength:F1} m): fully covered."
                     : $"  sidewalk side {st.SideIndex} segment {st.ChunkIndex + 1}/{st.ChunkCount} ({st.ChunkLength:F1} m): UNCOVERED {string.Join("; ", runs)}";
             }
+        }
+
+        const double ProbeReach = 12;
+
+        static Bounds Reach(LotStrip st)
+        {
+            double depth = st.Inward + 1.5;
+            return Bounds.Of(new[] { AlongSidewalk(st, -ProbeReach - 1, depth), AlongSidewalk(st, st.ChunkLength + ProbeReach + 1, depth) }).Grow(1);
         }
 
         static string Neighbour(List<(Quad q, LotStrip strip)> owned, LotStrip st, double u)
@@ -89,7 +99,7 @@ namespace BuildingCollections.Core
 
             string Probe(double from, int dir)
             {
-                for (double d = 0.25; d <= 12; d += 0.25)
+                for (double d = 0.25; d <= ProbeReach; d += 0.25)
                 {
                     if (Covered(quads, AlongSidewalk(st, from + dir * d, depth)))
                     {

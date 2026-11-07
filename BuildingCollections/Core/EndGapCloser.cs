@@ -16,6 +16,7 @@ namespace BuildingCollections.Core
         const float SlideStep = 0.25f;
         const float MaxSlide = 4f;
         const double InsideInset = 0.1;
+        const double Reach = 16;
         public const float MaxSpreadSliver = SpreadStrategy.MaxSliver;
 
         readonly List<PlannedLot> lots;
@@ -92,14 +93,18 @@ namespace BuildingCollections.Core
                 return 0;
             }
 
-            var otherQuads = lots.Where(p => !chain.Lots.Contains(p)).Select(p => p.Footprint(0)).ToList();
+            var area = Area(block, chain);
+            var nearExisting = existing.Where(area.Overlaps).ToList();
+            var nearThinned = thinned.Where(area.Contains).ToList();
+            var otherQuads = lots.Where(p => !chain.Lots.Contains(p)).Select(p => p.Footprint(0)).Where(area.Overlaps).ToList();
             var gap = new EndGap
             {
                 Block = block,
                 Chain = chain,
                 Dir = dir,
-                Fits = new LotFitTest(existing, thinned, outline, otherQuads, dir),
-                Beside = Beside(chain.End, otherQuads, dir),
+                Fits = new LotFitTest(nearExisting, nearThinned, outline, otherQuads, dir),
+                Beside = Beside(chain.End, otherQuads, nearExisting, dir),
+                Area = area,
             };
             gap.Gap = Measure(gap);
             if (gap.Gap < MinGap || gap.Gap >= CellSize - Step - 1e-3f)
@@ -129,9 +134,12 @@ namespace BuildingCollections.Core
 
             int dir = gap.Dir;
             float room = gap.Block.Strip == null ? 0 : (float)Math.Min(MaxSlide, EndSlack(gap.Block.Strip, -dir));
-            var rest = lots.Where(p => p != anchor && !gap.Chain.Lots.Contains(p)).Select(p => p.Footprint(0)).ToList();
-            var back = new LotFitTest(existing, thinned, outline, rest, -dir);
-            var besideAnchor = Beside(anchor, rest, -dir);
+            var area = gap.Area.Union(anchor.Footprint(0)).Grow(Reach);
+            var nearExisting = existing.Where(area.Overlaps).ToList();
+            var nearThinned = thinned.Where(area.Contains).ToList();
+            var rest = lots.Where(p => p != anchor && !gap.Chain.Lots.Contains(p)).Select(p => p.Footprint(0)).Where(area.Overlaps).ToList();
+            var back = new LotFitTest(nearExisting, nearThinned, outline, rest, -dir);
+            var besideAnchor = Beside(anchor, rest, nearExisting, -dir);
             for (float slide = SlideStep; slide <= room + 1e-3f; slide += SlideStep)
             {
                 float baseShift = -dir * slide;
@@ -140,7 +148,7 @@ namespace BuildingCollections.Core
                     return false;
                 }
 
-                var slid = Slid(gap, anchor, rest, baseShift);
+                var slid = Slid(gap, anchor, rest, nearExisting, nearThinned, baseShift);
                 if (slid.Gap >= CellSize - Step - 1e-3f)
                 {
                     return false;
@@ -173,7 +181,7 @@ namespace BuildingCollections.Core
         bool CanSlide(PlannedLot anchor, float shift, LotFitTest back, List<Quad> beside) =>
             back.Fits(anchor, anchor.Box, shift, StrictOverlap, beside) && Inside(anchor, shift) && !HitsAFront(anchor, shift);
 
-        EndGap Slid(EndGap gap, PlannedLot anchor, List<Quad> rest, float baseShift)
+        EndGap Slid(EndGap gap, PlannedLot anchor, List<Quad> rest, List<Quad> nearExisting, List<Pt> nearThinned, float baseShift)
         {
             var others = rest.Append(anchor.Footprint(anchor.Box, baseShift, 0)).ToList();
             var slid = new EndGap
@@ -182,8 +190,9 @@ namespace BuildingCollections.Core
                 Chain = gap.Chain,
                 Dir = gap.Dir,
                 Base = baseShift,
-                Fits = new LotFitTest(existing, thinned, outline, others, gap.Dir),
-                Beside = Beside(gap.Chain.End, others, gap.Dir),
+                Fits = new LotFitTest(nearExisting, nearThinned, outline, others, gap.Dir),
+                Beside = Beside(gap.Chain.End, others, nearExisting, gap.Dir),
+                Area = gap.Area,
             };
             slid.Gap = Measure(slid);
             return slid;
@@ -192,17 +201,29 @@ namespace BuildingCollections.Core
         bool HitsAFront(PlannedLot lot, float shift)
         {
             var q = lot.Footprint(lot.Box, shift, StrictOverlap);
-            return lots.Any(p => p != lot && p.Owner != lot.Owner && Quad.Touch(p.Footprint(p.MinX, p.MinY, p.MaxX, p.MinY + 1, p.Shift, StrictOverlap), q));
+            var area = Bounds.Of(q).Grow(1);
+            return lots.Any(p => p != lot && area.Overlaps(p.Footprint(0)) && p.Owner != lot.Owner && Quad.Touch(p.Footprint(p.MinX, p.MinY, p.MaxX, p.MinY + 1, p.Shift, StrictOverlap), q));
         }
 
         bool Inside(PlannedLot lot, float shift) => lot.Footprint(lot.Box, shift, InsideInset).P.All(c => Polygon.Contains(outline, c));
 
-        List<Quad> Beside(PlannedLot end, List<Quad> otherQuads, int dir)
+        static Bounds Area(PlanBlock block, EndChain chain)
+        {
+            var area = block.Grid == null ? Bounds.Of(chain.End.Footprint(0)) : Bounds.Of(block);
+            foreach (var p in chain.Lots)
+            {
+                area = area.Union(p.Footprint(0));
+            }
+
+            return area.Grow(Reach);
+        }
+
+        List<Quad> Beside(PlannedLot end, List<Quad> otherQuads, List<Quad> nearExisting, int dir)
         {
             var axis = end.Owner.Frame.AxisX;
             var endQuad = end.Footprint(end.Box, 0, StrictOverlap);
             float front = Proj(end.Footprint(end.Box, 0, 0), axis, dir, max: true);
-            return existing.Concat(otherQuads)
+            return nearExisting.Concat(otherQuads)
                 .Where(q => Quad.Touch(q, endQuad) && Proj(q, axis, dir, max: false) < front - BesideMargin).ToList();
         }
 

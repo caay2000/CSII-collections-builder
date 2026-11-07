@@ -11,6 +11,7 @@ namespace BuildingCollections.Core
         const float MaxShift = 4f;
         const int MaxWidth = 2;
         const double FacadeDepth = 0.25;
+        const double Reach = 16;
 
         readonly List<PlannedLot> lots;
         readonly IReadOnlyList<Quad> existing;
@@ -20,6 +21,9 @@ namespace BuildingCollections.Core
         readonly float overlap;
         readonly Random rng;
         readonly List<string> log;
+        List<PlannedLot> near = new List<PlannedLot>();
+        List<Quad> nearExisting = new List<Quad>();
+        List<Pt> nearThinned = new List<Pt>();
 
         public FrontGapFiller(List<PlannedLot> lots, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> thinned, IReadOnlyList<Pt> outline,
             IReadOnlyList<BuildingInfo> plain, float overlap, Random rng, List<string> log)
@@ -41,6 +45,10 @@ namespace BuildingCollections.Core
                 return 0;
             }
 
+            var area = Bounds.Of(block).Grow(Reach);
+            near = lots.Where(p => area.Overlaps(p.Footprint(0))).ToList();
+            nearExisting = existing.Where(area.Overlaps).ToList();
+            nearThinned = thinned.Where(area.Contains).ToList();
             int added = 0;
             for (int x = 0; x < block.Grid.Width; x++)
             {
@@ -59,7 +67,7 @@ namespace BuildingCollections.Core
         bool Covered(PlanBlock block, int minX)
         {
             var center = block.Frame.CellCenter(minX, block.AreaY);
-            return lots.Any(p => p.Footprint(0).Contains(center)) || existing.Any(q => q.Contains(center));
+            return near.Any(p => p.Footprint(0).Contains(center)) || nearExisting.Any(q => q.Contains(center));
         }
 
         IEnumerable<float> Shifts()
@@ -74,9 +82,9 @@ namespace BuildingCollections.Core
 
         bool TryInsert(PlanBlock block, int minX)
         {
-            var others = lots.Select(p => p.Footprint(0)).ToList();
-            var ahead = new LotFitTest(existing, thinned, outline, others, +1);
-            var behind = new LotFitTest(existing, thinned, outline, others, -1);
+            var others = near.Select(p => p.Footprint(0)).ToList();
+            var ahead = new LotFitTest(nearExisting, nearThinned, outline, others, +1);
+            var behind = new LotFitTest(nearExisting, nearThinned, outline, others, -1);
             var probe = new PlannedLot { Owner = block };
             var options = plain.Where(b => b.LotWidth <= MaxWidth && b.LotDepth <= block.Grid.Depth)
                 .OrderByDescending(b => b.LotWidth).ThenByDescending(b => b.LotDepth).ThenBy(_ => rng.Next()).ToList();
@@ -105,7 +113,7 @@ namespace BuildingCollections.Core
                 return false;
             }
 
-            var others = lots.Select(p => p.Footprint(0)).Concat(existing).ToList();
+            var others = near.Select(p => p.Footprint(0)).Concat(nearExisting).ToList();
             var probe = new PlannedLot { Owner = block };
             var options = plain.Where(b => b.LotWidth == 1 && b.LotDepth <= block.Grid.Depth)
                 .OrderBy(b => b.LotDepth).ThenBy(_ => rng.Next()).ToList();
@@ -161,9 +169,9 @@ namespace BuildingCollections.Core
         {
             var q = probe.Footprint(box, shift, StrictOverlap);
             var loose = probe.Footprint(box, shift, overlap + StrictOverlap);
-            return !existing.Any(e => Quad.Touch(e, q))
-                && !lots.Any(p => !SameSide(p.Owner, probe.Owner) && Quad.Touch(p.Footprint(p.MinX, p.MinY, p.MaxX, p.MinY + 1, p.Shift, 0), loose))
-                && !thinned.Any(q.Contains)
+            return !nearExisting.Any(e => Quad.Touch(e, q))
+                && !near.Any(p => !SameSide(p.Owner, probe.Owner) && Quad.Touch(p.Footprint(p.MinX, p.MinY, p.MaxX, p.MinY + 1, p.Shift, 0), loose))
+                && !nearThinned.Any(q.Contains)
                 && q.P.Select((c, i) => (c, n: q.P[(i + 1) % q.P.Length])).All(e => Polygon.Contains(outline, e.c) && Polygon.Contains(outline, (e.c + e.n) * 0.5));
         }
 
@@ -172,7 +180,9 @@ namespace BuildingCollections.Core
 
         void Add(PlanBlock block, BuildingInfo b, LotBox box, float shift, string note)
         {
-            lots.Add(new PlannedLot { Building = b, Owner = block, MinX = box.MinX, MinY = box.MinY, MaxX = box.MaxX, MaxY = box.MaxY, Shift = shift });
+            var lot = new PlannedLot { Building = b, Owner = block, MinX = box.MinX, MinY = box.MinY, MaxX = box.MaxX, MaxY = box.MaxY, Shift = shift };
+            lots.Add(lot);
+            near.Add(lot);
             log.Add($"  {block.Label}: uncovered cell {box.MinX - block.AreaX} filled with {b.PrefabName} ({b.LotWidth}x{b.LotDepth}), shifted {shift:F1} m{note}.");
         }
     }

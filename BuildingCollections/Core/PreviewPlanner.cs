@@ -33,11 +33,15 @@ namespace BuildingCollections.Core
             Fill(cornerPlans);
             Lap($"corners and fill ({grids.Count} strips)");
             ApplyDensity();
+            Lap("density");
             CloseEndGaps();
+            Lap("end gaps");
             FillFrontGaps();
-            Lap("density and gaps");
-            Measure();
-            Lap("frontage and diagnostics");
+            Lap("front gaps");
+            MeasureFrontage();
+            Lap("frontage");
+            Diagnose();
+            Lap("diagnostics");
             return result;
         }
 
@@ -49,10 +53,16 @@ namespace BuildingCollections.Core
 
         bool WedgesMayOverlap => request.Overlap > FootprintMask.StrictOverlap;
 
-        List<Quad> Others(PlanBlock block, bool backToBack = false) => footprints
-            .Where(f => f.owner != block && !(WedgesMayOverlap && VirtualLots.BacksMayOverlap(f.owner.Strip, block.Strip)))
-            .Select(f => backToBack && BackToBack(f.owner, block) ? f.front : f.quad)
-            .ToList();
+        const double MaskReach = 4;
+
+        List<Quad> Others(PlanBlock block, bool backToBack = false)
+        {
+            var area = Bounds.Of(block).Grow(MaskReach);
+            return footprints
+                .Where(f => f.owner != block && area.Overlaps(f.quad) && !(WedgesMayOverlap && VirtualLots.BacksMayOverlap(f.owner.Strip, block.Strip)))
+                .Select(f => backToBack && BackToBack(f.owner, block) ? f.front : f.quad)
+                .ToList();
+        }
 
         const double BackToBackCos = -0.5;
 
@@ -95,10 +105,14 @@ namespace BuildingCollections.Core
             return rows;
         }
 
-        List<Quad> OtherFronts(PlanBlock block, bool backToBack = false) => fronts
-            .Where(f => f.owner != block)
-            .Select(f => SameSide(f.owner, block) || (backToBack && BackToBack(f.owner, block)) ? f.front : f.deep)
-            .ToList();
+        List<Quad> OtherFronts(PlanBlock block, bool backToBack = false)
+        {
+            var area = Bounds.Of(block).Grow(MaskReach);
+            return fronts
+                .Where(f => f.owner != block && area.Overlaps(f.deep))
+                .Select(f => SameSide(f.owner, block) || (backToBack && BackToBack(f.owner, block)) ? f.front : f.deep)
+                .ToList();
+        }
 
         static bool SameSide(PlanBlock a, PlanBlock b) =>
             a.Strip != null && b.Strip != null && a.Strip.BlockIndex == b.Strip.BlockIndex && a.Strip.SideIndex == b.Strip.SideIndex;
@@ -361,10 +375,14 @@ namespace BuildingCollections.Core
             }
         }
 
-        void Measure()
+        void MeasureFrontage()
         {
             result.FrontFilled = FrontCoverage.CountFilled(result.Lots, result.FrontCells);
             result.Log.Add($"  frontage: {result.FrontFilled} of {result.FrontCells.Count} street cells filled.");
+        }
+
+        void Diagnose()
+        {
             try
             {
                 result.Log.AddRange(FrontCoverage.Uncovered(result.Lots, request.Existing, request.Blocks));
