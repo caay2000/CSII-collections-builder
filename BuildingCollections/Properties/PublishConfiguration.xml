@@ -1,6 +1,6 @@
 <Publish>
 	<!--Filled in with the number returned by the first Publish; NewVersion and Update need it.-->
-	<ModId Value="" />
+	<ModId Value="166507" />
 	<DisplayName Value="Collections Builder" />
 	<ShortDescription Value="Group buildings into collections and fill a whole city block with them in one click." />
 	<!--Multi-line: no leading spaces on each line (required by the publisher).-->
