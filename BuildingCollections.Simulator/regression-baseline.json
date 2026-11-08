@@ -34,9 +34,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "80 \u00D7 88 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 0
     },
     {
       "Scenario": "80 \u00D7 88 m",
@@ -45,9 +43,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "80 \u00D7 88 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "80 \u00D7 88 m",
@@ -56,9 +52,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "80 \u00D7 88 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "80 \u00D7 88 m",
@@ -67,9 +61,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "80 \u00D7 88 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "96 \u00D7 64 m",
@@ -78,9 +70,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "96 \u00D7 64 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 0
     },
     {
       "Scenario": "96 \u00D7 64 m",
@@ -89,9 +79,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "96 \u00D7 64 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "96 \u00D7 64 m",
@@ -100,9 +88,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "96 \u00D7 64 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "96 \u00D7 64 m",
@@ -111,9 +97,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "96 \u00D7 64 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "160 \u00D7 88 m",
@@ -122,9 +106,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "160 \u00D7 88 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 0
     },
     {
       "Scenario": "160 \u00D7 88 m",
@@ -133,9 +115,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "160 \u00D7 88 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "160 \u00D7 88 m",
@@ -144,9 +124,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "160 \u00D7 88 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "160 \u00D7 88 m",
@@ -155,9 +133,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "160 \u00D7 88 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "123 \u00D7 76 m",
@@ -166,9 +142,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 96,
-      "EmptyCells": 48,
-      "Key": "123 \u00D7 76 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "123 \u00D7 76 m",
@@ -177,9 +151,7 @@
       "GapMeters": 96,
       "MaxGap": 4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 72,
-      "Key": "123 \u00D7 76 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 72
     },
     {
       "Scenario": "123 \u00D7 76 m",
@@ -188,9 +160,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 28,
-      "Key": "123 \u00D7 76 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 28
     },
     {
       "Scenario": "123 \u00D7 76 m",
@@ -199,9 +169,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 28,
-      "Key": "123 \u00D7 76 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 28
     },
     {
       "Scenario": "101 \u00D7 67 m",
@@ -210,9 +178,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 96,
-      "EmptyCells": 97,
-      "Key": "101 \u00D7 67 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 97
     },
     {
       "Scenario": "101 \u00D7 67 m",
@@ -221,9 +187,7 @@
       "GapMeters": 184,
       "MaxGap": 5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 8,
-      "Key": "101 \u00D7 67 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 8
     },
     {
       "Scenario": "101 \u00D7 67 m",
@@ -232,9 +196,7 @@
       "GapMeters": 99,
       "MaxGap": 3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "101 \u00D7 67 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "101 \u00D7 67 m",
@@ -243,9 +205,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "101 \u00D7 67 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "31 \u00D7 76 m",
@@ -254,9 +214,7 @@
       "GapMeters": 528,
       "MaxGap": 7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "31 \u00D7 76 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "31 \u00D7 76 m",
@@ -265,9 +223,7 @@
       "GapMeters": 192,
       "MaxGap": 4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "31 \u00D7 76 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "31 \u00D7 76 m",
@@ -276,9 +232,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "31 \u00D7 76 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "31 \u00D7 76 m",
@@ -287,9 +241,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "31 \u00D7 76 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "35.8 \u00D7 35.8 m",
@@ -298,9 +250,7 @@
       "GapMeters": 355.2,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "35.8 \u00D7 35.8 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "35.8 \u00D7 35.8 m",
@@ -309,9 +259,7 @@
       "GapMeters": 355.2,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "35.8 \u00D7 35.8 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 96
     },
     {
       "Scenario": "35.8 \u00D7 35.8 m",
@@ -320,9 +268,7 @@
       "GapMeters": 355.2,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "35.8 \u00D7 35.8 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 96
     },
     {
       "Scenario": "35.8 \u00D7 35.8 m",
@@ -331,9 +277,7 @@
       "GapMeters": 177.6,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "35.8 \u00D7 35.8 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "35.8 \u00D7 88.6 m",
@@ -342,9 +286,7 @@
       "GapMeters": 177.6,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "35.8 \u00D7 88.6 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "35.8 \u00D7 88.6 m",
@@ -353,9 +295,7 @@
       "GapMeters": 177.6,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "35.8 \u00D7 88.6 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "35.8 \u00D7 88.6 m",
@@ -364,9 +304,7 @@
       "GapMeters": 177.6,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "35.8 \u00D7 88.6 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "35.8 \u00D7 88.6 m",
@@ -375,9 +313,7 @@
       "GapMeters": 177.6,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "35.8 \u00D7 88.6 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "67.3 \u00D7 52.1 m",
@@ -386,9 +322,7 @@
       "GapMeters": 73.8,
       "MaxGap": 4.1,
       "GapsBetweenBuildings": 78,
-      "EmptyCells": 48,
-      "Key": "67.3 \u00D7 52.1 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "67.3 \u00D7 52.1 m",
@@ -397,9 +331,7 @@
       "GapMeters": 355.2,
       "MaxGap": 4.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "67.3 \u00D7 52.1 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "67.3 \u00D7 52.1 m",
@@ -408,9 +340,7 @@
       "GapMeters": 166.2,
       "MaxGap": 4.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 18,
-      "Key": "67.3 \u00D7 52.1 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 18
     },
     {
       "Scenario": "67.3 \u00D7 52.1 m",
@@ -419,9 +349,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "67.3 \u00D7 52.1 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "99.9 \u00D7 35.8 m",
@@ -430,9 +358,7 @@
       "GapMeters": 177.6,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 48,
-      "EmptyCells": 96,
-      "Key": "99.9 \u00D7 35.8 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "99.9 \u00D7 35.8 m",
@@ -441,9 +367,7 @@
       "GapMeters": 177.6,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "99.9 \u00D7 35.8 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 96
     },
     {
       "Scenario": "99.9 \u00D7 35.8 m",
@@ -452,9 +376,7 @@
       "GapMeters": 177.6,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 55,
-      "Key": "99.9 \u00D7 35.8 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 55
     },
     {
       "Scenario": "99.9 \u00D7 35.8 m",
@@ -463,9 +385,7 @@
       "GapMeters": 88.8,
       "MaxGap": 3.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 31,
-      "Key": "99.9 \u00D7 35.8 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 31
     },
     {
       "Scenario": "diagonal at 10\u00B0 (80\u00B0 corner)",
@@ -474,9 +394,7 @@
       "GapMeters": 1041.6,
       "MaxGap": 24,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 120,
-      "Key": "diagonal at 10\u00B0 (80\u00B0 corner) @ 0.05",
-      "Strict": true
+      "EmptyCells": 120
     },
     {
       "Scenario": "diagonal at 10\u00B0 (80\u00B0 corner)",
@@ -485,9 +403,7 @@
       "GapMeters": 752.4,
       "MaxGap": 24,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 84,
-      "Key": "diagonal at 10\u00B0 (80\u00B0 corner) @ 0.5",
-      "Strict": false
+      "EmptyCells": 84
     },
     {
       "Scenario": "diagonal at 10\u00B0 (80\u00B0 corner)",
@@ -496,9 +412,7 @@
       "GapMeters": 489.6,
       "MaxGap": 16.5,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 48,
-      "Key": "diagonal at 10\u00B0 (80\u00B0 corner) @ 1.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "diagonal at 10\u00B0 (80\u00B0 corner)",
@@ -507,9 +421,7 @@
       "GapMeters": 336,
       "MaxGap": 9.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "diagonal at 10\u00B0 (80\u00B0 corner) @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "diagonal at 25\u00B0 (65\u00B0 corner)",
@@ -518,9 +430,7 @@
       "GapMeters": 151.2,
       "MaxGap": 6.3,
       "GapsBetweenBuildings": 26,
-      "EmptyCells": 96,
-      "Key": "diagonal at 25\u00B0 (65\u00B0 corner) @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "diagonal at 25\u00B0 (65\u00B0 corner)",
@@ -529,9 +439,7 @@
       "GapMeters": 86.4,
       "MaxGap": 5.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "diagonal at 25\u00B0 (65\u00B0 corner) @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "diagonal at 25\u00B0 (65\u00B0 corner)",
@@ -540,9 +448,7 @@
       "GapMeters": 115.2,
       "MaxGap": 5.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "diagonal at 25\u00B0 (65\u00B0 corner) @ 1.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "diagonal at 25\u00B0 (65\u00B0 corner)",
@@ -551,9 +457,7 @@
       "GapMeters": 74.4,
       "MaxGap": 3.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "diagonal at 25\u00B0 (65\u00B0 corner) @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
@@ -562,9 +466,7 @@
       "GapMeters": 48,
       "MaxGap": 2,
       "GapsBetweenBuildings": 8,
-      "EmptyCells": 28,
-      "Key": "diagonal at 40\u00B0 (50\u00B0 corner) @ 0.05",
-      "Strict": true
+      "EmptyCells": 28
     },
     {
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
@@ -573,9 +475,7 @@
       "GapMeters": 48,
       "MaxGap": 2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "diagonal at 40\u00B0 (50\u00B0 corner) @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
@@ -584,9 +484,7 @@
       "GapMeters": 48,
       "MaxGap": 2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "diagonal at 40\u00B0 (50\u00B0 corner) @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
@@ -595,9 +493,7 @@
       "GapMeters": 48,
       "MaxGap": 2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "diagonal at 40\u00B0 (50\u00B0 corner) @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
@@ -606,9 +502,7 @@
       "GapMeters": 292.8,
       "MaxGap": 12.2,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 109,
-      "Key": "diagonal at 55\u00B0 (125\u00B0 corner) @ 0.05",
-      "Strict": true
+      "EmptyCells": 109
     },
     {
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
@@ -617,9 +511,7 @@
       "GapMeters": 103.2,
       "MaxGap": 4.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "diagonal at 55\u00B0 (125\u00B0 corner) @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
@@ -628,9 +520,7 @@
       "GapMeters": 103.2,
       "MaxGap": 4.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "diagonal at 55\u00B0 (125\u00B0 corner) @ 1.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
@@ -639,9 +529,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "diagonal at 55\u00B0 (125\u00B0 corner) @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "rounded corner R 15 m",
@@ -650,9 +538,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 72,
-      "EmptyCells": 123,
-      "Key": "rounded corner R 15 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 123
     },
     {
       "Scenario": "rounded corner R 15 m",
@@ -661,9 +547,7 @@
       "GapMeters": 11.7,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 6,
-      "Key": "rounded corner R 15 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 6
     },
     {
       "Scenario": "rounded corner R 15 m",
@@ -672,9 +556,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 3,
-      "Key": "rounded corner R 15 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 3
     },
     {
       "Scenario": "rounded corner R 15 m",
@@ -683,9 +565,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 3,
-      "Key": "rounded corner R 15 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 3
     },
     {
       "Scenario": "rounded corner R 40 m",
@@ -694,9 +574,7 @@
       "GapMeters": 451.2,
       "MaxGap": 5,
       "GapsBetweenBuildings": 96,
-      "EmptyCells": 147,
-      "Key": "rounded corner R 40 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 147
     },
     {
       "Scenario": "rounded corner R 40 m",
@@ -705,9 +583,7 @@
       "GapMeters": 3.9,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 4,
-      "Key": "rounded corner R 40 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 4
     },
     {
       "Scenario": "rounded corner R 40 m",
@@ -716,9 +592,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 6,
-      "Key": "rounded corner R 40 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 6
     },
     {
       "Scenario": "rounded corner R 40 m",
@@ -727,9 +601,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 6,
-      "Key": "rounded corner R 40 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 6
     },
     {
       "Scenario": "rounded corner R 80 m",
@@ -738,9 +610,7 @@
       "GapMeters": 778.2,
       "MaxGap": 5.7,
       "GapsBetweenBuildings": 120,
-      "EmptyCells": 167,
-      "Key": "rounded corner R 80 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 167
     },
     {
       "Scenario": "rounded corner R 80 m",
@@ -749,9 +619,7 @@
       "GapMeters": 50.7,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "rounded corner R 80 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "rounded corner R 80 m",
@@ -760,9 +628,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "rounded corner R 80 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "rounded corner R 80 m",
@@ -771,9 +637,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "rounded corner R 80 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
@@ -782,9 +646,7 @@
       "GapMeters": 1080,
       "MaxGap": 18.3,
       "GapsBetweenBuildings": 48,
-      "EmptyCells": 120,
-      "Key": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like) @ 0.05",
-      "Strict": true
+      "EmptyCells": 120
     },
     {
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
@@ -793,9 +655,7 @@
       "GapMeters": 249.3,
       "MaxGap": 4.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 9,
-      "Key": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like) @ 0.5",
-      "Strict": false
+      "EmptyCells": 9
     },
     {
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
@@ -804,9 +664,7 @@
       "GapMeters": 187.2,
       "MaxGap": 3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like) @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
@@ -815,9 +673,7 @@
       "GapMeters": 232.8,
       "MaxGap": 3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like) @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "curve towards the block R 60 m, 90\u00B0",
@@ -826,9 +682,7 @@
       "GapMeters": 1405.2,
       "MaxGap": 10.2,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 168,
-      "Key": "curve towards the block R 60 m, 90\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 168
     },
     {
       "Scenario": "curve towards the block R 60 m, 90\u00B0",
@@ -837,9 +691,7 @@
       "GapMeters": 292.8,
       "MaxGap": 8.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "curve towards the block R 60 m, 90\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "curve towards the block R 60 m, 90\u00B0",
@@ -848,9 +700,7 @@
       "GapMeters": 96,
       "MaxGap": 2.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "curve towards the block R 60 m, 90\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "curve towards the block R 60 m, 90\u00B0",
@@ -859,9 +709,7 @@
       "GapMeters": 177.6,
       "MaxGap": 5.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "curve towards the block R 60 m, 90\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "gentle S (amplitude 10 m, wavelength 200 m)",
@@ -870,9 +718,7 @@
       "GapMeters": 710.4,
       "MaxGap": 8.1,
       "GapsBetweenBuildings": 173,
-      "EmptyCells": 132,
-      "Key": "gentle S (amplitude 10 m, wavelength 200 m) @ 0.05",
-      "Strict": true
+      "EmptyCells": 132
     },
     {
       "Scenario": "gentle S (amplitude 10 m, wavelength 200 m)",
@@ -881,9 +727,7 @@
       "GapMeters": 50.8,
       "MaxGap": 2.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 49,
-      "Key": "gentle S (amplitude 10 m, wavelength 200 m) @ 0.5",
-      "Strict": false
+      "EmptyCells": 49
     },
     {
       "Scenario": "gentle S (amplitude 10 m, wavelength 200 m)",
@@ -892,9 +736,7 @@
       "GapMeters": 38.6,
       "MaxGap": 4.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 32,
-      "Key": "gentle S (amplitude 10 m, wavelength 200 m) @ 1.0",
-      "Strict": false
+      "EmptyCells": 32
     },
     {
       "Scenario": "gentle S (amplitude 10 m, wavelength 200 m)",
@@ -903,9 +745,7 @@
       "GapMeters": 33.6,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 27,
-      "Key": "gentle S (amplitude 10 m, wavelength 200 m) @ 2.0",
-      "Strict": false
+      "EmptyCells": 27
     },
     {
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
@@ -914,9 +754,7 @@
       "GapMeters": 1218,
       "MaxGap": 10.9,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 144,
-      "Key": "marked S (amplitude 25 m, wavelength 200 m) @ 0.05",
-      "Strict": true
+      "EmptyCells": 144
     },
     {
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
@@ -925,9 +763,7 @@
       "GapMeters": 362.4,
       "MaxGap": 10.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "marked S (amplitude 25 m, wavelength 200 m) @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
@@ -936,9 +772,7 @@
       "GapMeters": 330.9,
       "MaxGap": 10.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "marked S (amplitude 25 m, wavelength 200 m) @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
@@ -947,9 +781,7 @@
       "GapMeters": 314.4,
       "MaxGap": 10.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "marked S (amplitude 25 m, wavelength 200 m) @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "wavy (amplitude 15 m, wavelength 100 m)",
@@ -958,9 +790,7 @@
       "GapMeters": 1272.2,
       "MaxGap": 8,
       "GapsBetweenBuildings": 39,
-      "EmptyCells": 221,
-      "Key": "wavy (amplitude 15 m, wavelength 100 m) @ 0.05",
-      "Strict": true
+      "EmptyCells": 221
     },
     {
       "Scenario": "wavy (amplitude 15 m, wavelength 100 m)",
@@ -969,9 +799,7 @@
       "GapMeters": 127.2,
       "MaxGap": 3.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "wavy (amplitude 15 m, wavelength 100 m) @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "wavy (amplitude 15 m, wavelength 100 m)",
@@ -980,9 +808,7 @@
       "GapMeters": 99.2,
       "MaxGap": 3.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "wavy (amplitude 15 m, wavelength 100 m) @ 1.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "wavy (amplitude 15 m, wavelength 100 m)",
@@ -991,9 +817,7 @@
       "GapMeters": 79.2,
       "MaxGap": 3.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "wavy (amplitude 15 m, wavelength 100 m) @ 2.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "tight S (amplitude 28 m, wavelength 90 m)",
@@ -1002,9 +826,7 @@
       "GapMeters": 2949,
       "MaxGap": 24.5,
       "GapsBetweenBuildings": 77,
-      "EmptyCells": 321,
-      "Key": "tight S (amplitude 28 m, wavelength 90 m) @ 0.05",
-      "Strict": true
+      "EmptyCells": 321
     },
     {
       "Scenario": "tight S (amplitude 28 m, wavelength 90 m)",
@@ -1013,9 +835,7 @@
       "GapMeters": 1535.4,
       "MaxGap": 23.7,
       "GapsBetweenBuildings": 96,
-      "EmptyCells": 168,
-      "Key": "tight S (amplitude 28 m, wavelength 90 m) @ 0.5",
-      "Strict": false
+      "EmptyCells": 168
     },
     {
       "Scenario": "tight S (amplitude 28 m, wavelength 90 m)",
@@ -1024,9 +844,7 @@
       "GapMeters": 1256.5,
       "MaxGap": 23.7,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 120,
-      "Key": "tight S (amplitude 28 m, wavelength 90 m) @ 1.0",
-      "Strict": false
+      "EmptyCells": 120
     },
     {
       "Scenario": "tight S (amplitude 28 m, wavelength 90 m)",
@@ -1035,9 +853,7 @@
       "GapMeters": 1215.5,
       "MaxGap": 23.7,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 119,
-      "Key": "tight S (amplitude 28 m, wavelength 90 m) @ 2.0",
-      "Strict": false
+      "EmptyCells": 119
     },
     {
       "Scenario": "parallelogram 60\u00B0 / 120\u00B0",
@@ -1046,9 +862,7 @@
       "GapMeters": 340.7,
       "MaxGap": 7.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "parallelogram 60\u00B0 / 120\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "parallelogram 60\u00B0 / 120\u00B0",
@@ -1057,9 +871,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "parallelogram 60\u00B0 / 120\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "parallelogram 60\u00B0 / 120\u00B0",
@@ -1068,9 +880,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 1,
-      "Key": "parallelogram 60\u00B0 / 120\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 1
     },
     {
       "Scenario": "parallelogram 60\u00B0 / 120\u00B0",
@@ -1079,9 +889,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 1,
-      "Key": "parallelogram 60\u00B0 / 120\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 1
     },
     {
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
@@ -1090,9 +898,7 @@
       "GapMeters": 695.3,
       "MaxGap": 11.2,
       "GapsBetweenBuildings": 61,
-      "EmptyCells": 105,
-      "Key": "parallelogram 70\u00B0 / 110\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 105
     },
     {
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
@@ -1101,9 +907,7 @@
       "GapMeters": 180.2,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "parallelogram 70\u00B0 / 110\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
@@ -1112,9 +916,7 @@
       "GapMeters": 175.3,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 8,
-      "Key": "parallelogram 70\u00B0 / 110\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 8
     },
     {
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
@@ -1123,9 +925,7 @@
       "GapMeters": 178.4,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 9,
-      "Key": "parallelogram 70\u00B0 / 110\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 9
     },
     {
       "Scenario": "parallelogram 80\u00B0 / 100\u00B0",
@@ -1134,9 +934,7 @@
       "GapMeters": 306.9,
       "MaxGap": 8.5,
       "GapsBetweenBuildings": 70,
-      "EmptyCells": 187,
-      "Key": "parallelogram 80\u00B0 / 100\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 187
     },
     {
       "Scenario": "parallelogram 80\u00B0 / 100\u00B0",
@@ -1145,9 +943,7 @@
       "GapMeters": 64.8,
       "MaxGap": 1.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "parallelogram 80\u00B0 / 100\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "parallelogram 80\u00B0 / 100\u00B0",
@@ -1156,9 +952,7 @@
       "GapMeters": 93.6,
       "MaxGap": 2.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "parallelogram 80\u00B0 / 100\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "parallelogram 80\u00B0 / 100\u00B0",
@@ -1167,9 +961,7 @@
       "GapMeters": 10.3,
       "MaxGap": 1.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "parallelogram 80\u00B0 / 100\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "parallelogram 85\u00B0 / 95\u00B0",
@@ -1178,9 +970,7 @@
       "GapMeters": 333.5,
       "MaxGap": 8,
       "GapsBetweenBuildings": 58,
-      "EmptyCells": 154,
-      "Key": "parallelogram 85\u00B0 / 95\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 154
     },
     {
       "Scenario": "parallelogram 85\u00B0 / 95\u00B0",
@@ -1189,9 +979,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "parallelogram 85\u00B0 / 95\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "parallelogram 85\u00B0 / 95\u00B0",
@@ -1200,9 +988,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "parallelogram 85\u00B0 / 95\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "parallelogram 85\u00B0 / 95\u00B0",
@@ -1211,9 +997,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "parallelogram 85\u00B0 / 95\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "trapezoid, one end at 70\u00B0 / 110\u00B0",
@@ -1222,9 +1006,7 @@
       "GapMeters": 197.7,
       "MaxGap": 4.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "trapezoid, one end at 70\u00B0 / 110\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "trapezoid, one end at 70\u00B0 / 110\u00B0",
@@ -1233,9 +1015,7 @@
       "GapMeters": 132,
       "MaxGap": 5.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "trapezoid, one end at 70\u00B0 / 110\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "trapezoid, one end at 70\u00B0 / 110\u00B0",
@@ -1244,9 +1024,7 @@
       "GapMeters": 64.7,
       "MaxGap": 3.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 19,
-      "Key": "trapezoid, one end at 70\u00B0 / 110\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 19
     },
     {
       "Scenario": "trapezoid, one end at 70\u00B0 / 110\u00B0",
@@ -1255,9 +1033,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "trapezoid, one end at 70\u00B0 / 110\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "trapezoid, one end at 80\u00B0 / 100\u00B0",
@@ -1266,9 +1042,7 @@
       "GapMeters": 175.8,
       "MaxGap": 6.8,
       "GapsBetweenBuildings": 34,
-      "EmptyCells": 74,
-      "Key": "trapezoid, one end at 80\u00B0 / 100\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 74
     },
     {
       "Scenario": "trapezoid, one end at 80\u00B0 / 100\u00B0",
@@ -1277,9 +1051,7 @@
       "GapMeters": 18.8,
       "MaxGap": 1.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "trapezoid, one end at 80\u00B0 / 100\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "trapezoid, one end at 80\u00B0 / 100\u00B0",
@@ -1288,9 +1060,7 @@
       "GapMeters": 45.1,
       "MaxGap": 2.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 9,
-      "Key": "trapezoid, one end at 80\u00B0 / 100\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 9
     },
     {
       "Scenario": "trapezoid, one end at 80\u00B0 / 100\u00B0",
@@ -1299,9 +1069,7 @@
       "GapMeters": 17.8,
       "MaxGap": 2.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 4,
-      "Key": "trapezoid, one end at 80\u00B0 / 100\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 4
     },
     {
       "Scenario": "trapezoid, one end at 100\u00B0 / 80\u00B0",
@@ -1310,9 +1078,7 @@
       "GapMeters": 74.4,
       "MaxGap": 3.1,
       "GapsBetweenBuildings": 48,
-      "EmptyCells": 105,
-      "Key": "trapezoid, one end at 100\u00B0 / 80\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 105
     },
     {
       "Scenario": "trapezoid, one end at 100\u00B0 / 80\u00B0",
@@ -1321,9 +1087,7 @@
       "GapMeters": 32.6,
       "MaxGap": 1.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "trapezoid, one end at 100\u00B0 / 80\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "trapezoid, one end at 100\u00B0 / 80\u00B0",
@@ -1332,9 +1096,7 @@
       "GapMeters": 46.6,
       "MaxGap": 2.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "trapezoid, one end at 100\u00B0 / 80\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "trapezoid, one end at 100\u00B0 / 80\u00B0",
@@ -1343,9 +1105,7 @@
       "GapMeters": 8.6,
       "MaxGap": 1.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "trapezoid, one end at 100\u00B0 / 80\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
@@ -1354,9 +1114,7 @@
       "GapMeters": 361.3,
       "MaxGap": 11.5,
       "GapsBetweenBuildings": 29,
-      "EmptyCells": 51,
-      "Key": "trapezoid, one end at 110\u00B0 / 70\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 51
     },
     {
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
@@ -1365,9 +1123,7 @@
       "GapMeters": 89.9,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "trapezoid, one end at 110\u00B0 / 70\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
@@ -1376,9 +1132,7 @@
       "GapMeters": 76.8,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 11,
-      "Key": "trapezoid, one end at 110\u00B0 / 70\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 11
     },
     {
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
@@ -1387,9 +1141,7 @@
       "GapMeters": 76.8,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 11,
-      "Key": "trapezoid, one end at 110\u00B0 / 70\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 11
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
@@ -1398,9 +1150,7 @@
       "GapMeters": 483.7,
       "MaxGap": 12.5,
       "GapsBetweenBuildings": 38,
-      "EmptyCells": 117,
-      "Key": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 117
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
@@ -1409,9 +1159,7 @@
       "GapMeters": 204,
       "MaxGap": 4.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
@@ -1420,9 +1168,7 @@
       "GapMeters": 113.6,
       "MaxGap": 5.9,
       "GapsBetweenBuildings": 6,
-      "EmptyCells": 28,
-      "Key": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 28
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
@@ -1431,9 +1177,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
@@ -1442,9 +1186,7 @@
       "GapMeters": 285.6,
       "MaxGap": 8,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 59,
-      "Key": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0 @ 0.05",
-      "Strict": true
+      "EmptyCells": 59
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
@@ -1453,9 +1195,7 @@
       "GapMeters": 230.6,
       "MaxGap": 8,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 12,
-      "Key": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0 @ 0.5",
-      "Strict": false
+      "EmptyCells": 12
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
@@ -1464,9 +1204,7 @@
       "GapMeters": 217.6,
       "MaxGap": 8,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 16,
-      "Key": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0 @ 1.0",
-      "Strict": false
+      "EmptyCells": 16
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
@@ -1475,9 +1213,7 @@
       "GapMeters": 114.8,
       "MaxGap": 2.9,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 0,
-      "Key": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 3 m) ending at a corner",
@@ -1486,9 +1222,7 @@
       "GapMeters": 376.8,
       "MaxGap": 8,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 48,
-      "Key": "side curved outwards (sagitta 3 m) ending at a corner @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "side curved outwards (sagitta 3 m) ending at a corner",
@@ -1497,9 +1231,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 3 m) ending at a corner @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 3 m) ending at a corner",
@@ -1508,9 +1240,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 3 m) ending at a corner @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 3 m) ending at a corner",
@@ -1519,9 +1249,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 3 m) ending at a corner @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 8 m) ending at a corner",
@@ -1530,9 +1258,7 @@
       "GapMeters": 777.6,
       "MaxGap": 8.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "side curved outwards (sagitta 8 m) ending at a corner @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "side curved outwards (sagitta 8 m) ending at a corner",
@@ -1541,9 +1267,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 8 m) ending at a corner @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 8 m) ending at a corner",
@@ -1552,9 +1276,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 8 m) ending at a corner @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 8 m) ending at a corner",
@@ -1563,9 +1285,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 8 m) ending at a corner @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 16 m) ending at a corner",
@@ -1574,9 +1294,7 @@
       "GapMeters": 1156.8,
       "MaxGap": 8.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 144,
-      "Key": "side curved outwards (sagitta 16 m) ending at a corner @ 0.05",
-      "Strict": true
+      "EmptyCells": 144
     },
     {
       "Scenario": "side curved outwards (sagitta 16 m) ending at a corner",
@@ -1585,9 +1303,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 16 m) ending at a corner @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 16 m) ending at a corner",
@@ -1596,9 +1312,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 16 m) ending at a corner @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved outwards (sagitta 16 m) ending at a corner",
@@ -1607,9 +1321,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved outwards (sagitta 16 m) ending at a corner @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved inwards (sagitta 3 m) ending at a corner",
@@ -1618,9 +1330,7 @@
       "GapMeters": 465.4,
       "MaxGap": 7.8,
       "GapsBetweenBuildings": 48,
-      "EmptyCells": 109,
-      "Key": "side curved inwards (sagitta 3 m) ending at a corner @ 0.05",
-      "Strict": true
+      "EmptyCells": 109
     },
     {
       "Scenario": "side curved inwards (sagitta 3 m) ending at a corner",
@@ -1629,9 +1339,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved inwards (sagitta 3 m) ending at a corner @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved inwards (sagitta 3 m) ending at a corner",
@@ -1640,9 +1348,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved inwards (sagitta 3 m) ending at a corner @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved inwards (sagitta 3 m) ending at a corner",
@@ -1651,9 +1357,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "side curved inwards (sagitta 3 m) ending at a corner @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved inwards (sagitta 8 m) ending at a corner",
@@ -1662,9 +1366,7 @@
       "GapMeters": 273.9,
       "MaxGap": 6.8,
       "GapsBetweenBuildings": 134,
-      "EmptyCells": 79,
-      "Key": "side curved inwards (sagitta 8 m) ending at a corner @ 0.05",
-      "Strict": true
+      "EmptyCells": 79
     },
     {
       "Scenario": "side curved inwards (sagitta 8 m) ending at a corner",
@@ -1673,9 +1375,7 @@
       "GapMeters": 184.1,
       "MaxGap": 6.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "side curved inwards (sagitta 8 m) ending at a corner @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "side curved inwards (sagitta 8 m) ending at a corner",
@@ -1684,9 +1384,7 @@
       "GapMeters": 192,
       "MaxGap": 6.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 5,
-      "Key": "side curved inwards (sagitta 8 m) ending at a corner @ 1.0",
-      "Strict": false
+      "EmptyCells": 5
     },
     {
       "Scenario": "side curved inwards (sagitta 8 m) ending at a corner",
@@ -1695,9 +1393,7 @@
       "GapMeters": 61.9,
       "MaxGap": 3.3,
       "GapsBetweenBuildings": 15,
-      "EmptyCells": 16,
-      "Key": "side curved inwards (sagitta 8 m) ending at a corner @ 2.0",
-      "Strict": false
+      "EmptyCells": 16
     },
     {
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
@@ -1706,9 +1402,7 @@
       "GapMeters": 416.4,
       "MaxGap": 8.4,
       "GapsBetweenBuildings": 1,
-      "EmptyCells": 72,
-      "Key": "side curved inwards (sagitta 16 m) ending at a corner @ 0.05",
-      "Strict": true
+      "EmptyCells": 72
     },
     {
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
@@ -1717,9 +1411,7 @@
       "GapMeters": 194.4,
       "MaxGap": 4.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "side curved inwards (sagitta 16 m) ending at a corner @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
@@ -1728,9 +1420,7 @@
       "GapMeters": 194.4,
       "MaxGap": 4.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "side curved inwards (sagitta 16 m) ending at a corner @ 1.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
@@ -1739,9 +1429,7 @@
       "GapMeters": 93.6,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "side curved inwards (sagitta 16 m) ending at a corner @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "two curved sides in a row (sagitta 8 m) with a corner between them",
@@ -1750,9 +1438,7 @@
       "GapMeters": 1406.4,
       "MaxGap": 8.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 192,
-      "Key": "two curved sides in a row (sagitta 8 m) with a corner between them @ 0.05",
-      "Strict": true
+      "EmptyCells": 192
     },
     {
       "Scenario": "two curved sides in a row (sagitta 8 m) with a corner between them",
@@ -1761,9 +1447,7 @@
       "GapMeters": 64.8,
       "MaxGap": 2.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "two curved sides in a row (sagitta 8 m) with a corner between them @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "two curved sides in a row (sagitta 8 m) with a corner between them",
@@ -1772,9 +1456,7 @@
       "GapMeters": 64.8,
       "MaxGap": 2.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "two curved sides in a row (sagitta 8 m) with a corner between them @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "two curved sides in a row (sagitta 8 m) with a corner between them",
@@ -1783,9 +1465,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "two curved sides in a row (sagitta 8 m) with a corner between them @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "small rounded corner R 8 m",
@@ -1794,9 +1474,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 8 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 8 m",
@@ -1805,9 +1483,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 8 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 8 m",
@@ -1816,9 +1492,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 8 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 8 m",
@@ -1827,9 +1501,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 8 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 10 m",
@@ -1838,9 +1510,7 @@
       "GapMeters": 89.9,
       "MaxGap": 5.9,
       "GapsBetweenBuildings": 47,
-      "EmptyCells": 76,
-      "Key": "small rounded corner R 10 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 76
     },
     {
       "Scenario": "small rounded corner R 10 m",
@@ -1849,9 +1519,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 10 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 10 m",
@@ -1860,9 +1528,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 10 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 10 m",
@@ -1871,9 +1537,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 10 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 20 m",
@@ -1882,9 +1546,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 48,
-      "EmptyCells": 48,
-      "Key": "small rounded corner R 20 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "small rounded corner R 20 m",
@@ -1893,9 +1555,7 @@
       "GapMeters": 93.6,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "small rounded corner R 20 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "small rounded corner R 20 m",
@@ -1904,9 +1564,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 20 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 20 m",
@@ -1915,9 +1573,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 20 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 25 m",
@@ -1926,9 +1582,7 @@
       "GapMeters": 153.8,
       "MaxGap": 7.1,
       "GapsBetweenBuildings": 26,
-      "EmptyCells": 71,
-      "Key": "small rounded corner R 25 m @ 0.05",
-      "Strict": true
+      "EmptyCells": 71
     },
     {
       "Scenario": "small rounded corner R 25 m",
@@ -1937,9 +1591,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 25 m @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 25 m",
@@ -1948,9 +1600,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 25 m @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 25 m",
@@ -1959,9 +1609,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "small rounded corner R 25 m @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
@@ -1970,9 +1618,7 @@
       "GapMeters": 1054,
       "MaxGap": 11.3,
       "GapsBetweenBuildings": 50,
-      "EmptyCells": 168,
-      "Key": "narrow triangle (17334, -10268), 8 existing in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 168
     },
     {
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
@@ -1981,9 +1627,7 @@
       "GapMeters": 753.6,
       "MaxGap": 11.3,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 120,
-      "Key": "narrow triangle (17334, -10268), 8 existing in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 120
     },
     {
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
@@ -1992,9 +1636,7 @@
       "GapMeters": 753.6,
       "MaxGap": 9.3,
       "GapsBetweenBuildings": 38,
-      "EmptyCells": 120,
-      "Key": "narrow triangle (17334, -10268), 8 existing in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 120
     },
     {
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
@@ -2003,9 +1645,7 @@
       "GapMeters": 498,
       "MaxGap": 6.7,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 72,
-      "Key": "narrow triangle (17334, -10268), 8 existing in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 72
     },
     {
       "Scenario": "block (17569, -10291)",
@@ -2014,9 +1654,7 @@
       "GapMeters": 156.7,
       "MaxGap": 8.2,
       "GapsBetweenBuildings": 32,
-      "EmptyCells": 65,
-      "Key": "block (17569, -10291) @ 0.05",
-      "Strict": true
+      "EmptyCells": 65
     },
     {
       "Scenario": "block (17569, -10291)",
@@ -2025,9 +1663,7 @@
       "GapMeters": 100.6,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block (17569, -10291) @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block (17569, -10291)",
@@ -2036,9 +1672,7 @@
       "GapMeters": 110.6,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block (17569, -10291) @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block (17569, -10291)",
@@ -2047,9 +1681,7 @@
       "GapMeters": 35.1,
       "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 9,
-      "Key": "block (17569, -10291) @ 2.0",
-      "Strict": false
+      "EmptyCells": 9
     },
     {
       "Scenario": "block (17608, -10348)",
@@ -2058,9 +1690,7 @@
       "GapMeters": 399,
       "MaxGap": 8.1,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 72,
-      "Key": "block (17608, -10348) @ 0.05",
-      "Strict": true
+      "EmptyCells": 72
     },
     {
       "Scenario": "block (17608, -10348)",
@@ -2069,9 +1699,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17608, -10348) @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17608, -10348)",
@@ -2080,9 +1708,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17608, -10348) @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17608, -10348)",
@@ -2091,9 +1717,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17608, -10348) @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17618, -10274), 3 existing in the game",
@@ -2102,9 +1726,7 @@
       "GapMeters": 281.7,
       "MaxGap": 9.2,
       "GapsBetweenBuildings": 72,
-      "EmptyCells": 158,
-      "Key": "block (17618, -10274), 3 existing in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 158
     },
     {
       "Scenario": "block (17618, -10274), 3 existing in the game",
@@ -2113,9 +1735,7 @@
       "GapMeters": 99.4,
       "MaxGap": 2.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 28,
-      "Key": "block (17618, -10274), 3 existing in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 28
     },
     {
       "Scenario": "block (17618, -10274), 3 existing in the game",
@@ -2124,9 +1744,7 @@
       "GapMeters": 99.5,
       "MaxGap": 2.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 29,
-      "Key": "block (17618, -10274), 3 existing in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 29
     },
     {
       "Scenario": "block (17618, -10274), 3 existing in the game",
@@ -2135,9 +1753,7 @@
       "GapMeters": 132.4,
       "MaxGap": 6.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 45,
-      "Key": "block (17618, -10274), 3 existing in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 45
     },
     {
       "Scenario": "block (17647, -10363)",
@@ -2146,9 +1762,7 @@
       "GapMeters": 444.9,
       "MaxGap": 7.9,
       "GapsBetweenBuildings": 9,
-      "EmptyCells": 81,
-      "Key": "block (17647, -10363) @ 0.05",
-      "Strict": true
+      "EmptyCells": 81
     },
     {
       "Scenario": "block (17647, -10363)",
@@ -2157,9 +1771,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17647, -10363) @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17647, -10363)",
@@ -2168,9 +1780,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17647, -10363) @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17647, -10363)",
@@ -2179,9 +1789,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 0,
-      "Key": "block (17647, -10363) @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17661, -10352)",
@@ -2190,9 +1798,7 @@
       "GapMeters": 440.2,
       "MaxGap": 7.9,
       "GapsBetweenBuildings": 10,
-      "EmptyCells": 82,
-      "Key": "block (17661, -10352) @ 0.05",
-      "Strict": true
+      "EmptyCells": 82
     },
     {
       "Scenario": "block (17661, -10352)",
@@ -2201,9 +1807,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17661, -10352) @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17661, -10352)",
@@ -2212,9 +1816,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17661, -10352) @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17661, -10352)",
@@ -2223,9 +1825,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 0,
-      "Key": "block (17661, -10352) @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17817, -10255), 12 existing in the game",
@@ -2234,9 +1834,7 @@
       "GapMeters": 559.2,
       "MaxGap": 7.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 72,
-      "Key": "block (17817, -10255), 12 existing in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 72
     },
     {
       "Scenario": "block (17817, -10255), 12 existing in the game",
@@ -2245,9 +1843,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17817, -10255), 12 existing in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17817, -10255), 12 existing in the game",
@@ -2256,9 +1852,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17817, -10255), 12 existing in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17817, -10255), 12 existing in the game",
@@ -2267,9 +1861,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17817, -10255), 12 existing in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17824, -10159), 4 existing in the game",
@@ -2278,9 +1870,7 @@
       "GapMeters": 464.8,
       "MaxGap": 8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 59,
-      "Key": "block (17824, -10159), 4 existing in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 59
     },
     {
       "Scenario": "block (17824, -10159), 4 existing in the game",
@@ -2289,9 +1879,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17824, -10159), 4 existing in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17824, -10159), 4 existing in the game",
@@ -2300,9 +1888,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17824, -10159), 4 existing in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17824, -10159), 4 existing in the game",
@@ -2311,9 +1897,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17824, -10159), 4 existing in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17925, -10139)",
@@ -2322,9 +1906,7 @@
       "GapMeters": 463.7,
       "MaxGap": 7.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 59,
-      "Key": "block (17925, -10139) @ 0.05",
-      "Strict": true
+      "EmptyCells": 59
     },
     {
       "Scenario": "block (17925, -10139)",
@@ -2333,9 +1915,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17925, -10139) @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17925, -10139)",
@@ -2344,9 +1924,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17925, -10139) @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (17925, -10139)",
@@ -2355,9 +1933,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (17925, -10139) @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
@@ -2366,9 +1942,7 @@
       "GapMeters": 452.4,
       "MaxGap": 8,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 72,
-      "Key": "triangle (18235, -10153), 8 existing in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 72
     },
     {
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
@@ -2377,9 +1951,7 @@
       "GapMeters": 367.2,
       "MaxGap": 8,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 60,
-      "Key": "triangle (18235, -10153), 8 existing in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 60
     },
     {
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
@@ -2388,9 +1960,7 @@
       "GapMeters": 218.4,
       "MaxGap": 8,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 36,
-      "Key": "triangle (18235, -10153), 8 existing in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 36
     },
     {
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
@@ -2399,9 +1969,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "triangle (18235, -10153), 8 existing in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "long block (18633, -11042), 34 existing in the game",
@@ -2410,9 +1978,7 @@
       "GapMeters": 1064.6,
       "MaxGap": 11.1,
       "GapsBetweenBuildings": 25,
-      "EmptyCells": 175,
-      "Key": "long block (18633, -11042), 34 existing in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 175
     },
     {
       "Scenario": "long block (18633, -11042), 34 existing in the game",
@@ -2421,9 +1987,7 @@
       "GapMeters": 192,
       "MaxGap": 4.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "long block (18633, -11042), 34 existing in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "long block (18633, -11042), 34 existing in the game",
@@ -2432,9 +1996,7 @@
       "GapMeters": 427.2,
       "MaxGap": 11.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 36,
-      "Key": "long block (18633, -11042), 34 existing in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 36
     },
     {
       "Scenario": "long block (18633, -11042), 34 existing in the game",
@@ -2443,9 +2005,7 @@
       "GapMeters": 424.8,
       "MaxGap": 11.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 36,
-      "Key": "long block (18633, -11042), 34 existing in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 36
     },
     {
       "Scenario": "block_18681_-11093",
@@ -2454,9 +2014,7 @@
       "GapMeters": 1133.5,
       "MaxGap": 21.3,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 144,
-      "Key": "block_18681_-11093 @ 0.05",
-      "Strict": true
+      "EmptyCells": 144
     },
     {
       "Scenario": "block_18681_-11093",
@@ -2465,9 +2023,7 @@
       "GapMeters": 319.1,
       "MaxGap": 7.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18681_-11093 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18681_-11093",
@@ -2476,9 +2032,7 @@
       "GapMeters": 307.1,
       "MaxGap": 7.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18681_-11093 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18681_-11093",
@@ -2487,9 +2041,7 @@
       "GapMeters": 307.1,
       "MaxGap": 7.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18681_-11093 @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18707_-11058",
@@ -2498,9 +2050,7 @@
       "GapMeters": 879.6,
       "MaxGap": 16,
       "GapsBetweenBuildings": 10,
-      "EmptyCells": 127,
-      "Key": "block_18707_-11058 @ 0.05",
-      "Strict": true
+      "EmptyCells": 127
     },
     {
       "Scenario": "block_18707_-11058",
@@ -2509,9 +2059,7 @@
       "GapMeters": 273.6,
       "MaxGap": 6.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "block_18707_-11058 @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_18707_-11058",
@@ -2520,9 +2068,7 @@
       "GapMeters": 282.3,
       "MaxGap": 6.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 55,
-      "Key": "block_18707_-11058 @ 1.0",
-      "Strict": false
+      "EmptyCells": 55
     },
     {
       "Scenario": "block_18707_-11058",
@@ -2531,9 +2077,7 @@
       "GapMeters": 16,
       "MaxGap": 2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18707_-11058 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18789_-11116",
@@ -2542,9 +2086,7 @@
       "GapMeters": 391.7,
       "MaxGap": 6.7,
       "GapsBetweenBuildings": 72,
-      "EmptyCells": 96,
-      "Key": "block_18789_-11116 @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "block_18789_-11116",
@@ -2553,9 +2095,7 @@
       "GapMeters": 194.4,
       "MaxGap": 5.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18789_-11116 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18789_-11116",
@@ -2564,9 +2104,7 @@
       "GapMeters": 186.6,
       "MaxGap": 4.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18789_-11116 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18789_-11116",
@@ -2575,9 +2113,7 @@
       "GapMeters": 160.1,
       "MaxGap": 4.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 11,
-      "Key": "block_18789_-11116 @ 2.0",
-      "Strict": false
+      "EmptyCells": 11
     },
     {
       "Scenario": "block_18838_-11127",
@@ -2586,9 +2122,7 @@
       "GapMeters": 1161.6,
       "MaxGap": 22.5,
       "GapsBetweenBuildings": 11,
-      "EmptyCells": 131,
-      "Key": "block_18838_-11127 @ 0.05",
-      "Strict": true
+      "EmptyCells": 131
     },
     {
       "Scenario": "block_18838_-11127",
@@ -2597,9 +2131,7 @@
       "GapMeters": 333.6,
       "MaxGap": 5.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 72,
-      "Key": "block_18838_-11127 @ 0.5",
-      "Strict": false
+      "EmptyCells": 72
     },
     {
       "Scenario": "block_18838_-11127",
@@ -2608,9 +2140,7 @@
       "GapMeters": 324,
       "MaxGap": 5.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 72,
-      "Key": "block_18838_-11127 @ 1.0",
-      "Strict": false
+      "EmptyCells": 72
     },
     {
       "Scenario": "block_18838_-11127",
@@ -2619,9 +2149,7 @@
       "GapMeters": 74.4,
       "MaxGap": 3.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18838_-11127 @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18840_-11167",
@@ -2630,9 +2158,7 @@
       "GapMeters": 972.2,
       "MaxGap": 23.8,
       "GapsBetweenBuildings": 15,
-      "EmptyCells": 96,
-      "Key": "block_18840_-11167 @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "block_18840_-11167",
@@ -2641,9 +2167,7 @@
       "GapMeters": 601.7,
       "MaxGap": 11.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "block_18840_-11167 @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_18840_-11167",
@@ -2652,9 +2176,7 @@
       "GapMeters": 601.7,
       "MaxGap": 11.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "block_18840_-11167 @ 1.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_18840_-11167",
@@ -2663,9 +2185,7 @@
       "GapMeters": 134.4,
       "MaxGap": 5.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18840_-11167 @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18857_-11060",
@@ -2674,9 +2194,7 @@
       "GapMeters": 345.8,
       "MaxGap": 7.7,
       "GapsBetweenBuildings": 7,
-      "EmptyCells": 48,
-      "Key": "block_18857_-11060 @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_18857_-11060",
@@ -2685,9 +2203,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18857_-11060 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18857_-11060",
@@ -2696,9 +2212,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18857_-11060 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18857_-11060",
@@ -2707,9 +2221,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18857_-11060 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18912_-11131",
@@ -2718,9 +2230,7 @@
       "GapMeters": 559.6,
       "MaxGap": 12,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 72,
-      "Key": "block_18912_-11131 @ 0.05",
-      "Strict": true
+      "EmptyCells": 72
     },
     {
       "Scenario": "block_18912_-11131",
@@ -2729,9 +2239,7 @@
       "GapMeters": 176.7,
       "MaxGap": 4.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18912_-11131 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18912_-11131",
@@ -2740,9 +2248,7 @@
       "GapMeters": 187.2,
       "MaxGap": 4.7,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 24,
-      "Key": "block_18912_-11131 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18912_-11131",
@@ -2751,9 +2257,7 @@
       "GapMeters": 251.9,
       "MaxGap": 4.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18912_-11131 @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18930_-11180",
@@ -2762,9 +2266,7 @@
       "GapMeters": 469.5,
       "MaxGap": 13.5,
       "GapsBetweenBuildings": 5,
-      "EmptyCells": 48,
-      "Key": "block_18930_-11180 @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_18930_-11180",
@@ -2773,9 +2275,7 @@
       "GapMeters": 290.4,
       "MaxGap": 5.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_18930_-11180 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18930_-11180",
@@ -2784,9 +2284,7 @@
       "GapMeters": 172.8,
       "MaxGap": 5.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18930_-11180 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18930_-11180",
@@ -2795,9 +2293,7 @@
       "GapMeters": 172.8,
       "MaxGap": 5.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18930_-11180 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (18946, -11057), 21 existing in the game",
@@ -2806,9 +2302,7 @@
       "GapMeters": 428.4,
       "MaxGap": 8,
       "GapsBetweenBuildings": 46,
-      "EmptyCells": 90,
-      "Key": "block (18946, -11057), 21 existing in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 90
     },
     {
       "Scenario": "block (18946, -11057), 21 existing in the game",
@@ -2817,9 +2311,7 @@
       "GapMeters": 40.8,
       "MaxGap": 1.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (18946, -11057), 21 existing in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (18946, -11057), 21 existing in the game",
@@ -2828,9 +2320,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block (18946, -11057), 21 existing in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (18946, -11057), 21 existing in the game",
@@ -2839,9 +2329,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 0,
-      "Key": "block (18946, -11057), 21 existing in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18963_-11118",
@@ -2850,9 +2338,7 @@
       "GapMeters": 652.8,
       "MaxGap": 8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "block_18963_-11118 @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "block_18963_-11118",
@@ -2861,9 +2347,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18963_-11118 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18963_-11118",
@@ -2872,9 +2356,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18963_-11118 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18963_-11118",
@@ -2883,9 +2365,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18963_-11118 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18972_-11204",
@@ -2894,9 +2374,7 @@
       "GapMeters": 568.9,
       "MaxGap": 8,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 48,
-      "Key": "block_18972_-11204 @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_18972_-11204",
@@ -2905,9 +2383,7 @@
       "GapMeters": 321.7,
       "MaxGap": 8,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 12,
-      "Key": "block_18972_-11204 @ 0.5",
-      "Strict": false
+      "EmptyCells": 12
     },
     {
       "Scenario": "block_18972_-11204",
@@ -2916,9 +2392,7 @@
       "GapMeters": 235.3,
       "MaxGap": 7.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_18972_-11204 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18972_-11204",
@@ -2927,9 +2401,7 @@
       "GapMeters": 309.7,
       "MaxGap": 7.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 15,
-      "Key": "block_18972_-11204 @ 2.0",
-      "Strict": false
+      "EmptyCells": 15
     },
     {
       "Scenario": "block_19010_-11078",
@@ -2938,9 +2410,7 @@
       "GapMeters": 515.1,
       "MaxGap": 8,
       "GapsBetweenBuildings": 46,
-      "EmptyCells": 84,
-      "Key": "block_19010_-11078 @ 0.05",
-      "Strict": true
+      "EmptyCells": 84
     },
     {
       "Scenario": "block_19010_-11078",
@@ -2949,9 +2419,7 @@
       "GapMeters": 199.2,
       "MaxGap": 5.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19010_-11078 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19010_-11078",
@@ -2960,9 +2428,7 @@
       "GapMeters": 199.2,
       "MaxGap": 5.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19010_-11078 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19010_-11078",
@@ -2971,9 +2437,7 @@
       "GapMeters": 96,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 12,
-      "Key": "block_19010_-11078 @ 2.0",
-      "Strict": false
+      "EmptyCells": 12
     },
     {
       "Scenario": "block_19014_-11067",
@@ -2982,9 +2446,7 @@
       "GapMeters": 339.5,
       "MaxGap": 7.5,
       "GapsBetweenBuildings": 46,
-      "EmptyCells": 96,
-      "Key": "block_19014_-11067 @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "block_19014_-11067",
@@ -2993,9 +2455,7 @@
       "GapMeters": 86.4,
       "MaxGap": 3.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19014_-11067 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19014_-11067",
@@ -3004,9 +2464,7 @@
       "GapMeters": 50.4,
       "MaxGap": 3.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19014_-11067 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19014_-11067",
@@ -3015,9 +2473,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 6,
-      "EmptyCells": 8,
-      "Key": "block_19014_-11067 @ 2.0",
-      "Strict": false
+      "EmptyCells": 8
     },
     {
       "Scenario": "block_19014_-11260",
@@ -3026,9 +2482,7 @@
       "GapMeters": 451.2,
       "MaxGap": 9.5,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 48,
-      "Key": "block_19014_-11260 @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_19014_-11260",
@@ -3037,9 +2491,7 @@
       "GapMeters": 228,
       "MaxGap": 9.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19014_-11260 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19014_-11260",
@@ -3048,9 +2500,7 @@
       "GapMeters": 271.2,
       "MaxGap": 9.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19014_-11260 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19014_-11260",
@@ -3059,9 +2509,7 @@
       "GapMeters": 228,
       "MaxGap": 9.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19014_-11260 @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19024_-11108",
@@ -3070,9 +2518,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19024_-11108 @ 0.05",
-      "Strict": true
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19024_-11108",
@@ -3081,9 +2527,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19024_-11108 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19024_-11108",
@@ -3092,9 +2536,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19024_-11108 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19024_-11108",
@@ -3103,9 +2545,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19024_-11108 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block (19034, -11154), 11 existing in the game",
@@ -3114,9 +2554,7 @@
       "GapMeters": 4181.8,
       "MaxGap": 40,
       "GapsBetweenBuildings": 35,
-      "EmptyCells": 184,
-      "Key": "block (19034, -11154), 11 existing in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 184
     },
     {
       "Scenario": "block (19034, -11154), 11 existing in the game",
@@ -3125,9 +2563,7 @@
       "GapMeters": 3736.2,
       "MaxGap": 40,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "block (19034, -11154), 11 existing in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 96
     },
     {
       "Scenario": "block (19034, -11154), 11 existing in the game",
@@ -3136,9 +2572,7 @@
       "GapMeters": 3954,
       "MaxGap": 40,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 120,
-      "Key": "block (19034, -11154), 11 existing in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 120
     },
     {
       "Scenario": "block (19034, -11154), 11 existing in the game",
@@ -3147,9 +2581,7 @@
       "GapMeters": 3677.2,
       "MaxGap": 40,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 85,
-      "Key": "block (19034, -11154), 11 existing in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 85
     },
     {
       "Scenario": "block_19060_-11269",
@@ -3158,9 +2590,7 @@
       "GapMeters": 711.6,
       "MaxGap": 18.9,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 60,
-      "Key": "block_19060_-11269 @ 0.05",
-      "Strict": true
+      "EmptyCells": 60
     },
     {
       "Scenario": "block_19060_-11269",
@@ -3169,9 +2599,7 @@
       "GapMeters": 259.2,
       "MaxGap": 3.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19060_-11269 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19060_-11269",
@@ -3180,9 +2608,7 @@
       "GapMeters": 259.2,
       "MaxGap": 3.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19060_-11269 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19060_-11269",
@@ -3191,9 +2617,7 @@
       "GapMeters": 362.8,
       "MaxGap": 5.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19060_-11269 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19061_-11054",
@@ -3202,9 +2626,7 @@
       "GapMeters": 649.2,
       "MaxGap": 15.9,
       "GapsBetweenBuildings": 36,
-      "EmptyCells": 108,
-      "Key": "block_19061_-11054 @ 0.05",
-      "Strict": true
+      "EmptyCells": 108
     },
     {
       "Scenario": "block_19061_-11054",
@@ -3213,9 +2635,7 @@
       "GapMeters": 189.6,
       "MaxGap": 5.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48,
-      "Key": "block_19061_-11054 @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_19061_-11054",
@@ -3224,9 +2644,7 @@
       "GapMeters": 60,
       "MaxGap": 2.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19061_-11054 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19061_-11054",
@@ -3235,9 +2653,7 @@
       "GapMeters": 60,
       "MaxGap": 2.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19061_-11054 @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19087_-11072",
@@ -3246,9 +2662,7 @@
       "GapMeters": 968,
       "MaxGap": 20.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "block_19087_-11072 @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "block_19087_-11072",
@@ -3257,9 +2671,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19087_-11072 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19087_-11072",
@@ -3268,9 +2680,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19087_-11072 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19087_-11072",
@@ -3279,9 +2689,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19087_-11072 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19099_-11311",
@@ -3290,9 +2698,7 @@
       "GapMeters": 225.6,
       "MaxGap": 6.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19099_-11311 @ 0.05",
-      "Strict": true
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19099_-11311",
@@ -3301,9 +2707,7 @@
       "GapMeters": 225.6,
       "MaxGap": 6.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19099_-11311 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19099_-11311",
@@ -3312,9 +2716,7 @@
       "GapMeters": 64.8,
       "MaxGap": 2.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19099_-11311 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19099_-11311",
@@ -3323,9 +2725,7 @@
       "GapMeters": 64.8,
       "MaxGap": 2.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19099_-11311 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
@@ -3334,9 +2734,7 @@
       "GapMeters": 456.4,
       "MaxGap": 8,
       "GapsBetweenBuildings": 64,
-      "EmptyCells": 132,
-      "Key": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game @ 0.05",
-      "Strict": true
+      "EmptyCells": 132
     },
     {
       "Scenario": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
@@ -3345,9 +2743,7 @@
       "GapMeters": 118.8,
       "MaxGap": 5.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 12,
-      "Key": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game @ 0.5",
-      "Strict": false
+      "EmptyCells": 12
     },
     {
       "Scenario": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
@@ -3356,9 +2752,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
@@ -3367,9 +2761,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19138_-11226",
@@ -3378,9 +2770,7 @@
       "GapMeters": 335.7,
       "MaxGap": 7,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 48,
-      "Key": "block_19138_-11226 @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_19138_-11226",
@@ -3389,9 +2779,7 @@
       "GapMeters": 57.6,
       "MaxGap": 2.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19138_-11226 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19138_-11226",
@@ -3400,9 +2788,7 @@
       "GapMeters": 57.6,
       "MaxGap": 2.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19138_-11226 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19138_-11226",
@@ -3411,9 +2797,7 @@
       "GapMeters": 19.2,
       "MaxGap": 2.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19138_-11226 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19172_-11191",
@@ -3422,9 +2806,7 @@
       "GapMeters": 154.8,
       "MaxGap": 3.6,
       "GapsBetweenBuildings": 63,
-      "EmptyCells": 60,
-      "Key": "block_19172_-11191 @ 0.05",
-      "Strict": true
+      "EmptyCells": 60
     },
     {
       "Scenario": "block_19172_-11191",
@@ -3433,9 +2815,7 @@
       "GapMeters": 125.5,
       "MaxGap": 3.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19172_-11191 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19172_-11191",
@@ -3444,9 +2824,7 @@
       "GapMeters": 127.8,
       "MaxGap": 3.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19172_-11191 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19172_-11191",
@@ -3455,9 +2833,7 @@
       "GapMeters": 39.2,
       "MaxGap": 3.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 9,
-      "Key": "block_19172_-11191 @ 2.0",
-      "Strict": false
+      "EmptyCells": 9
     },
     {
       "Scenario": "block_19176_-11299",
@@ -3466,9 +2842,7 @@
       "GapMeters": 928.2,
       "MaxGap": 12,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 96,
-      "Key": "block_19176_-11299 @ 0.05",
-      "Strict": true
+      "EmptyCells": 96
     },
     {
       "Scenario": "block_19176_-11299",
@@ -3477,9 +2851,7 @@
       "GapMeters": 346.2,
       "MaxGap": 10.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19176_-11299 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19176_-11299",
@@ -3488,9 +2860,7 @@
       "GapMeters": 367.8,
       "MaxGap": 10.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19176_-11299 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19176_-11299",
@@ -3499,9 +2869,7 @@
       "GapMeters": 387,
       "MaxGap": 10.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19176_-11299 @ 2.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19219_-11235",
@@ -3510,9 +2878,7 @@
       "GapMeters": 473.6,
       "MaxGap": 8.2,
       "GapsBetweenBuildings": 46,
-      "EmptyCells": 72,
-      "Key": "block_19219_-11235 @ 0.05",
-      "Strict": true
+      "EmptyCells": 72
     },
     {
       "Scenario": "block_19219_-11235",
@@ -3521,9 +2887,7 @@
       "GapMeters": 189.6,
       "MaxGap": 5.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19219_-11235 @ 0.5",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19219_-11235",
@@ -3532,9 +2896,7 @@
       "GapMeters": 132.2,
       "MaxGap": 5.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "block_19219_-11235 @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_19219_-11235",
@@ -3543,9 +2905,7 @@
       "GapMeters": 42,
       "MaxGap": 2.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19219_-11235 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19231_-11328",
@@ -3554,9 +2914,7 @@
       "GapMeters": 1094.4,
       "MaxGap": 17.1,
       "GapsBetweenBuildings": 6,
-      "EmptyCells": 48,
-      "Key": "block_19231_-11328 @ 0.05",
-      "Strict": true
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_19231_-11328",
@@ -3565,9 +2923,7 @@
       "GapMeters": 1094.4,
       "MaxGap": 17.1,
       "GapsBetweenBuildings": 6,
-      "EmptyCells": 48,
-      "Key": "block_19231_-11328 @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_19231_-11328",
@@ -3576,9 +2932,7 @@
       "GapMeters": 1094.4,
       "MaxGap": 17.1,
       "GapsBetweenBuildings": 6,
-      "EmptyCells": 48,
-      "Key": "block_19231_-11328 @ 1.0",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_19231_-11328",
@@ -3587,9 +2941,7 @@
       "GapMeters": 990.3,
       "MaxGap": 17.1,
       "GapsBetweenBuildings": 23,
-      "EmptyCells": 35,
-      "Key": "block_19231_-11328 @ 2.0",
-      "Strict": false
+      "EmptyCells": 35
     },
     {
       "Scenario": "block_19258_-11311",
@@ -3598,9 +2950,7 @@
       "GapMeters": 750.7,
       "MaxGap": 24.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 52,
-      "Key": "block_19258_-11311 @ 0.05",
-      "Strict": true
+      "EmptyCells": 52
     },
     {
       "Scenario": "block_19258_-11311",
@@ -3609,9 +2959,7 @@
       "GapMeters": 45.6,
       "MaxGap": 1.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19258_-11311 @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19258_-11311",
@@ -3620,9 +2968,7 @@
       "GapMeters": 45.6,
       "MaxGap": 1.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19258_-11311 @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19258_-11311",
@@ -3631,9 +2977,7 @@
       "GapMeters": 45.6,
       "MaxGap": 1.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "block_19258_-11311 @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Cobblestone, long curve and short street",
@@ -3642,9 +2986,7 @@
       "GapMeters": 1620.1,
       "MaxGap": 13.6,
       "GapsBetweenBuildings": 9,
-      "EmptyCells": 228,
-      "Key": "Cobblestone, long curve and short street @ 0.05",
-      "Strict": true
+      "EmptyCells": 228
     },
     {
       "Scenario": "Cobblestone, long curve and short street",
@@ -3653,9 +2995,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "Cobblestone, long curve and short street @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Cobblestone, long curve and short street",
@@ -3664,9 +3004,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "Cobblestone, long curve and short street @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Cobblestone, long curve and short street",
@@ -3675,9 +3013,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 3,
-      "Key": "Cobblestone, long curve and short street @ 2.0",
-      "Strict": false
+      "EmptyCells": 3
     },
     {
       "Scenario": "Prospect, tight curve",
@@ -3686,9 +3022,7 @@
       "GapMeters": 2887.9,
       "MaxGap": 8.1,
       "GapsBetweenBuildings": 51,
-      "EmptyCells": 367,
-      "Key": "Prospect, tight curve @ 0.05",
-      "Strict": true
+      "EmptyCells": 367
     },
     {
       "Scenario": "Prospect, tight curve",
@@ -3697,9 +3031,7 @@
       "GapMeters": 544.8,
       "MaxGap": 8,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 48,
-      "Key": "Prospect, tight curve @ 0.5",
-      "Strict": false
+      "EmptyCells": 48
     },
     {
       "Scenario": "Prospect, tight curve",
@@ -3708,9 +3040,7 @@
       "GapMeters": 410.4,
       "MaxGap": 8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24,
-      "Key": "Prospect, tight curve @ 1.0",
-      "Strict": false
+      "EmptyCells": 24
     },
     {
       "Scenario": "Prospect, tight curve",
@@ -3719,9 +3049,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "Prospect, tight curve @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Whitestone, big loop",
@@ -3730,9 +3058,7 @@
       "GapMeters": 4086.3,
       "MaxGap": 7.9,
       "GapsBetweenBuildings": 572,
-      "EmptyCells": 620,
-      "Key": "Whitestone, big loop @ 0.05",
-      "Strict": true
+      "EmptyCells": 620
     },
     {
       "Scenario": "Whitestone, big loop",
@@ -3741,9 +3067,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "Whitestone, big loop @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Whitestone, big loop",
@@ -3752,9 +3076,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "Whitestone, big loop @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Whitestone, big loop",
@@ -3763,9 +3085,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0,
-      "Key": "Whitestone, big loop @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Whitestone with Prospect (closed loop and 80\u00B0 corner)",
@@ -3774,9 +3094,7 @@
       "GapMeters": 4592,
       "MaxGap": 9.5,
       "GapsBetweenBuildings": 218,
-      "EmptyCells": 639,
-      "Key": "Whitestone with Prospect (closed loop and 80\u00B0 corner) @ 0.05",
-      "Strict": true
+      "EmptyCells": 639
     },
     {
       "Scenario": "Whitestone with Prospect (closed loop and 80\u00B0 corner)",
@@ -3785,9 +3103,7 @@
       "GapMeters": 57.6,
       "MaxGap": 2.4,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 0,
-      "Key": "Whitestone with Prospect (closed loop and 80\u00B0 corner) @ 0.5",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Whitestone with Prospect (closed loop and 80\u00B0 corner)",
@@ -3796,9 +3112,7 @@
       "GapMeters": 86.4,
       "MaxGap": 1.9,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 0,
-      "Key": "Whitestone with Prospect (closed loop and 80\u00B0 corner) @ 1.0",
-      "Strict": false
+      "EmptyCells": 0
     },
     {
       "Scenario": "Whitestone with Prospect (closed loop and 80\u00B0 corner)",
@@ -3807,9 +3121,7 @@
       "GapMeters": 86.4,
       "MaxGap": 1.9,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 0,
-      "Key": "Whitestone with Prospect (closed loop and 80\u00B0 corner) @ 2.0",
-      "Strict": false
+      "EmptyCells": 0
     }
   ]
 }

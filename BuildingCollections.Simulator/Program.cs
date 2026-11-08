@@ -18,9 +18,7 @@ namespace BuildingCollections.Simulator
 
             if (args.Length > 0 && args[0] == "regress")
             {
-                Simulation.Plain = Simulation.Catalogs[Simulation.DefaultCatalog];
-                int from = Array.IndexOf(args, "--first-seed");
-                return Regression.Run(args.Contains("--update"), Simulation.DefaultCatalog, from > 0 ? int.Parse(args[from + 1]) : 1);
+                return RegressionCommand.Run(args);
             }
 
             string output = args.Length > 0 ? args[0] : "simulation.html";
@@ -51,6 +49,14 @@ namespace BuildingCollections.Simulator
                 foreach (var r in runs.Where(r => Math.Abs(r.Overlap - 0.5f) < 0.01f))
                 {
                     Console.WriteLine($"WHY {r.Scenario.Name,-50} cells {r.Result.FrontFilled}/{r.Result.FrontCells.Count} corners {r.CornersOk}/{r.Corners.Count} gaps: {string.Join(" ", r.RealGaps.Where(g => g.Length >= 0.75).Select(g => g.Length.ToString("0.0")))}");
+                }
+            }
+
+            if (Environment.GetEnvironmentVariable("SIM_WEDGES") == "1")
+            {
+                foreach (var r in runs.Where(r => r.WedgeMeters > 0))
+                {
+                    Console.WriteLine($"WEDGE {r.Scenario.Name,-58} overlap {r.Overlap,4:0.0#}: {r.WedgeMeters,5:0.0} m in {r.Gaps.Count(g => g.Wedge)}: {string.Join(" ", r.Gaps.Where(g => g.Wedge).Select(g => $"{g.Length:0.0}@({g.From.X:0},{g.From.Y:0})"))}");
                 }
             }
 

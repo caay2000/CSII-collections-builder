@@ -1,72 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using BuildingCollections.Core;
 
 namespace BuildingCollections.Simulator
 {
-    public sealed class Metrics
-    {
-        public string Scenario { get; set; }
-        public float Overlap { get; set; }
-        public int MissedCorners { get; set; }
-        public double GapMeters { get; set; }
-        public double MaxGap { get; set; }
-        public int GapsBetweenBuildings { get; set; }
-        public int EmptyCells { get; set; }
-
-        public string Key => $"{Scenario} @ {Overlap:0.0#}";
-
-        public bool Strict => Overlap <= FootprintMask.StrictOverlap;
-    }
-
-    public sealed class Baseline
-    {
-        public string Catalog { get; set; }
-        public int[] Seeds { get; set; }
-        public List<Metrics> Runs { get; set; } = new List<Metrics>();
-    }
-
-    public sealed class Verdict
-    {
-        public List<string> Regressions = new List<string>();
-        public List<string> Improvements = new List<string>();
-        public List<string> Missing = new List<string>();
-        public List<string> Added = new List<string>();
-
-        public bool Passed => Regressions.Count == 0 && Missing.Count == 0;
-    }
-
-    public readonly struct Slack
-    {
-        readonly double fixedPart;
-        readonly double perRoot;
-        readonly double share;
-
-        Slack(double fixedPart, double perRoot, double share)
-        {
-            this.fixedPart = fixedPart;
-            this.perRoot = perRoot;
-            this.share = share;
-        }
-
-        public static Slack Noise(double fixedPart, double perRoot) => new Slack(fixedPart, perRoot, 0);
-
-        public static Slack Share(double fixedPart, double share) => new Slack(fixedPart, 0, share);
-
-        public double Allowed(double baseline) => fixedPart + perRoot * Math.Sqrt(Math.Max(0, baseline)) + share * baseline;
-    }
-
-    public sealed class MetricRule
-    {
-        public string Name;
-        public Func<Metrics, double> Value;
-        public Func<Metrics, Slack> PerScenario;
-        public Func<float, Slack> PerOverlap;
-    }
-
     public static class Regression
     {
         public static readonly float[] Overlaps = { FootprintMask.StrictOverlap, 0.5f, 1f, 2f };
@@ -77,37 +15,14 @@ namespace BuildingCollections.Simulator
 
         public static readonly IReadOnlyList<MetricRule> Rules = new List<MetricRule>
         {
-            new MetricRule
-            {
-                Name = "missed corners", Value = m => m.MissedCorners,
-                PerScenario = _ => Slack.Noise(0, 1), PerOverlap = _ => Slack.Share(0, 0),
-            },
-            new MetricRule
-            {
-                Name = "gaps between two buildings", Value = m => m.GapsBetweenBuildings,
-                PerScenario = m => m.Strict ? Slack.Noise(6, 3) : Slack.Noise(3, 3),
-                PerOverlap = o => o <= FootprintMask.StrictOverlap ? Slack.Share(10, 0.03) : Slack.Share(5, 0.03),
-            },
-            new MetricRule
-            {
-                Name = "uncovered meters", Value = m => m.GapMeters,
-                PerScenario = _ => Slack.Noise(20, 4), PerOverlap = _ => Slack.Share(20, 0.01),
-            },
-            new MetricRule
-            {
-                Name = "largest gap", Value = m => m.MaxGap,
-                PerScenario = _ => Slack.Noise(6, 0), PerOverlap = null,
-            },
-            new MetricRule
-            {
-                Name = "empty street cells", Value = m => m.EmptyCells,
-                PerScenario = _ => Slack.Noise(6, 2.5), PerOverlap = _ => Slack.Share(10, 0.015),
-            },
+            new MetricRule("missed corners", m => m.MissedCorners, _ => Slack.Noise(0, 1), _ => Slack.Share(0, 0)),
+            new MetricRule("gaps between two buildings", m => m.GapsBetweenBuildings,
+                m => m.Strict ? Slack.Noise(6, 3) : Slack.Noise(3, 3),
+                o => o <= FootprintMask.StrictOverlap ? Slack.Share(10, 0.03) : Slack.Share(5, 0.03)),
+            new MetricRule("uncovered meters", m => m.GapMeters, _ => Slack.Noise(20, 4), _ => Slack.Share(20, 0.01)),
+            new MetricRule("largest gap", m => m.MaxGap, _ => Slack.Noise(6, 0), null),
+            new MetricRule("empty street cells", m => m.EmptyCells, _ => Slack.Noise(6, 2.5), _ => Slack.Share(10, 0.015)),
         };
-
-        static readonly JsonSerializerOptions Json = new JsonSerializerOptions { WriteIndented = true };
-
-        public static string BaselinePath => Path.Combine(GameBlocks.ProjectFolder, "regression-baseline.json");
 
         public static Baseline Measure(IEnumerable<Scenario> scenarios, string catalog, int[] seeds)
         {
@@ -136,24 +51,29 @@ namespace BuildingCollections.Simulator
         public static Verdict Compare(Baseline expected, Baseline actual)
         {
             var verdict = new Verdict();
-            var now = actual.Runs.ToDictionary(m => m.Key);
-            foreach (var before in expected.Runs)
+            var now = Index(actual);
+            var before = Index(expected);
+            verdict.Added.AddRange(now.Keys.Where(k => !before.ContainsKey(k)));
+            foreach (var was in expected.Runs)
             {
-                if (!now.TryGetValue(before.Key, out var after))
+                if (!now.TryGetValue(was.Key, out var current))
                 {
-                    verdict.Missing.Add(before.Key);
+                    verdict.Missing.Add(was.Key);
                     continue;
                 }
 
                 foreach (var rule in Rules)
                 {
-                    Judge(verdict, $"{before.Key}: {rule.Name}", rule.Value(before), rule.Value(after), rule.PerScenario(before));
+                    Judge(verdict, $"{was.Key}: {rule.Name}", rule.Value(was), rule.Value(current), rule.PerScenario(was));
                 }
             }
 
-            var known = new HashSet<string>(expected.Runs.Select(m => m.Key));
-            verdict.Added.AddRange(actual.Runs.Where(m => !known.Contains(m.Key)).Select(m => m.Key));
-            var common = expected.Runs.Where(m => now.ContainsKey(m.Key)).ToList();
+            CompareTotals(verdict, expected.Runs.Where(m => now.ContainsKey(m.Key)).ToList(), now);
+            return verdict;
+        }
+
+        static void CompareTotals(Verdict verdict, List<Metrics> common, Dictionary<string, Metrics> now)
+        {
             foreach (var overlap in Overlaps)
             {
                 var group = common.Where(m => m.Overlap == overlap).ToList();
@@ -163,8 +83,22 @@ namespace BuildingCollections.Simulator
                     Judge(verdict, $"TOTAL @ {overlap:0.0#}: {rule.Name}", was, current, rule.PerOverlap(overlap));
                 }
             }
+        }
 
-            return verdict;
+        static Dictionary<string, Metrics> Index(Baseline baseline)
+        {
+            var index = new Dictionary<string, Metrics>();
+            foreach (var m in baseline.Runs)
+            {
+                if (index.ContainsKey(m.Key))
+                {
+                    throw new InvalidOperationException($"Two scenarios share the name '{m.Scenario}'.");
+                }
+
+                index[m.Key] = m;
+            }
+
+            return index;
         }
 
         static void Judge(Verdict verdict, string what, double was, double now, Slack slack)
@@ -179,51 +113,6 @@ namespace BuildingCollections.Simulator
             {
                 verdict.Improvements.Add(line);
             }
-        }
-
-        public static Baseline Load(string path) => JsonSerializer.Deserialize<Baseline>(File.ReadAllText(path));
-
-        public static void Save(Baseline baseline, string path) => File.WriteAllText(path, JsonSerializer.Serialize(baseline, Json) + Environment.NewLine);
-
-        public static string Mismatch(Baseline expected, string catalog, int[] seeds) =>
-            expected.Catalog != catalog ? $"baseline catalog '{expected.Catalog}' differs from '{catalog}'"
-            : !expected.Seeds.SequenceEqual(seeds) ? "baseline seeds differ from the current ones"
-            : null;
-
-        public static int Run(bool update, string catalog, int firstSeed)
-        {
-            var seeds = Seeds(firstSeed);
-            var actual = Measure(Scenarios.All(), catalog, seeds);
-            if (update)
-            {
-                Save(actual, BaselinePath);
-                Console.WriteLine($"Baseline written: {BaselinePath} ({actual.Runs.Count} runs, seeds {seeds.First()}-{seeds.Last()}).");
-                return 0;
-            }
-
-            if (!File.Exists(BaselinePath))
-            {
-                Console.WriteLine($"No baseline at {BaselinePath}. Run 'regress --update' first.");
-                return 2;
-            }
-
-            var expected = Load(BaselinePath);
-            var mismatch = firstSeed == 1 ? Mismatch(expected, catalog, seeds) : null;
-            if (mismatch != null)
-            {
-                Console.WriteLine($"Cannot compare: {mismatch}. Run 'regress --update'.");
-                return 2;
-            }
-
-            var verdict = Compare(expected, actual);
-            verdict.Improvements.ForEach(l => Console.WriteLine("BETTER  " + l));
-            verdict.Regressions.ForEach(l => Console.WriteLine("WORSE   " + l));
-            verdict.Missing.ForEach(l => Console.WriteLine("MISSING " + l));
-            verdict.Added.ForEach(l => Console.WriteLine("NEW     " + l));
-            Console.WriteLine(verdict.Passed
-                ? $"Regression passed ({verdict.Improvements.Count} improvements). Run 'regress --update' to record them."
-                : $"Regression FAILED: {verdict.Regressions.Count} worse, {verdict.Missing.Count} missing.");
-            return verdict.Passed ? 0 : 1;
         }
     }
 }

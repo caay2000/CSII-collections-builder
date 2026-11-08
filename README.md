@@ -38,7 +38,8 @@ street cells and the largest gap. `regress` (and the `SimulatorRegressionTests` 
 of them gets worse than the noise allowance, per scenario and as a total per overlap. The allowances were calibrated
 so that six other sets of 24 seeds pass against the baseline. After a fix that improves things, `regress` lists the
 `BETTER` lines: record them with `--update` and commit the baseline together with the fix. `--first-seed N` measures
-with another seed set, to check that a change is not just luck.
+with another seed set, to check that a change is not just luck. A scenario that is not in the baseline also fails
+(`NEW`), so new scenarios get recorded. `SIM_WEDGES=1` lists the wedge gaps that the report does not count as gaps.
 
 The simulator uses the `game` catalog by default (no one-cell-deep plain buildings, as in most collections);
 set `SIM_CATALOG=with-2x1` or `SIM_CATALOG=full` to try other assortments, and `SIM_LOG=1` to print the planner log.
