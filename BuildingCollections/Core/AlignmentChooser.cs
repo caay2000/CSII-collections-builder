@@ -39,6 +39,7 @@ namespace BuildingCollections.Core
         readonly List<SidePlan> plans;
         readonly int[] prev;
         readonly CornerClaim[][][] claims;
+        readonly List<CornerClaim> active = new List<CornerClaim>();
         readonly int[][] own;
         readonly bool[][] takesStart;
         readonly bool[][] takesEnd;
@@ -52,6 +53,7 @@ namespace BuildingCollections.Core
             takesStart = plans.Select(p => p.Options.Select(o => o.Count > 0 && TakesCorner(o[0], false)).ToArray()).ToArray();
             takesEnd = plans.Select(p => p.Options.Select(o => o.Count > 0 && p.Shape.EndCorner && TakesCorner(o[o.Count - 1], true)).ToArray()).ToArray();
             claims = plans.Select((p, i) => p.Options.Select((o, c) => Claims(i, o, takesStart[i][c], takesEnd[i][c])).ToArray()).ToArray();
+            CornerClaims.Rank(claims.SelectMany(o => o).SelectMany(c => c));
         }
 
         static CornerClaim[] Claims(int plan, List<LotStrip> option, bool start, bool end)
@@ -130,7 +132,41 @@ namespace BuildingCollections.Core
                 }
             }
 
-            return best;
+            return Improve(best);
+        }
+
+        int[] Improve(int[] choice)
+        {
+            var current = Evaluate(choice);
+            bool changed = true;
+            while (changed)
+            {
+                changed = false;
+                for (int i = 0; i < plans.Count; i++)
+                {
+                    int was = choice[i];
+                    for (int c = 0; c < Options(i); c++)
+                    {
+                        if (c == was)
+                        {
+                            continue;
+                        }
+
+                        choice[i] = c;
+                        var score = Evaluate(choice);
+                        if (score.Beats(current))
+                        {
+                            current = score;
+                            was = c;
+                            changed = true;
+                        }
+                    }
+
+                    choice[i] = was;
+                }
+            }
+
+            return choice;
         }
 
         long Combinations()
@@ -174,7 +210,13 @@ namespace BuildingCollections.Core
 
         Score Evaluate(int[] choice)
         {
-            var kept = CornerClaims.Covering(choice.SelectMany((c, i) => claims[i][c]));
+            active.Clear();
+            for (int i = 0; i < plans.Count; i++)
+            {
+                active.AddRange(claims[i][choice[i]]);
+            }
+
+            var kept = CornerClaims.Covering(active);
             var total = new Score(0, 0);
             for (int i = 0; i < plans.Count; i++)
             {

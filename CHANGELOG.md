@@ -10,7 +10,8 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   planifica primero, y el otro solo cuenta como esquina cubierta si el esquinero ganador queda a 6 m o menos de su
   vértice. Antes el lado corto "reservaba" una esquina que luego perdía, y la esquina de al lado se quedaba sin
   esquinero y con huecos de 6-16 m (manzana 18681: de 13 m a menos de 2 m de acera sin cubrir con solape 0,5).
-  Con hasta 4096 combinaciones se prueban todas; por encima se usa la elección anterior.
+  Con hasta 4096 combinaciones se prueban todas; por encima se parte de la elección anterior y se mejora lado a lado
+  con el mismo criterio.
 - Simulador: `SIM_SVG=<carpeta>` guarda un SVG por escenario, `SIM_WEDGES=1` lista las cuñas y `SIM_CORNER_GAPS=1` los
   huecos reales a menos de 25 m de una esquina no recta; el banco mide también la construcción de tiras.
 - Simulador: regresión de colocación (`regress`, `regress --update` y el test `SimulatorRegressionTests`). Compara

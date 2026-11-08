@@ -11,6 +11,7 @@ namespace BuildingCollections.Core
         public Quad Cells;
         public Pt Vertex;
         public int Order;
+        public int Rank;
     }
 
     internal static class CornerClaims
@@ -30,11 +31,21 @@ namespace BuildingCollections.Core
             };
         }
 
-        internal static List<CornerClaim> Covering(IEnumerable<CornerClaim> claims)
+        internal static void Rank(IEnumerable<CornerClaim> claims)
         {
+            int rank = 0;
+            foreach (var claim in claims.OrderByDescending(c => c.Strip.Width).ThenBy(c => c.Order))
+            {
+                claim.Rank = rank++;
+            }
+        }
+
+        internal static List<CornerClaim> Covering(List<CornerClaim> claims)
+        {
+            claims.Sort((a, b) => a.Rank.CompareTo(b.Rank));
             var kept = new List<CornerClaim>();
             var covering = new List<CornerClaim>();
-            foreach (var claim in claims.OrderByDescending(c => c.Strip.Width).ThenBy(c => c.Order))
+            foreach (var claim in claims)
             {
                 var winner = kept.FirstOrDefault(k => k.Strip != claim.Strip && Quad.Touch(k.Cells, claim.Cells));
                 if (winner == null)
