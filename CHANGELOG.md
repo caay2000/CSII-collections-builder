@@ -4,6 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.3
+- Vista previa más rápida al barajar: el relleno de las últimas celdas de calle sin cubrir (fase "front gaps")
+  tardaba 3-4 s por vista previa en selecciones por polígono. Ahora salta las celdas cuyo centro queda fuera del
+  contorno, que nunca podían rellenarse, y prueba cada tamaño de solar una sola vez en lugar de cada edificio de la
+  colección (con 30 edificios en pocos tamaños, la misma prueba se repetía una docena de veces). El edificio se elige
+  después al azar entre los de ese tamaño.
+- Simulador: `bench N S polygon` recorta cada manzana por la mitad, como una selección por polígono, y planifica cada
+  una con su recorte como contorno.
+
 ## 0.3.2
 - Manzanas con un lado corto entre dos esquinas: al elegir la alineación de cada calle se comprueba si dos esquineros
   se pisarían (las dos celdas de fondo de cada uno). Si se pisan, se queda el de la calle más ancha, que es la que se

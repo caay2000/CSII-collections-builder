@@ -53,7 +53,7 @@ namespace BuildingCollections.Core
             for (int x = 0; x < block.Grid.Width; x++)
             {
                 int minX = block.AreaX + x;
-                if (Covered(block, minX) || !(TryInsert(block, minX) || TryInsertOverlappingBacks(block, minX)))
+                if (Covered(block, minX) || !InsideOutline(block, minX) || !(TryInsert(block, minX) || TryInsertOverlappingBacks(block, minX)))
                 {
                     continue;
                 }
@@ -69,6 +69,13 @@ namespace BuildingCollections.Core
             var center = block.Frame.CellCenter(minX, block.AreaY);
             return near.Any(p => p.Footprint(0).Contains(center)) || nearExisting.Any(q => q.Contains(center));
         }
+
+        bool InsideOutline(PlanBlock block, int minX) => Polygon.Contains(outline, block.Frame.CellCenter(minX, block.AreaY));
+
+        List<List<BuildingInfo>> BySize(IEnumerable<BuildingInfo> buildings) =>
+            buildings.GroupBy(b => (b.LotWidth, b.LotDepth)).Select(g => g.ToList()).ToList();
+
+        BuildingInfo AnyOf(List<BuildingInfo> sameSize) => sameSize[rng.Next(sameSize.Count)];
 
         IEnumerable<float> Shifts()
         {
@@ -86,11 +93,11 @@ namespace BuildingCollections.Core
             var ahead = new LotFitTest(nearExisting, nearThinned, outline, others, +1);
             var behind = new LotFitTest(nearExisting, nearThinned, outline, others, -1);
             var probe = new PlannedLot { Owner = block };
-            var options = plain.Where(b => b.LotWidth <= MaxWidth && b.LotDepth <= block.Grid.Depth)
-                .OrderByDescending(b => b.LotWidth).ThenByDescending(b => b.LotDepth).ThenBy(_ => rng.Next()).ToList();
-            foreach (var b in options)
+            var sizes = BySize(plain.Where(b => b.LotWidth <= MaxWidth && b.LotDepth <= block.Grid.Depth))
+                .OrderByDescending(g => g[0].LotWidth).ThenByDescending(g => g[0].LotDepth).ToList();
+            foreach (var sameSize in sizes)
             {
-                var box = new LotBox(minX, block.AreaY, minX + b.LotWidth, block.AreaY + b.LotDepth);
+                var box = new LotBox(minX, block.AreaY, minX + sameSize[0].LotWidth, block.AreaY + sameSize[0].LotDepth);
                 foreach (float shift in Shifts())
                 {
                     if (!ahead.Fits(probe, box, shift, overlap + StrictOverlap, null) || !behind.Fits(probe, box, shift, overlap + StrictOverlap, null))
@@ -98,7 +105,7 @@ namespace BuildingCollections.Core
                         continue;
                     }
 
-                    Add(block, b, box, shift, string.Empty);
+                    Add(block, AnyOf(sameSize), box, shift, string.Empty);
                     return true;
                 }
             }
@@ -115,13 +122,13 @@ namespace BuildingCollections.Core
 
             var others = near.Select(p => p.Footprint(0)).Concat(nearExisting).ToList();
             var probe = new PlannedLot { Owner = block };
-            var options = plain.Where(b => b.LotWidth == 1 && b.LotDepth <= block.Grid.Depth)
-                .OrderBy(b => b.LotDepth).ThenBy(_ => rng.Next()).ToList();
+            var sizes = BySize(plain.Where(b => b.LotWidth == 1 && b.LotDepth <= block.Grid.Depth))
+                .OrderBy(g => g[0].LotDepth).ToList();
             foreach (int wanted in new[] { 2, 1 })
             {
-                foreach (var b in options)
+                foreach (var sameSize in sizes)
                 {
-                    var box = new LotBox(minX, block.AreaY, minX + 1, block.AreaY + b.LotDepth);
+                    var box = new LotBox(minX, block.AreaY, minX + 1, block.AreaY + sameSize[0].LotDepth);
                     foreach (float shift in Shifts())
                     {
                         if (!FacadeClear(probe, box, shift, others) || TouchedSides(probe, box, shift, others) < wanted || !Clear(probe, box, shift))
@@ -129,7 +136,7 @@ namespace BuildingCollections.Core
                             continue;
                         }
 
-                        Add(block, b, box, shift, ", backs overlapping");
+                        Add(block, AnyOf(sameSize), box, shift, ", backs overlapping");
                         return true;
                     }
                 }
