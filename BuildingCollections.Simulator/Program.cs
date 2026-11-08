@@ -16,6 +16,13 @@ namespace BuildingCollections.Simulator
                 return 0;
             }
 
+            if (args.Length > 0 && args[0] == "regress")
+            {
+                Simulation.Plain = Simulation.Catalogs[Simulation.DefaultCatalog];
+                int from = Array.IndexOf(args, "--first-seed");
+                return Regression.Run(args.Contains("--update"), Simulation.DefaultCatalog, from > 0 ? int.Parse(args[from + 1]) : 1);
+            }
+
             string output = args.Length > 0 ? args[0] : "simulation.html";
             int seed = args.Length > 1 ? int.Parse(args[1]) : 7;
             var overlaps = new[] { FootprintMask.StrictOverlap, 0.5f, 1f, 2f };

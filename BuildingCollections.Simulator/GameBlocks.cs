@@ -33,7 +33,28 @@ namespace BuildingCollections.Simulator
             ["block_19101_-11125"] = "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
         };
 
-        public static string Folder => Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../Blocks"));
+        public static string ProjectFolder => FindProjectFolder(AppContext.BaseDirectory);
+
+        public static string Folder => Path.Combine(ProjectFolder, "Blocks");
+
+        static string FindProjectFolder(string start)
+        {
+            for (var dir = new DirectoryInfo(start); dir != null; dir = dir.Parent)
+            {
+                var candidate = Path.Combine(dir.FullName, "BuildingCollections.Simulator");
+                if (File.Exists(Path.Combine(candidate, "BuildingCollections.Simulator.csproj")))
+                {
+                    return candidate;
+                }
+
+                if (File.Exists(Path.Combine(dir.FullName, "BuildingCollections.Simulator.csproj")))
+                {
+                    return dir.FullName;
+                }
+            }
+
+            throw new DirectoryNotFoundException($"BuildingCollections.Simulator not found above {start}");
+        }
 
         public static IEnumerable<Scenario> All()
         {
