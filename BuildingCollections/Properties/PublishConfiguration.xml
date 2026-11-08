@@ -35,9 +35,12 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/mill-lane.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="" />
-	<ModVersion Value="0.3.1" />
+	<ModVersion Value="0.3.2" />
 	<GameVersion Value="1.*" />
 	<ChangeLog>
+0.3.2
+- Blocks with a short side between two corners: the corner next to the short side no longer stays empty when the short side cannot hold its own corner building.
+
 0.3.1
 - Faster preview for large selections (several blocks or a big polygon): about three times quicker, same result.
 
