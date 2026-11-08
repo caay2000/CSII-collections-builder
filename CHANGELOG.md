@@ -11,11 +11,9 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   `ZoneCheckSystem` del juego) no los condena. Así el mod ya no escribe nada en la partida.
 - `BuiltGuardSystem` deja de marcar con `BcBuilt` y de quitar `Condemned`; sigue registrando el estado de los
   edificios tras construir.
-- Partidas antiguas: `LegacyMarkerSystem` pasa los edificios con `BcBuilt` a Plop the Growables (les pone
-  `PloppedBuilding`, les quita `SpawnedBuilding` y `Condemned`) y después quita `BcBuilt`. Hace falta porque el
-  `ExistingBuildingSystem` de PtG marca como `SpawnedBuilding` al cargar todo edificio sin marca suya, y su
-  comprobación de zona condenaría los nuestros (caso de quien usaba el mod sin PtG). Sin PtG, `BcBuilt` se deja
-  hasta que esté activo. El tipo `BcBuilt` se mantiene para poder cargar esas partidas.
+- Partidas antiguas: `LegacyMarkerSystem` quita `BcBuilt` al cargar (los edificios ya llevan `PloppedBuilding`,
+  porque PtG estaba activo al construirlos). El tipo `BcBuilt` se conserva solo en esta versión para poder cargar
+  esas partidas; tras cargar y guardar una vez, la 0.3.5 lo elimina junto con este sistema.
 - La pestaña del constructor avisa si falta Plop the Growables o Anarchy (Anarchy cargado, no solo registrado).
 
 ## 0.3.3
