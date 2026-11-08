@@ -12,6 +12,12 @@ namespace BuildingCollections.Tests
             P0 = start, T = dir, Width = width, Depth = 6, ChunkStart = start, ChunkLength = length,
         };
 
+        static System.Collections.Generic.List<CornerClaim> Resolve(params CornerClaim[] claims)
+        {
+            CornerClaims.Rank(claims);
+            return CornerClaims.Covering(claims.ToList());
+        }
+
         [Fact]
         public void Across_a_short_side_the_wider_strip_keeps_its_corner_and_the_far_corner_is_lost()
         {
@@ -20,7 +26,7 @@ namespace BuildingCollections.Tests
             var narrowEnd = CornerClaims.For(0, narrow, 0, true);
             var wideStart = CornerClaims.For(1, wide, 1000, false);
 
-            var covering = CornerClaims.Covering(new[] { narrowEnd, wideStart });
+            var covering = Resolve(narrowEnd, wideStart);
 
             Assert.Contains(wideStart, covering);
             Assert.DoesNotContain(narrowEnd, covering);
@@ -32,7 +38,7 @@ namespace BuildingCollections.Tests
             var shortSide = Strip(new Pt(0, 20), new Pt(0, -1), 20, 2);
             var nearSide = Strip(new Pt(0, 4), new Pt(1, 0), 160, 20);
 
-            var covering = CornerClaims.Covering(new[] { CornerClaims.For(0, shortSide, 0, false), CornerClaims.For(1, nearSide, 1000, false) });
+            var covering = Resolve(CornerClaims.For(0, shortSide, 0, false), CornerClaims.For(1, nearSide, 1000, false));
 
             Assert.Equal(2, covering.Count);
         }
