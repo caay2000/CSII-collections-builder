@@ -4,6 +4,12 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## Sin publicar
+- Simulador: regresión de colocación (`regress`, `regress --update` y el test `SimulatorRegressionTests`). Compara
+  esquinas sin esquinero, huecos entre edificios, metros de acera sin cubrir, celdas vacías y hueco máximo de cada
+  escenario (24 semillas, cuatro solapes) con `regression-baseline.json`, con márgenes calibrados contra el ruido de
+  otras semillas.
+
 ## 0.3.1
 - Vista previa más rápida con selecciones grandes: el relleno de huecos de fachada, el cierre de huecos en los extremos,
   el enmascarado de la rejilla y el diagnóstico de acera solo comparan cada tira con los edificios de su entorno, en vez

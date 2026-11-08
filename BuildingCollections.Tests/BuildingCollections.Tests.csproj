@@ -13,5 +13,6 @@
   <ItemGroup>
     <!-- La lógica pura se compila aquí directamente: no hay dependencias del juego. -->
     <Compile Include="../BuildingCollections/Core/*.cs" Link="Core/%(Filename)%(Extension)" />
+    <Compile Include="../BuildingCollections.Simulator/*.cs" Exclude="../BuildingCollections.Simulator/Program.cs" Link="Simulator/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

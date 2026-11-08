@@ -28,7 +28,17 @@ dotnet test BuildingCollections.Tests                     # pure logic
 dotnet build BuildingCollections -p:Deploy=true           # DLL + icon to the local Mods folder (game closed)
 BuildingCollections/UI/deploy-ui.sh                       # UI to the local Mods folder
 dotnet run -c Release --project BuildingCollections.Simulator -- report.html [seed] [name filter]
+dotnet run -c Release --project BuildingCollections.Simulator -- regress            # compare with the baseline
+dotnet run -c Release --project BuildingCollections.Simulator -- regress --update   # record a new baseline
 ```
+
+**Placement regression.** `BuildingCollections.Simulator/regression-baseline.json` holds, for every simulator scenario
+and overlap, the sums over seeds 1-24 of missed corners, gaps between two buildings, uncovered sidewalk meters, empty
+street cells and the largest gap. `regress` (and the `SimulatorRegressionTests` test in `dotnet test`) fails when any
+of them gets worse than the noise allowance, per scenario and as a total per overlap. The allowances were calibrated
+so that six other sets of 24 seeds pass against the baseline. After a fix that improves things, `regress` lists the
+`BETTER` lines: record them with `--update` and commit the baseline together with the fix. `--first-seed N` measures
+with another seed set, to check that a change is not just luck.
 
 The simulator uses the `game` catalog by default (no one-cell-deep plain buildings, as in most collections);
 set `SIM_CATALOG=with-2x1` or `SIM_CATALOG=full` to try other assortments, and `SIM_LOG=1` to print the planner log.
