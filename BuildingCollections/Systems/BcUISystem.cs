@@ -221,7 +221,7 @@ namespace BuildingCollections.Systems
                 toolActive.Update(toolSystem.activeTool == builder);
                 UpdatePlopping();
 
-                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)},\"anarchyAvailable\":{Js(AnarchyBridge.Available)},\"ptgAvailable\":{Js(PtgBridge.Available)},\"filled\":{builder.FrontFilled},\"front\":{builder.FrontTotal},\"treeSets\":{treeSetsJson}}}");
+                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)},\"anarchyAvailable\":{Js(AnarchyBridge.Available)},\"ptgAvailable\":{Js(PtgBridge.Available)},\"anarchyInstalled\":{Js(AnarchyBridge.Installed)},\"filled\":{builder.FrontFilled},\"front\":{builder.FrontTotal},\"treeSets\":{treeSetsJson}}}");
 
                 if (builder.MessageSerial != messageSerial)
                 {

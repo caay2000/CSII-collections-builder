@@ -18,8 +18,23 @@ namespace BuildingCollections
         static int typeLookups;
         static bool registered;
         static bool unsupported;
+        static bool installedChecked;
 
         public static bool Available => registered;
+
+        public static bool Installed
+        {
+            get
+            {
+                if (!installedChecked)
+                {
+                    installedChecked = true;
+                    systemType ??= FindType();
+                }
+
+                return systemType != null;
+            }
+        }
 
         public static bool CanSwitch => registered && toggleMethod != null;
 

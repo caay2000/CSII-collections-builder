@@ -49,7 +49,7 @@ export const BuilderTab = () => {
     const mixCandidates = mix ? mixBuildings.filter(passes) : [];
     const missingMods = [
         !plan.ptgAvailable && "Plop the Growables (without it the game condemns the buildings placed here)",
-        !plan.anarchyAvailable && "Anarchy (needed for overlap)",
+        !plan.anarchyInstalled && "Anarchy (needed for overlap)",
     ].filter((m): m is string => !!m);
     const canGenerate = plan.areaSelected && !!selected && candidates.length + mixCandidates.length > 0;
     const collectionProblem = !selected ? null

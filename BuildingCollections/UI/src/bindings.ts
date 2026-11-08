@@ -22,7 +22,7 @@ export interface BuilderDto {
     mixShare: number;
 }
 export interface PlanDto {
-    areaSelected: boolean; previewing: boolean; lots: number; blocks: number; anarchy: boolean; anarchyAvailable: boolean; ptgAvailable: boolean;
+    areaSelected: boolean; previewing: boolean; lots: number; blocks: number; anarchy: boolean; anarchyAvailable: boolean; ptgAvailable: boolean; anarchyInstalled: boolean;
     filled: number; front: number;
     treeSets: string[];
 }
@@ -67,7 +67,7 @@ export const useCollections = (): CollectionDto[] => useJson(useValue(collection
 export const useBuildings = (): BuildingDto[] => useJson(useValue(buildings$), []);
 export const useMixBuildings = (): BuildingDto[] => useJson(useValue(mixBuildings$), []);
 export const useBuilder = (): BuilderDto => ({ ...DEFAULT_BUILDER, ...parse<Partial<BuilderDto>>(useValue(builder$), {}) });
-export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, anarchy: false, anarchyAvailable: true, ptgAvailable: true, filled: 0, front: 0, treeSets: [], ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
+export const usePlan = (): PlanDto => ({ areaSelected: false, previewing: false, lots: 0, blocks: 0, anarchy: false, anarchyAvailable: false, ptgAvailable: true, anarchyInstalled: true, filled: 0, front: 0, treeSets: [], ...parse<Partial<PlanDto>>(useValue(plan$), {}) });
 
 export const actions = {
     setPanelOpen: (v: boolean) => trigger(G, "setPanelOpen", v),
