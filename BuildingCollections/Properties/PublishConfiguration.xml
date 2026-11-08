@@ -31,7 +31,7 @@ The builder tab shows a warning if either is missing.
 **Your saves**
 - The builder only places regular buildings from your own collections (and, if you turn them on, ordinary trees), the same objects you could place by hand. It adds no new assets and does not change any game rules.
 - Your collections and settings live in the mod's own settings folder, not in the save.
-- This mod writes nothing to the save. Saves from 0.3.3 or earlier carried a small marker on the buildings it placed; it is removed when you load them with this version, and gone from the file once you save again.
+- This mod writes nothing to the save. Saves from 0.3.3 or earlier carried a small marker on the buildings it placed; when you load them with this version and Plop the Growables, those buildings are handed over to Plop the Growables and the marker is removed (gone from the file once you save again).
 - Keeping the placed buildings from being condemned is done by Plop the Growables, which is why it is a required mod.
 
 **Mixing two collections**

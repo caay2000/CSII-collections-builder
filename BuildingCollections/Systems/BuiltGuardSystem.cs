@@ -17,13 +17,6 @@ namespace BuildingCollections.Systems
         readonly List<(Entity entity, int frames)> pending = new List<(Entity, int)>();
         readonly List<Entity> report = new List<Entity>();
         int reportCountdown = -1;
-        EntityQuery legacyQuery;
-
-        protected override void OnCreate()
-        {
-            base.OnCreate();
-            legacyQuery = GetEntityQuery(ComponentType.ReadOnly<BcBuilt>());
-        }
 
         public void Track(IEnumerable<Entity> entities, int reportAfterFrames)
         {
@@ -37,21 +30,8 @@ namespace BuildingCollections.Systems
 
         protected override void OnUpdate()
         {
-            RemoveLegacyMarkers();
             Settle();
             Report();
-        }
-
-        void RemoveLegacyMarkers()
-        {
-            if (legacyQuery.IsEmptyIgnoreFilter)
-            {
-                return;
-            }
-
-            int count = legacyQuery.CalculateEntityCount();
-            EntityManager.RemoveComponent<BcBuilt>(legacyQuery);
-            Mod.Log.Info($"[build] Removed the old BcBuilt marker from {count} buildings; the save no longer depends on this mod.");
         }
 
         void Settle()
