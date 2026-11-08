@@ -5,6 +5,9 @@
 	<ShortDescription Value="Group buildings into collections and fill a whole city block with them in one click." />
 	<!--Multi-line: no leading spaces on each line (required by the publisher).-->
 	<LongDescription>
+**Why this mod exists**
+This started as a personal project. I watched YouTubers such as JustJoeG build whole streets out of hand-picked buildings, and nothing I found on Paradox Mods did quite what I needed, so I made my own. It has been working well for me, so I decided to share it in case someone else is in the same situation.
+
 Collections Builder does two things: it lets you keep your own **collections** of buildings, and it uses them to **build whole city blocks** in one go.
 
 **Collections**
@@ -19,6 +22,11 @@ Collections Builder does two things: it lets you keep your own **collections** o
 - Filter by lot width, depth and level, and set the density (how much of the street front gets built).
 - Preview the result as a transparent plan, press Reshuffle for another random layout with the same rules, and press Build when you like it. No zoning needed, and growables placed this way are protected from being condemned.
 - Optional trees in the leftover space inside the block.
+
+**Your saves**
+- The builder only places regular buildings from your own collections, the same ones you could place by hand. It adds no new assets and changes no game rules or city data.
+- Your collections and settings live in the mod's own settings folder, not in the save.
+- The only thing written to the save is an empty marker on the buildings the builder placed, used to keep them from being condemned.
 
 **Mixing two collections**
 - Fill a block from two collections at once and choose the proportion with a slider, for example 70 % of one style and 30 % of another.
