@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
+if [ $# -ne 2 ]; then echo "usage: $0 <captures folder> <output folder>" >&2; exit 2; fi
 IN="$1"; OUT="$2"; T="$OUT/tmp"; mkdir -p "$T"
+trap 'rm -rf "$T"' EXIT
 F=/mnt/c/Windows/Fonts/segoeuib.ttf
 FL=/mnt/c/Windows/Fonts/segoeui.ttf
 img(){ echo "$IN/Screenshot 2026-11-09 $1.png"; }
@@ -46,4 +48,3 @@ convert "$T/c1.png" "$T/c2.png" -background none +smush 40 "$T/cc.png"
 convert "$T/bg.png" "$T/cc.png" -gravity center -geometry +0+30 -composite "$T/c.png"
 label "Collections: your own lists of buildings, filtered by size and level" "$T/l.png" 28
 convert "$T/c.png" "$T/l.png" -gravity north -geometry +0+18 -composite -quality 90 "$OUT/collections.jpg"
-rm -r "$T"
