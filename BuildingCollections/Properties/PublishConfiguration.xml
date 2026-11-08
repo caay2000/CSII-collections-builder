@@ -20,13 +20,19 @@ Collections Builder does two things: it lets you keep your own **collections** o
 - Click a block surrounded by roads, or draw a polygon, and pick a collection.
 - The mod lays buildings from that collection along every sidewalk, facing the street, with corner buildings on the corners when the collection has them. It also handles curved streets.
 - Filter by lot width, depth and level, and set the density (how much of the street front gets built).
-- Preview the result as a transparent plan, press Reshuffle for another random layout with the same rules, and press Build when you like it. No zoning needed, and growables placed this way are protected from being condemned.
+- Preview the result as a transparent plan, press Reshuffle for another random layout with the same rules, and press Build when you like it. No zoning needed: **Plop the Growables** keeps the placed buildings from being condemned.
 - Optional trees in the leftover space inside the block.
+
+**Required mods**
+- **Plop the Growables**: buildings placed without zoning would otherwise be condemned by the game.
+- **Anarchy**: needed for the overlap between buildings.
+The builder tab shows a warning if either is missing.
 
 **Your saves**
 - The builder only places regular buildings from your own collections (and, if you turn them on, ordinary trees), the same objects you could place by hand. It adds no new assets and does not change any game rules.
 - Your collections and settings live in the mod's own settings folder, not in the save.
-- The only thing written to the save is an empty marker on the buildings the builder placed, used to keep them from being condemned.
+- This mod writes nothing to the save. Saves from 0.3.3 or earlier carried a small marker on the buildings it placed; it is removed when you load them with this version, and gone from the file once you save again.
+- Keeping the placed buildings from being condemned is done by Plop the Growables, which is why it is a required mod.
 
 **Mixing two collections**
 - Fill a block from two collections at once and choose the proportion with a slider, for example 70 % of one style and 30 % of another.
@@ -34,7 +40,7 @@ Collections Builder does two things: it lets you keep your own **collections** o
 **Overlap**
 - Street lengths are rarely a multiple of the 8 m lot grid, so a strict layout leaves gaps at street ends and along curves.
 - With "Overlap per joint" (0.5 to 2 m), neighbouring buildings may overlap each other by up to that much, so they always touch and the leftover goes to the corner instead of showing as gaps between buildings. Existing buildings are never removed or overlapped.
-- Overlap needs the **Anarchy** mod: the builder turns Anarchy on while its tab is open and turns it back off when you leave (only if it was the one that turned it on). Set it to Off to build without overlap.
+- Overlap uses the **Anarchy** mod: the builder turns Anarchy on while its tab is open and turns it back off when you leave (only if it was the one that turned it on). Set it to Off to build without overlap.
 
 Find It is optional (it is only used for adding buildings and for tags). Early version: feedback and bug reports are welcome on GitHub.
 	</LongDescription>
@@ -47,9 +53,15 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/collections.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="" />
-	<ModVersion Value="0.3.3" />
+	<ModVersion Value="0.3.4" />
 	<GameVersion Value="1.*" />
+	<Dependency Id="75826" />
+	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.4
+- Plop the Growables and Anarchy are now required mods. Protection from being condemned is left to Plop the Growables, so this mod no longer writes anything to the save; the old marker is removed from existing saves on load.
+- The builder tab warns when a required mod is missing.
+
 0.3.3
 - Faster reshuffles: filling the last uncovered street cells no longer stalls for seconds on polygon selections and large collections.
 

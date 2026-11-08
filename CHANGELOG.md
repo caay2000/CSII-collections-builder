@@ -4,6 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.4
+- Plop the Growables (75826) y Anarchy (74604) pasan a ser dependencias en Paradox Mods. La protección contra
+  `Condemned` la hace Plop the Growables: su `PloppedBuildingSystem` marca como `PloppedBuilding` todo edificio
+  residencial, comercial o industrial que aparece sin obra, y su `SelectiveZoneCheckSystem` (que sustituye al
+  `ZoneCheckSystem` del juego) no los condena. Así el mod ya no escribe nada en la partida.
+- `BuiltGuardSystem` deja de marcar con `BcBuilt` y de quitar `Condemned`; conserva el tipo para cargar partidas
+  antiguas y les quita la marca al cargar. Sigue registrando el estado de los edificios tras construir.
+- La pestaña del constructor avisa si falta Plop the Growables o Anarchy.
+
 ## 0.3.3
 - Vista previa más rápida al barajar: el relleno de las últimas celdas de calle sin cubrir (fase "front gaps")
   tardaba 3-4 s por vista previa en selecciones por polígono. Ahora salta las celdas cuyo centro queda fuera del

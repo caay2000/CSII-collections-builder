@@ -47,6 +47,10 @@ export const BuilderTab = () => {
     const mix = b.mix && b.mix !== selected && collections.some((c) => c.name === b.mix) ? b.mix : "";
     const candidates = buildings.filter(passes);
     const mixCandidates = mix ? mixBuildings.filter(passes) : [];
+    const missingMods = [
+        !plan.ptgAvailable && "Plop the Growables (without it the game condemns the buildings placed here)",
+        !plan.anarchyAvailable && "Anarchy (needed for overlap)",
+    ].filter((m): m is string => !!m);
     const canGenerate = plan.areaSelected && !!selected && candidates.length + mixCandidates.length > 0;
     const collectionProblem = !selected ? null
         : buildings.length + (mix ? mixBuildings.length : 0) === 0 ? (mix ? "Both collections are empty." : "The collection is empty.")
@@ -185,6 +189,8 @@ export const BuilderTab = () => {
                     )}
                 </div>
             </div>
+
+            {missingMods.length > 0 && <div className={styles.builderMsgWarn}>{`Required mods missing: ${missingMods.join("; ")}.`}</div>}
 
             <div className={styles.summary}>
                 {!selected ? (

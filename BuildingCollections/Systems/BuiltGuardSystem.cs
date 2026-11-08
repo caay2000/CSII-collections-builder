@@ -1,13 +1,9 @@
-using System;
 using System.Collections.Generic;
 using Colossal.Serialization.Entities;
 using Game;
 using Game.Buildings;
 using Game.Common;
-using Game.Notifications;
-using Game.Prefabs;
 using Game.Tools;
-using Unity.Collections;
 using Unity.Entities;
 
 namespace BuildingCollections.Systems
@@ -21,16 +17,12 @@ namespace BuildingCollections.Systems
         readonly List<(Entity entity, int frames)> pending = new List<(Entity, int)>();
         readonly List<Entity> report = new List<Entity>();
         int reportCountdown = -1;
-        EntityQuery condemnedQuery;
-        EntityQuery configQuery;
-        IconCommandSystem iconSystem;
+        EntityQuery legacyQuery;
 
         protected override void OnCreate()
         {
             base.OnCreate();
-            condemnedQuery = GetEntityQuery(ComponentType.ReadOnly<BcBuilt>(), ComponentType.ReadOnly<Condemned>(), ComponentType.Exclude<Deleted>());
-            configQuery = GetEntityQuery(ComponentType.ReadOnly<BuildingConfigurationData>());
-            iconSystem = World.GetOrCreateSystemManaged<IconCommandSystem>();
+            legacyQuery = GetEntityQuery(ComponentType.ReadOnly<BcBuilt>());
         }
 
         public void Track(IEnumerable<Entity> entities, int reportAfterFrames)
@@ -45,19 +37,31 @@ namespace BuildingCollections.Systems
 
         protected override void OnUpdate()
         {
-            TagPending();
-            Unflag();
+            RemoveLegacyMarkers();
+            Settle();
             Report();
         }
 
-        void TagPending()
+        void RemoveLegacyMarkers()
+        {
+            if (legacyQuery.IsEmptyIgnoreFilter)
+            {
+                return;
+            }
+
+            int count = legacyQuery.CalculateEntityCount();
+            EntityManager.RemoveComponent<BcBuilt>(legacyQuery);
+            Mod.Log.Info($"[build] Removed the old BcBuilt marker from {count} buildings; the save no longer depends on this mod.");
+        }
+
+        void Settle()
         {
             if (pending.Count == 0)
             {
                 return;
             }
 
-            int tagged = 0, lost = 0;
+            int placed = 0, lost = 0;
             for (int i = pending.Count - 1; i >= 0; i--)
             {
                 var (e, frames) = pending[i];
@@ -68,10 +72,9 @@ namespace BuildingCollections.Systems
                 }
                 else if (!EntityManager.HasComponent<Temp>(e))
                 {
-                    EntityManager.AddComponent<BcBuilt>(e);
                     report.Add(e);
                     pending.RemoveAt(i);
-                    tagged++;
+                    placed++;
                 }
                 else if (frames > 900)
                 {
@@ -84,40 +87,9 @@ namespace BuildingCollections.Systems
                 }
             }
 
-            if (tagged > 0 || lost > 0)
+            if (placed > 0 || lost > 0)
             {
-                Mod.Log.Info($"[build] {tagged} buildings tagged as ours, {lost} not applied or deleted, {pending.Count} pending.");
-            }
-        }
-
-        readonly ThrottledLog unflagLog = new ThrottledLog(TimeSpan.FromSeconds(30));
-
-        void Unflag()
-        {
-            if (condemnedQuery.IsEmptyIgnoreFilter)
-            {
-                return;
-            }
-
-            using (var entities = condemnedQuery.ToEntityArray(Allocator.Temp))
-            {
-                Entity notification = Entity.Null;
-                if (!configQuery.IsEmptyIgnoreFilter)
-                {
-                    notification = configQuery.GetSingleton<BuildingConfigurationData>().m_CondemnedNotification;
-                }
-
-                var icons = iconSystem.CreateCommandBuffer();
-                foreach (var e in entities)
-                {
-                    EntityManager.RemoveComponent<Condemned>(e);
-                    if (notification != Entity.Null)
-                    {
-                        icons.Remove(e, notification);
-                    }
-                }
-
-                unflagLog.Info("unflag", $"[build] Removed Condemned from {entities.Length} of our buildings.");
+                Mod.Log.Info($"[build] {placed} buildings placed, {lost} not applied or deleted, {pending.Count} pending.");
             }
         }
 
@@ -129,7 +101,7 @@ namespace BuildingCollections.Systems
             }
 
             reportCountdown = -1;
-            int alive = 0, condemned = 0, construction = 0, tagged = 0;
+            int alive = 0, condemned = 0, construction = 0;
             foreach (var e in report)
             {
                 if (!EntityManager.Exists(e) || EntityManager.HasComponent<Deleted>(e))
@@ -140,10 +112,9 @@ namespace BuildingCollections.Systems
                 alive++;
                 if (EntityManager.HasComponent<Condemned>(e)) condemned++;
                 if (EntityManager.HasComponent<Game.Objects.UnderConstruction>(e)) construction++;
-                if (EntityManager.HasComponent<BcBuilt>(e)) tagged++;
             }
 
-            Mod.Log.Info($"[build] State after waiting: {alive} of {report.Count} still standing, {tagged} tagged, {condemned} with Condemned, {construction} under construction.");
+            Mod.Log.Info($"[build] State after waiting: {alive} of {report.Count} still standing, {condemned} with Condemned, {construction} under construction; Plop the Growables {(PtgBridge.Available ? "active" : "missing")}.");
             report.Clear();
         }
     }
