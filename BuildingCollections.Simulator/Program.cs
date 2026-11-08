@@ -12,7 +12,7 @@ namespace BuildingCollections.Simulator
         {
             if (args.Length > 0 && args[0] == "bench")
             {
-                Bench.Run(args.Length > 1 ? int.Parse(args[1]) : 10, args.Length > 2 ? int.Parse(args[2]) : 3);
+                Bench.Run(args.Length > 1 ? int.Parse(args[1]) : 10, args.Length > 2 ? int.Parse(args[2]) : 3, args.Contains("polygon"));
                 return 0;
             }
 
