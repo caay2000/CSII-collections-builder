@@ -70,7 +70,11 @@ namespace BuildingCollections.Core
             return near.Any(p => p.Footprint(0).Contains(center)) || nearExisting.Any(q => q.Contains(center));
         }
 
-        bool InsideOutline(PlanBlock block, int minX) => Polygon.Contains(outline, block.Frame.CellCenter(minX, block.AreaY));
+        bool InsideOutline(PlanBlock block, int minX)
+        {
+            var center = block.Frame.CellCenter(minX, block.AreaY);
+            return Shifts().Any(s => Polygon.Contains(outline, center + block.Frame.AxisX * s));
+        }
 
         List<List<BuildingInfo>> BySize(IEnumerable<BuildingInfo> buildings) =>
             buildings.GroupBy(b => (b.LotWidth, b.LotDepth)).Select(g => g.ToList()).ToList();
