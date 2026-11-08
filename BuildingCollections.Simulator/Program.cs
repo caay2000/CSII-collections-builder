@@ -52,11 +52,36 @@ namespace BuildingCollections.Simulator
                 }
             }
 
+            var svgFolder = Environment.GetEnvironmentVariable("SIM_SVG");
+            if (!string.IsNullOrEmpty(svgFolder))
+            {
+                Directory.CreateDirectory(svgFolder);
+                foreach (var r in runs)
+                {
+                    File.WriteAllText(Path.Combine(svgFolder, $"{Regex.Replace(r.Scenario.Name, "[^A-Za-z0-9]+", "_")}_{r.Overlap:0.0#}.svg"), HtmlReport.StandaloneSvg(r));
+                }
+            }
+
             if (Environment.GetEnvironmentVariable("SIM_WEDGES") == "1")
             {
                 foreach (var r in runs.Where(r => r.WedgeMeters > 0))
                 {
                     Console.WriteLine($"WEDGE {r.Scenario.Name,-58} overlap {r.Overlap,4:0.0#}: {r.WedgeMeters,5:0.0} m in {r.Gaps.Count(g => g.Wedge)}: {string.Join(" ", r.Gaps.Where(g => g.Wedge).Select(g => $"{g.Length:0.0}@({g.From.X:0},{g.From.Y:0})"))}");
+                }
+            }
+
+            if (Environment.GetEnvironmentVariable("SIM_CORNER_GAPS") == "1")
+            {
+                foreach (var r in runs)
+                {
+                    foreach (var g in r.RealGaps)
+                    {
+                        var near = r.Corners.Where(c => Math.Abs(c.Angle - 90) > 5).Select(c => (c, d: Math.Min(Dist(g.From, c.At), Dist(g.To, c.At)))).Where(x => x.d < 25).OrderBy(x => x.d).ToList();
+                        if (near.Count > 0)
+                        {
+                            Console.WriteLine($"CGAP {r.Scenario.Name,-58} overlap {r.Overlap,4:0.0#}: {g.Length,5:0.0} m, {near[0].d,4:0.0} m from a {near[0].c.Angle:0}° corner");
+                        }
+                    }
                 }
             }
 
@@ -72,6 +97,8 @@ namespace BuildingCollections.Simulator
             Console.WriteLine($"Report: {Path.GetFullPath(output)}");
             return 0;
         }
+
+        static double Dist(Pt a, Pt b) => Math.Sqrt(Pt.Dot(a - b, a - b));
 
         static string Version()
         {

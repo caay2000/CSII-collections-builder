@@ -34,8 +34,11 @@ namespace BuildingCollections.Core
         const int CellWeight = 10;
         const int ChangeWeight = 5000;
 
+        const long ExhaustiveLimit = 1 << 12;
+
         readonly List<SidePlan> plans;
         readonly int[] prev;
+        readonly CornerClaim[][][] claims;
         readonly int[][] own;
         readonly bool[][] takesStart;
         readonly bool[][] takesEnd;
@@ -48,6 +51,23 @@ namespace BuildingCollections.Core
             own = plans.Select(p => p.Options.Select((o, c) => OwnScore(p, o, c)).ToArray()).ToArray();
             takesStart = plans.Select(p => p.Options.Select(o => o.Count > 0 && TakesCorner(o[0], false)).ToArray()).ToArray();
             takesEnd = plans.Select(p => p.Options.Select(o => o.Count > 0 && p.Shape.EndCorner && TakesCorner(o[o.Count - 1], true)).ToArray()).ToArray();
+            claims = plans.Select((p, i) => p.Options.Select((o, c) => Claims(i, o, takesStart[i][c], takesEnd[i][c])).ToArray()).ToArray();
+        }
+
+        static CornerClaim[] Claims(int plan, List<LotStrip> option, bool start, bool end)
+        {
+            var list = new List<CornerClaim>();
+            if (start)
+            {
+                list.Add(CornerClaims.For(plan, option[0], plan * 1000, false));
+            }
+
+            if (end)
+            {
+                list.Add(CornerClaims.For(plan, option[option.Count - 1], plan * 1000 + option.Count - 1, true));
+            }
+
+            return list.ToArray();
         }
 
         static int OwnScore(SidePlan plan, List<LotStrip> option, int choice)
@@ -93,6 +113,11 @@ namespace BuildingCollections.Core
                 return best;
             }
 
+            if (Combinations() <= ExhaustiveLimit)
+            {
+                return Exhaustive();
+            }
+
             bool wraps = prev[0] == n - 1;
             var bestScore = Score.None;
             for (int first = 0; first < (wraps ? Options(0) : 1); first++)
@@ -106,6 +131,60 @@ namespace BuildingCollections.Core
             }
 
             return best;
+        }
+
+        long Combinations()
+        {
+            long total = 1;
+            for (int i = 0; i < plans.Count && total <= ExhaustiveLimit; i++)
+            {
+                total *= Math.Max(1, Options(i));
+            }
+
+            return total;
+        }
+
+        int[] Exhaustive()
+        {
+            int n = plans.Count;
+            var choice = new int[n];
+            var best = new int[n];
+            var bestScore = Score.None;
+            while (true)
+            {
+                var score = Evaluate(choice);
+                if (score.Beats(bestScore))
+                {
+                    bestScore = score;
+                    Array.Copy(choice, best, n);
+                }
+
+                int i = 0;
+                while (i < n && ++choice[i] >= Options(i))
+                {
+                    choice[i++] = 0;
+                }
+
+                if (i == n)
+                {
+                    return best;
+                }
+            }
+        }
+
+        Score Evaluate(int[] choice)
+        {
+            var kept = CornerClaims.Covering(choice.SelectMany((c, i) => claims[i][c]));
+            var total = new Score(0, 0);
+            for (int i = 0; i < plans.Count; i++)
+            {
+                int c = choice[i];
+                bool taken = plans[i].Shape.StartCorner && plans[i].Options[c].Count > 0
+                    && kept.Any(k => (k.Plan == i && !k.AtEnd) || (k.Plan == prev[i] && k.AtEnd));
+                total += new Score(own[i][c] + (taken ? CornerWeight : 0), 0) + Pick(i, c);
+            }
+
+            return total;
         }
 
         static Score Pick(int i, int choice) => new Score(0, i < 62 ? (long)choice << i : 0);

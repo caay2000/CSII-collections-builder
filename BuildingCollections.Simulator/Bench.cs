@@ -18,6 +18,7 @@ namespace BuildingCollections.Simulator
             int columns = (int)Math.Ceiling(Math.Sqrt(scenarios.Count));
             double x = 0, y = 0, rowHeight = 0;
             int column = 0;
+            var stripClock = new Stopwatch();
             foreach (var s in scenarios)
             {
                 var all = s.Sides.SelectMany(p => p).ToList();
@@ -26,7 +27,9 @@ namespace BuildingCollections.Simulator
                 var d = new Pt(x - minX, y - minY);
                 var sides = s.Sides.Select(side => side.Select(p => p + d).ToList()).ToList();
                 var moved = s.Existing.Select(q => new Quad(q.P[0] + d, q.P[1] + d, q.P[2] + d, q.P[3] + d)).ToList();
+                stripClock.Start();
                 var strips = VirtualLots.Build(sides, moved, frontage: s.Frontage, curveOverlap: 0.5);
+                stripClock.Stop();
                 blocks.AddRange(strips.Where(st => st.Grid.FreeCount() > 0).Select(st => new PlanBlock
                 {
                     Frame = CellFrame.FromStrip(st), Grid = st.Grid, Strip = st, Priority = st.Width * 100, IsVirtual = true,
@@ -47,7 +50,7 @@ namespace BuildingCollections.Simulator
             var pts = blocks.Select(b => b.Frame.CellCenter(b.AreaX, b.AreaY)).ToList();
             double ox = -500, oy = -500, ex = pts.Max(p => p.X) + 500, ey = pts.Max(p => p.Y) + 500;
             var outline = new List<Pt> { new Pt(ox, oy), new Pt(ex, oy), new Pt(ex, ey), new Pt(ox, ey) };
-            Console.WriteLine($"Bench: {scenarios.Count} game blocks, {blocks.Count} strips, {existing.Count} existing buildings.");
+            Console.WriteLine($"Bench: {scenarios.Count} game blocks, {blocks.Count} strips, {existing.Count} existing buildings; strips built in {stripClock.ElapsedMilliseconds} ms.");
             var total = new Stopwatch();
             for (int seed = 1; seed <= seeds; seed++)
             {

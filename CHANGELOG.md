@@ -4,7 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
-## Sin publicar
+## 0.3.2
+- Manzanas con un lado corto entre dos esquinas: al elegir la alineación de cada calle se comprueba si dos esquineros
+  se pisarían (las dos celdas de fondo de cada uno). Si se pisan, se queda el de la calle más ancha, que es la que se
+  planifica primero, y el otro solo cuenta como esquina cubierta si el esquinero ganador queda a 6 m o menos de su
+  vértice. Antes el lado corto "reservaba" una esquina que luego perdía, y la esquina de al lado se quedaba sin
+  esquinero y con huecos de 6-16 m (manzana 18681: de 13 m a menos de 2 m de acera sin cubrir con solape 0,5).
+  Con hasta 4096 combinaciones se prueban todas; por encima se usa la elección anterior.
+- Simulador: `SIM_SVG=<carpeta>` guarda un SVG por escenario, `SIM_WEDGES=1` lista las cuñas y `SIM_CORNER_GAPS=1` los
+  huecos reales a menos de 25 m de una esquina no recta; el banco mide también la construcción de tiras.
 - Simulador: regresión de colocación (`regress`, `regress --update` y el test `SimulatorRegressionTests`). Compara
   esquinas sin esquinero, huecos entre edificios, metros de acera sin cubrir, celdas vacías y hueco máximo de cada
   escenario (24 semillas, cuatro solapes) con `regression-baseline.json`, con márgenes calibrados contra el ruido de

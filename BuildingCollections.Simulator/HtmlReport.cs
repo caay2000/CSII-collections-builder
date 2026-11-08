@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using BuildingCollections.Core;
 
 namespace BuildingCollections.Simulator
@@ -162,6 +163,30 @@ namespace BuildingCollections.Simulator
         static string Stats(Run r) =>
             $"<p class=\"stats\"><b>{r.Result.FrontFilled}/{r.Result.FrontCells.Count}</b> street cells ({r.FilledShare:P0}) · <b>{r.Result.Lots.Count}</b> buildings · " +
             $"<b>{r.RealGaps.Count()}</b> gaps, {F(r.GapMeters)} m (max {F(r.MaxGap)} m){(r.Slivers.Any() ? $" · {r.Slivers.Count()} slivers ≤ 1.5 m" : string.Empty)}{(r.WedgeMeters > 0 ? $" · unavoidable wedges {F(r.WedgeMeters)} m" : string.Empty)}{CornerStats(r)}</p>{LogBlock(r)}";
+
+        static readonly Dictionary<string, string> InlineStyles = new Dictionary<string, string>
+        {
+            ["road"] = "fill:none;stroke:#999;stroke-width:7",
+            ["ground"] = "fill:#eee",
+            ["cell"] = "fill:none;stroke:#bbb;stroke-width:0.35",
+            ["cell off"] = "fill:none;stroke:#ddd;stroke-width:0.35",
+            ["lot"] = "fill:#6a9fd8;fill-opacity:0.6;stroke:#36c;stroke-width:0.4",
+            ["lot corner"] = "fill:#e8a33a;fill-opacity:0.7;stroke:#b70;stroke-width:0.4",
+            ["face"] = "fill:none;stroke:#222;stroke-width:1.3",
+            ["face corner"] = "fill:none;stroke:#222;stroke-width:1.8",
+            ["gap"] = "stroke:#d22;stroke-width:2.2",
+            ["gap sliver"] = "stroke:#e90;stroke-width:1.2",
+            ["gap wedge"] = "stroke:#a0f;stroke-width:1.6",
+            ["cmark ok"] = "fill:#2a2",
+            ["cmark warn"] = "fill:#e90",
+            ["cmark bad"] = "fill:#d22",
+        };
+
+        public static string StandaloneSvg(Run r)
+        {
+            var svg = Svg(r).Replace("role=\"img\"", "xmlns=\"http://www.w3.org/2000/svg\" width=\"1400\" height=\"1000\" role=\"img\"");
+            return Regex.Replace(svg, "class=\"([^\"]+)\"", m => InlineStyles.TryGetValue(m.Groups[1].Value, out var style) ? $"style=\"{style}\"" : m.Value);
+        }
 
         static string Svg(Run r)
         {
