@@ -28,11 +28,15 @@ Collections Builder does two things: it lets you keep your own **collections** o
 - With "Overlap per joint" (0.5 to 2 m), neighbouring buildings may overlap each other by up to that much, so they always touch and the leftover goes to the corner instead of showing as gaps between buildings. Existing buildings are never removed or overlapped.
 - Overlap needs the **Anarchy** mod: the builder turns Anarchy on while its tab is open and turns it back off when you leave (only if it was the one that turned it on). Set it to Off to build without overlap.
 
-Find It is optional (it is only used for adding buildings and for tags). Early version (0.1.x): feedback and bug reports are welcome on GitHub.
+Find It is optional (it is only used for adding buildings and for tags). Early version: feedback and bug reports are welcome on GitHub.
 	</LongDescription>
 	<Thumbnail Value="Properties/Thumbnail.png" />
-	<Screenshot Value="Properties/Screenshots/cobblestone.jpg" />
-	<Screenshot Value="Properties/Screenshots/mill-lane.jpg" />
+	<Screenshot Value="Properties/Screenshots/preview.jpg" />
+	<Screenshot Value="Properties/Screenshots/select-and-preview.jpg" />
+	<Screenshot Value="Properties/Screenshots/reshuffle.jpg" />
+	<Screenshot Value="Properties/Screenshots/polygon.jpg" />
+	<Screenshot Value="Properties/Screenshots/trees.jpg" />
+	<Screenshot Value="Properties/Screenshots/collections.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="" />
 	<ModVersion Value="0.3.3" />
