@@ -4,7 +4,7 @@
     <LangVersion>9.0</LangVersion>
     <AssemblyName>BuildingCollections</AssemblyName>
     <RootNamespace>BuildingCollections</RootNamespace>
-    <Version>0.3.5</Version>
+    <Version>0.3.6</Version>
     <Nullable>disable</Nullable>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <ManagedPath Condition="'$(ManagedPath)' == ''">/mnt/c/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Managed</ManagedPath>

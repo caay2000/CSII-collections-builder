@@ -4,6 +4,10 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.6
+- Se elimina el tipo `BcBuilt` y `LegacyMarkerSystem`: la partida ya se cargó y guardó con la 0.3.5 (636
+  edificios limpiados, todos en pie con PtG). En el código del mod ya no queda ningún componente que vaya a la partida.
+
 ## 0.3.5
 - Ficha de Paradox Mods: nuevo texto inicial sobre el origen del mod (las colecciones de JustJoeG, y Placemaker y
   Street Builder para rellenar manzanas), y la miniatura y capturas de la 0.3.3, que no llegaron a la ficha. Se publica como versión nueva porque el publicador no deja actualizar la
@@ -18,7 +22,7 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   edificios tras construir.
 - Partidas antiguas: `LegacyMarkerSystem` quita `BcBuilt` al cargar (los edificios ya llevan `PloppedBuilding`,
   porque PtG estaba activo al construirlos). El tipo `BcBuilt` se conserva solo en esta versión para poder cargar
-  esas partidas; tras cargar y guardar una vez, la 0.3.5 lo elimina junto con este sistema.
+  esas partidas; tras cargar y guardar una vez, la 0.3.6 lo elimina junto con este sistema.
 - La pestaña del constructor avisa si falta Plop the Growables o Anarchy (Anarchy cargado, no solo registrado).
 
 ## 0.3.3

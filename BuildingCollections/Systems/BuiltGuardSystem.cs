@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Colossal.Serialization.Entities;
 using Game;
 using Game.Buildings;
 using Game.Common;
@@ -8,10 +7,6 @@ using Unity.Entities;
 
 namespace BuildingCollections.Systems
 {
-    public struct BcBuilt : IComponentData, IQueryTypeParameter, IEmptySerializable
-    {
-    }
-
     public partial class BuiltGuardSystem : GameSystemBase
     {
         readonly List<(Entity entity, int frames)> pending = new List<(Entity, int)>();
