@@ -80,3 +80,67 @@ controlada. La forma de confirmarla es medir desactivando cosas, una a la vez.
 - Si el tiempo de EAI es proporcional a los 8,4 GB o por ficheros (20.905).
 - Si la lentitud es siempre igual o varía con el contenido del playset (comentas que a veces pasa de 20 min).
 - Si el disco es SSD o HDD (la partición tiene 0,9 TB; no he mirado el tipo).
+
+## Captura con Process Monitor (preparada el 2026-11-08, pendiente de hacer)
+Objetivo: ver qué lee el juego desde el segundo 0, incluido lo que pasa antes de que carguen los mods (biblioteca
+de assets, Paradox Mods, playset), y distinguir si los minutos de silencio son disco o CPU. El análisis lo hace
+`tools/procmon_report.py`.
+
+1. **Preparación (una vez):** descargar Process Monitor (https://learn.microsoft.com/sysinternals/downloads/procmon)
+   y abrirlo como administrador. Ctrl+E para parar la captura inicial y Ctrl+X para borrarla.
+   *File → Backing Files…* → "Use file named" en un disco con espacio. *Options → Select Columns…* → marcar
+   **Duration** y **Thread ID**, dejar **Time of Day**. *Options → Profiling Events…* → "Do not generate".
+   Las pilas se capturan siempre (pestaña Stack de cada evento) y solo se guardan en PML.
+2. **Filtro (Ctrl+L), tras Reset:** `Process Name is Cities2.exe` Include; `Operation is` Include para `ReadFile`,
+   `Load Image`, `TCP Connect`, `TCP Send`, `TCP Receive`, `UDP Send`, `UDP Receive`. Sin `CreateFile` ni
+   `QueryDirectory`: el juego abre ~4.300 ficheros de `Content/Game` unas 220 veces cada uno y la primera captura
+   (2026-11-08, 3,2 M eventos en 6 min) agotó la memoria y tumbó el juego. En la barra: ficheros, red y
+   procesos/hilos activados; registro y profiling desactivados. Después *Filter → Drop Filtered Events*.
+3. **Grabar:** reiniciar el PC (arranque en frío, como el real) y abrir Process Monitor. Con el juego cerrado,
+   Ctrl+X y Ctrl+E. Lanzar el juego y apuntar la hora. Apuntar la hora del menú principal (y la del final de la
+   carga de la partida, si se carga). Ctrl+E para parar.
+4. **Guardar dos veces:** *File → Save…* → "All events", formato **PML** (`procmon_boot.pml`, para reabrirlo con
+   pilas y resúmenes) y otra vez "Events displayed using current filter", formato **CSV** (`procmon_boot.csv`), en
+   `C:\Users\caay2\Documents\`. Copiar también la carpeta `Logs` del juego.
+5. **Analizar:** `python3 tools/procmon_report.py "/mnt/c/Users/caay2/Documents/procmon_boot.csv"`
+   (opciones `--top`, `--gap`, `--bucket`). Admite el CSV con la interfaz en inglés o en español.
+
+## Resultados de la captura (2026-11-08)
+Dos capturas con el filtro ligero (`ReadFile`, `Load Image`, red), cruzadas con `SceneFlow.log` de un arranque
+sin Process Monitor (16:45 → menú 17:22, 36 min; con Process Monitor también 36 min, así que no distorsiona).
+
+| Tramo (desde el lanzamiento) | Disco | Qué es |
+|---|---|---|
+| 0 → 2 min | 1,4 GB (assets base de Unity) | motor |
+| 2 → 12,7 min | nada, ni red | CPU antes de cargar mods (entre los dos `LoadAssetLibraryAsync`) |
+| 12,7 → 24,8 min | ~400 MB en 27 M lecturas (~70 B cada una) de los `.cok` de mods | "Preload Mods", sistemas ECS, inicio de prefabs |
+| 24,8 → 35,7 min | nada | CPU: "Loaded 70607 prefabs in 620 s" |
+| 36 min | — | menú principal |
+| menú → +7 min | 7 GB de PNG en un solo hilo | Extra Assets Importer carga superficies: Farming Surfaces (95080) ~3 GB, UK Outdoor Tiles (95077) ~1,3 GB, packs G87, EDT, Vanilla Terrain |
+
+- El disco no es el cuello de botella: 1,9 GB y ~2 min de E/S sumada en todo el arranque.
+- ~22 de los 36 min son CPU sin lecturas; para saber qué hace hace falta un perfilador de CPU (WPR/WPA) o un mod
+  "Startup Profiler"; Process Monitor no lo ve.
+- Palancas sin código: menos packs de assets (70.607 prefabs) y menos packs de superficies de EAI (PNG de ~85 MB).
+- La captura sin filtrar (`CreateFile`, `QueryDirectory`, profiling) generó 3,2 M eventos en 6 min y agotó la memoria.
+
+### Fases del arranque (2026-11-08 16:45, sin Process Monitor)
+Horas de `SceneFlow.log` y `Modding.log`; la fase 10 sale de la captura posterior al menú.
+
+| # | Fase | Desde → hasta | Duración | Qué ocupa el tiempo |
+|---|---|---|---|---|
+| 1 | Motor | 16:45:28 → 16:46:59 | 1,5 min | Unity/Mono, ~1,4 GB de assets base |
+| 2 | Mundo ECS + biblioteca de assets | 16:46:59 → 16:47:40 | 0,7 min | — |
+| 3 | Hueco antes de mods | 16:47:40 → 16:55:43 | 8 min | CPU pura, sin disco, red ni log |
+| 4 | Preload Mods | 16:55:45 → 17:01:31 | 5,8 min | `.cok` de mods en millones de lecturas diminutas |
+| 5 | Sistemas ECS + mods | 17:01:31 → 17:05:51 | 4,3 min | los mods solo 45 s |
+| 6 | Ajustes gráficos / VT | 17:05:51 → 17:06:07 | 0,3 min | — |
+| 7 | Carga de prefabs | 17:06:07 → 17:16:27 | 10,3 min | CPU: 70.607 prefabs |
+| 8 | Hasta "Boot completed" | 17:16:27 → 17:21:28 | 5 min | CPU, sin log |
+| 9 | Carga del menú | 17:21:28 → 17:22:43 | 1,3 min | — |
+| | **Menú principal** | | **37 min** | |
+| 10 | Superficies de Extra Assets Importer | 17:22:43 → ~17:30:20 | ~7,5 min | 7 GB de PNG (Farming Surfaces + UK Outdoor Tiles, más de la mitad) |
+| | **Juego usable** | | **~45 min** | |
+
+Resumen: ~23 min de CPU sin explicar (fases 3, 7 y 8, requieren perfilador de CPU), ~10 min de mods (4–5, escala
+con los packs de assets), ~7,5 min de superficies (10, lo más fácil de recortar) y ~2 min de E/S de disco en total.
