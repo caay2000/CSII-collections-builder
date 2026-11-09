@@ -79,6 +79,7 @@ export const actions = {
     rename: (name: string) => trigger(G, "rename", name),
     removeBuildings: (ids: string[]) => trigger(G, "removeBuildings", JSON.stringify(ids)),
     addAllFromFindIt: () => trigger(G, "addAll"),
+    addActivePrefab: () => trigger(G, "addActivePrefab"),
     setBuilder: (b: BuilderDto) => trigger(G, "setBuilder", JSON.stringify(b)),
     setToolActive: (v: boolean) => trigger(G, "setToolActive", v),
     generatePreview: () => trigger(G, "generatePreview"),

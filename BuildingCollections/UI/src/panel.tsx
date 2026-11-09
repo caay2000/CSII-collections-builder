@@ -6,11 +6,13 @@ import { actions, useEscapes, usePanelOpen } from "./bindings";
 import { CollectionsTab } from "./collectionsTab";
 import { BuilderTab } from "./builderTab";
 import { icon, onEscape } from "./widgets";
+import { useFindItReselect } from "./findItReselect";
 
 const ICON = "coui://buildingcollections/icon.svg";
 
 export const GameTopLeftButton = () => {
     const open = usePanelOpen();
+    useFindItReselect(open);
     return (
         <>
             <Tooltip tooltip="Collections Builder" direction="down" delayTime={0}>
