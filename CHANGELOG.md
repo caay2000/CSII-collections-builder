@@ -4,6 +4,11 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.5
+- Ficha de Paradox Mods: nuevo texto inicial sobre el origen del mod (las colecciones de JustJoeG, y Placemaker y
+  Street Builder para rellenar manzanas). Se publica como versión nueva porque el publicador no deja actualizar la
+  ficha de una versión ya subida.
+
 ## 0.3.4
 - Plop the Growables (75826) y Anarchy (74604) pasan a ser dependencias en Paradox Mods. La protección contra
   `Condemned` la hace Plop the Growables: su `PloppedBuildingSystem` marca como `PloppedBuilding` todo edificio
