@@ -53,11 +53,14 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/collections.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="" />
-	<ModVersion Value="0.3.7" />
+	<ModVersion Value="0.3.8" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.8
+- Better street coverage: when several ways of lining up the buildings along the sides take the same corners, the one that leaves the least sidewalk uncovered is used (about 13% less uncovered sidewalk at the default overlap in the test blocks).
+
 0.3.7
 - Shift+click on the building already selected in Find It now adds it to the collection.
 

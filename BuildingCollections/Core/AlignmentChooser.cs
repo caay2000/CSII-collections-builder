@@ -15,9 +15,11 @@ namespace BuildingCollections.Core
 
     internal sealed class AlignmentChooser
     {
-        public static IEnumerable<LotStrip> Choose(List<SidePlan> plans, int sideCount, IList<string> notes)
+        public static IEnumerable<LotStrip> Choose(List<SidePlan> plans, int sideCount, IList<string> notes, Func<List<List<LotStrip>>, int> pickBest = null)
         {
-            var pick = new AlignmentChooser(plans, sideCount).Best();
+            var candidates = new AlignmentChooser(plans, sideCount).Candidates();
+            int chosen = candidates.Count > 1 && pickBest != null ? pickBest(candidates.Select(c => Strips(plans, c)).ToList()) : 0;
+            var pick = candidates[chosen];
             for (int i = 0; i < plans.Count; i++)
             {
                 if (pick[i] == 1)
@@ -26,8 +28,17 @@ namespace BuildingCollections.Core
                 }
             }
 
-            return plans.SelectMany((p, i) => p.Options[pick[i]]);
+            if (chosen > 0)
+            {
+                notes?.Add($"alignment: option {chosen + 1} of {candidates.Count} with the same corners leaves less sidewalk uncovered.");
+            }
+
+            return Strips(plans, pick);
         }
+
+        static List<LotStrip> Strips(List<SidePlan> plans, int[] pick) => plans.SelectMany((p, i) => p.Options[pick[i]]).ToList();
+
+        const int MaxCandidates = 6;
 
         const int CornerWeight = 100000;
         const int RoundedWeight = 10000;
@@ -41,6 +52,7 @@ namespace BuildingCollections.Core
         readonly CornerClaim[][][] claims;
         readonly List<CornerClaim> active = new List<CornerClaim>();
         readonly int[][] own;
+        readonly int[][] rounded;
         readonly bool[][] takesStart;
         readonly bool[][] takesEnd;
 
@@ -50,6 +62,7 @@ namespace BuildingCollections.Core
             var bySide = plans.Select((p, i) => (p.Side, i)).ToDictionary(x => x.Side, x => x.i);
             prev = plans.Select(p => bySide.TryGetValue((p.Side - 1 + sideCount) % sideCount, out int pi) ? pi : -1).ToArray();
             own = plans.Select(p => p.Options.Select((o, c) => OwnScore(p, o, c)).ToArray()).ToArray();
+            rounded = plans.Select(p => p.Options.Select(o => RoundedScore(p, o)).ToArray()).ToArray();
             takesStart = plans.Select(p => p.Options.Select(o => o.Count > 0 && TakesCorner(o[0], false)).ToArray()).ToArray();
             takesEnd = plans.Select(p => p.Options.Select(o => o.Count > 0 && p.Shape.EndCorner && TakesCorner(o[o.Count - 1], true)).ToArray()).ToArray();
             claims = plans.Select((p, i) => p.Options.Select((o, c) => Claims(i, o, takesStart[i][c], takesEnd[i][c])).ToArray()).ToArray();
@@ -88,9 +101,19 @@ namespace BuildingCollections.Core
                 }
             }
 
-            int rounded = (plan.Shape.StartRounded && option[0].Grid.LeftCorner ? 1 : 0)
+            return RoundedScore(plan, option) + cells * CellWeight - choice * ChangeWeight;
+        }
+
+        static int RoundedScore(SidePlan plan, List<LotStrip> option)
+        {
+            if (option.Count == 0)
+            {
+                return 0;
+            }
+
+            int count = (plan.Shape.StartRounded && option[0].Grid.LeftCorner ? 1 : 0)
                 + (plan.Shape.EndRounded && option[option.Count - 1].Grid.RightCorner ? 1 : 0);
-            return rounded * RoundedWeight + cells * CellWeight - choice * ChangeWeight;
+            return count * RoundedWeight;
         }
 
         int StartCornerScore(int i, int choice, int prevChoice)
@@ -106,13 +129,12 @@ namespace BuildingCollections.Core
 
         int Options(int i) => plans[i].Options.Count;
 
-        public int[] Best()
+        public List<int[]> Candidates()
         {
             int n = plans.Count;
-            var best = new int[n];
             if (n == 0)
             {
-                return best;
+                return new List<int[]> { new int[0] };
             }
 
             if (Combinations() <= ExhaustiveLimit)
@@ -120,6 +142,13 @@ namespace BuildingCollections.Core
                 return Exhaustive();
             }
 
+            return new List<int[]> { Best() };
+        }
+
+        int[] Best()
+        {
+            int n = plans.Count;
+            var best = new int[n];
             bool wraps = prev[0] == n - 1;
             var bestScore = Score.None;
             for (int first = 0; first < (wraps ? Options(0) : 1); first++)
@@ -180,21 +209,14 @@ namespace BuildingCollections.Core
             return total;
         }
 
-        int[] Exhaustive()
+        List<int[]> Exhaustive()
         {
             int n = plans.Count;
             var choice = new int[n];
-            var best = new int[n];
-            var bestScore = Score.None;
+            var all = new List<(Score score, int[] choice)>();
             while (true)
             {
-                var score = Evaluate(choice);
-                if (score.Beats(bestScore))
-                {
-                    bestScore = score;
-                    Array.Copy(choice, best, n);
-                }
-
+                all.Add((Evaluate(choice), (int[])choice.Clone()));
                 int i = 0;
                 while (i < n && ++choice[i] >= Options(i))
                 {
@@ -203,9 +225,13 @@ namespace BuildingCollections.Core
 
                 if (i == n)
                 {
-                    return best;
+                    break;
                 }
             }
+
+            all.Sort((a, b) => a.score.Beats(b.score) ? -1 : b.score.Beats(a.score) ? 1 : 0);
+            int tier = all[0].score.Tier;
+            return all.TakeWhile(x => x.score.Tier == tier).Take(MaxCandidates).Select(x => x.choice).ToList();
         }
 
         Score Evaluate(int[] choice)
@@ -223,7 +249,7 @@ namespace BuildingCollections.Core
                 int c = choice[i];
                 bool taken = plans[i].Shape.StartCorner && plans[i].Options[c].Count > 0
                     && kept.Any(k => (k.Plan == i && !k.AtEnd) || (k.Plan == prev[i] && k.AtEnd));
-                total += new Score(own[i][c] + (taken ? CornerWeight : 0), 0) + Pick(i, c);
+                total += new Score(own[i][c] + (taken ? CornerWeight : 0), 0, rounded[i][c] + (taken ? CornerWeight : 0)) + Pick(i, c);
             }
 
             return total;
@@ -304,17 +330,20 @@ namespace BuildingCollections.Core
             readonly int points;
             readonly long order;
 
-            public Score(int points, long order)
+            public Score(int points, long order, int tier = 0)
             {
                 this.points = points;
                 this.order = order;
+                Tier = tier;
             }
+
+            public int Tier { get; }
 
             public bool IsNone => points == int.MinValue;
 
             public bool Beats(Score other) => other.IsNone || points > other.points || (points == other.points && order < other.order);
 
-            public static Score operator +(Score a, Score b) => new Score(a.points + b.points, a.order + b.order);
+            public static Score operator +(Score a, Score b) => new Score(a.points + b.points, a.order + b.order, a.Tier + b.Tier);
         }
     }
 }

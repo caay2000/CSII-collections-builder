@@ -4,6 +4,23 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.8
+- Alineación por acera cubierta: `AlignmentChooser` devuelve las combinaciones de alineación (al inicio o al final
+  de cada lado) que empatan en esquinas y redondeos, hasta 6. Antes desempataba por celdas y por número de cambios,
+  y elegía a menudo la que dejaba más acera sin cubrir (manzana 18840: 25 m frente a 0 m posibles).
+- `AlignmentProbe` planifica cada candidata con un catálogo de referencia (1x2, 2x2, 3x2, 2x3, 3x3 y esquineros 1x2
+  y 2x2, con y sin esquineros 1x1) y 2 semillas fijas. Solo cambia la opción actual por otra que no empeore esquinas
+  perdidas, celdas de calle vacías, huecos entre edificios ni metros sin cubrir con ninguno de los dos catálogos, y
+  que deje al menos 2 m menos sin cubrir por planificación. Las candidatas que dan las mismas tiras se prueban una vez.
+- `CornerCheck` pasa del simulador a `Core`, y la medida de huecos de acera del simulador pasa a `Core/SidewalkGaps`
+  (con prefiltro de solares por tira), para que la sonda y la regresión midan igual. `FrontCoverage.GapsBetweenOwn`
+  cuenta los huecos entre dos edificios del mismo lado.
+- Regresión: 0 empeoramientos y 95 mejoras con las semillas 1-24 (94 con 49-72). Totales: metros sin cubrir −3 %,
+  −13 %, −12 % y −19 % con solape 0,05 / 0,5 / 1 / 2; celdas vacías −3 %, −15 %, −17 % y −30 %; huecos entre
+  edificios −4 % con 0,05 y −20 a −27 % con 1 y 2.
+- Coste: construir las tiras pasa de ~8 a ~42 ms por manzana (código ya compilado). El simulador guarda las tiras
+  por escenario y solape, así que la regresión tarda ahora ~12 s en lugar de ~53.
+
 ## 0.3.7
 - Shift+clic en Find It sobre el edificio que ya está seleccionado no lo añadía: Find It no reactiva el mismo prefab
   y `ObjectToolSystem` no lanza `EventPrefabChanged` si no cambia. Ahora la interfaz detecta el Shift+clic sobre un

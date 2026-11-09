@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BuildingCollections.Core;
-
-namespace BuildingCollections.Simulator
+namespace BuildingCollections.Core
 {
     public enum CornerState
     {

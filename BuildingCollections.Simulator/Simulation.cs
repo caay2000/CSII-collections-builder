@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using BuildingCollections.Core;
@@ -67,11 +68,22 @@ namespace BuildingCollections.Simulator
         static BuildingInfo B(string name, int w, int d, CornerKind corner = CornerKind.Front) =>
             new BuildingInfo { PrefabName = name, LotWidth = w, LotDepth = d, Corner = corner };
 
+        static readonly ConcurrentDictionary<(Scenario, double), Lazy<(List<LotStrip>, List<string>)>> StripCache =
+            new ConcurrentDictionary<(Scenario, double), Lazy<(List<LotStrip>, List<string>)>>();
+
+        static (List<LotStrip> strips, List<string> notes) StripsFor(Scenario scenario, double curve) =>
+            StripCache.GetOrAdd((scenario, curve), key => new Lazy<(List<LotStrip>, List<string>)>(() =>
+            {
+                var notes = new List<string>();
+                var strips = VirtualLots.Build(scenario.Sides, scenario.Existing, frontage: scenario.Frontage, notes: notes, curveOverlap: curve);
+                return (strips, notes);
+            })).Value;
+
         public static Run Simulate(Scenario scenario, float overlap, int seed)
         {
             var curve = overlap > FootprintMask.StrictOverlap ? overlap : 0;
-            var notes = new List<string>();
-            var strips = VirtualLots.Build(scenario.Sides, scenario.Existing, frontage: scenario.Frontage, notes: notes, curveOverlap: curve);
+            var (strips, built) = StripsFor(scenario, curve);
+            var notes = new List<string>(built);
             var outline = VirtualLots.Outline(scenario.Sides);
             var blocks = strips.Where(s => s.Grid.FreeCount() > 0).Select(s => new PlanBlock
             {
@@ -117,55 +129,7 @@ namespace BuildingCollections.Simulator
 
         static double Dist(Pt a, Pt b) => Math.Sqrt(Pt.Dot(a - b, a - b));
 
-        const double RayStart = 0.5;
-        const double RayReach = 4;
-        const double RayStep = 0.5;
-
-        static List<Gap> FindGaps(List<LotStrip> strips, PreviewResult result)
-        {
-            const double step = 0.1;
-            var quads = result.Lots.Select(l => l.Footprint(0)).ToList();
-            var gaps = new List<Gap>();
-            foreach (var st in strips)
-            {
-                double depth = st.Inward + 1.5;
-                Pt At(double u) => st.ChunkStart + st.T * u + st.N * depth;
-                bool Reached(double u)
-                {
-                    for (double d = st.Inward + RayStart; d <= st.Inward + RayReach + 1e-6; d += RayStep)
-                    {
-                        if (FrontCoverage.Covered(quads, st.ChunkStart + st.T * u + st.N * d))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-
-                double start = -1;
-                for (double u = 0; u <= st.ChunkLength + 1e-6; u += step)
-                {
-                    bool covered = Reached(u);
-                    if (!covered && start < 0)
-                    {
-                        start = u;
-                    }
-
-                    if (start >= 0 && (covered || u + step > st.ChunkLength + 1e-6))
-                    {
-                        double end = covered ? u : st.ChunkLength;
-                        if (end - start >= 0.5)
-                        {
-                            gaps.Add(new Gap { From = At(start), To = At(end), Length = end - start });
-                        }
-
-                        start = -1;
-                    }
-                }
-            }
-
-            return gaps;
-        }
+        static List<Gap> FindGaps(List<LotStrip> strips, PreviewResult result) =>
+            SidewalkGaps.Find(strips, result.Lots).Select(g => new Gap { From = g.From, To = g.To, Length = g.Length }).ToList();
     }
 }
