@@ -7,7 +7,7 @@ T="$(mktemp -d)"
 trap 'rm -rf "$T"' EXIT
 F=/mnt/c/Windows/Fonts/segoeuib.ttf
 FL=/mnt/c/Windows/Fonts/segoeui.ttf
-SIM_SVG="$T/svg" dotnet run -c Release --project "$ROOT/BuildingCollections.Simulator" -- "$T/sim.html" 7 > /dev/null
+DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 SIM_SVG="$T/svg" dotnet run -c Release --project "$ROOT/BuildingCollections.Simulator" -- "$T/sim.html" 7 > /dev/null
 mkdir -p "$T/tiles"
 i=0
 for f in Whitestone_with_Prospect_closed_loop_and_80_corner_ Cobblestone_long_curve_and_short_street marked_S_amplitude_25_m_wavelength_200_m_ \
