@@ -81,7 +81,7 @@ controlada. La forma de confirmarla es medir desactivando cosas, una a la vez.
 - Si la lentitud es siempre igual o varía con el contenido del playset (comentas que a veces pasa de 20 min).
 - Si el disco es SSD o HDD (la partición tiene 0,9 TB; no he mirado el tipo).
 
-## Captura con Process Monitor (preparada el 2026-11-08, pendiente de hacer)
+## Captura con Process Monitor (2026-11-08)
 Objetivo: ver qué lee el juego desde el segundo 0, incluido lo que pasa antes de que carguen los mods (biblioteca
 de assets, Paradox Mods, playset), y distinguir si los minutos de silencio son disco o CPU. El análisis lo hace
 `tools/procmon_report.py`.
@@ -102,12 +102,14 @@ de assets, Paradox Mods, playset), y distinguir si los minutos de silencio son d
 4. **Guardar dos veces:** *File → Save…* → "All events", formato **PML** (`procmon_boot.pml`, para reabrirlo con
    pilas y resúmenes) y otra vez "Events displayed using current filter", formato **CSV** (`procmon_boot.csv`), en
    `C:\Users\caay2\Documents\`. Copiar también la carpeta `Logs` del juego.
-5. **Analizar:** `python3 tools/procmon_report.py "/mnt/c/Users/caay2/Documents/procmon_boot.csv"`
+5. **Analizar:** la columna `files` cuenta los ficheros leídos; las aperturas y consultas de carpeta solo salen si la
+   captura incluye `CreateFile` y `QueryDirectory` (el script avisa si no). `Load Image` y la red se capturan para
+   mirarlos en Process Monitor, el script no los resume. Comando: `python3 tools/procmon_report.py "/mnt/c/Users/caay2/Documents/procmon_boot.csv"`
    (opciones `--top`, `--gap`, `--bucket`). Admite el CSV con la interfaz en inglés o en español.
 
 ## Resultados de la captura (2026-11-08)
 Dos capturas con el filtro ligero (`ReadFile`, `Load Image`, red), cruzadas con `SceneFlow.log` de un arranque
-sin Process Monitor (16:45 → menú 17:22, 36 min; con Process Monitor también 36 min, así que no distorsiona).
+sin Process Monitor (16:45 → menú 17:22, 37 min; con Process Monitor también unos 37 min, así que no distorsiona).
 
 | Tramo (desde el lanzamiento) | Disco | Qué es |
 |---|---|---|
@@ -115,17 +117,18 @@ sin Process Monitor (16:45 → menú 17:22, 36 min; con Process Monitor también
 | 2 → 12,7 min | nada, ni red | CPU antes de cargar mods (entre los dos `LoadAssetLibraryAsync`) |
 | 12,7 → 24,8 min | ~400 MB en 27 M lecturas (~70 B cada una) de los `.cok` de mods | "Preload Mods", sistemas ECS, inicio de prefabs |
 | 24,8 → 35,7 min | nada | CPU: "Loaded 70607 prefabs in 620 s" |
-| 36 min | — | menú principal |
+| 37 min | — | menú principal |
 | menú → +7 min | 7 GB de PNG en un solo hilo | Extra Assets Importer carga superficies: Farming Surfaces (95080) ~3 GB, UK Outdoor Tiles (95077) ~1,3 GB, packs G87, EDT, Vanilla Terrain |
 
 - El disco no es el cuello de botella: 1,9 GB y ~2 min de E/S sumada en todo el arranque.
-- ~22 de los 36 min son CPU sin lecturas; para saber qué hace hace falta un perfilador de CPU (WPR/WPA) o un mod
+- ~23 de los 37 min son CPU sin lecturas; para saber qué hace hace falta un perfilador de CPU (WPR/WPA) o un mod
   "Startup Profiler"; Process Monitor no lo ve.
 - Palancas sin código: menos packs de assets (70.607 prefabs) y menos packs de superficies de EAI (PNG de ~85 MB).
 - La captura sin filtrar (`CreateFile`, `QueryDirectory`, profiling) generó 3,2 M eventos en 6 min y agotó la memoria.
 
 ### Fases del arranque (2026-11-08 16:45, sin Process Monitor)
-Horas de `SceneFlow.log` y `Modding.log`; la fase 10 sale de la captura posterior al menú.
+Horas de `SceneFlow.log` y `Modding.log` de este arranque, distinto de los capturados con Process Monitor (por eso
+los minutos de cada fase no coinciden con la cronología de la captura); la fase 10 sale de la captura posterior al menú.
 
 | # | Fase | Desde → hasta | Duración | Qué ocupa el tiempo |
 |---|---|---|---|---|

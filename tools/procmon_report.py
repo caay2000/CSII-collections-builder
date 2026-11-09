@@ -179,6 +179,7 @@ def main():
                 n = parse_length(row[c_detail]) if c_detail >= 0 else 0
                 d = parse_number(row[c_duration]) if c_duration >= 0 else 0.0
                 g.reads += 1
+                g.files.add(path.lower())
                 g.bytes += n
                 g.seconds += d
                 f = files[path]
@@ -201,7 +202,10 @@ def main():
         print(f"{name[:58]:<58} {len(g.files):>7,} {g.dirs:>7,} {mb(g.bytes):>8} {g.seconds:>8.1f}  "
               f"+{(g.first - start).total_seconds() / 60:.1f} -> +{(g.last - start).total_seconds() / 60:.1f} min")
 
-    print(f"\nTop {args.top} groups by files opened")
+    if not any(g.opens or g.dirs for g in groups.values()):
+        print("Note: no CreateFile or QueryDirectory events in the capture; 'files' counts files read, opens and dir queries are 0.\n", file=sys.stderr)
+
+    print(f"\nTop {args.top} groups by files touched")
     for name, g in sorted(groups.items(), key=lambda kv: len(kv[1].files), reverse=True)[:args.top]:
         print(f"{name[:58]:<58} {len(g.files):>7,} files {g.opens:>9,} opens {g.dirs:>8,} dir queries")
 
