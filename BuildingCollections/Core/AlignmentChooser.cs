@@ -229,9 +229,10 @@ namespace BuildingCollections.Core
                 }
             }
 
-            all.Sort((a, b) => a.score.Beats(b.score) ? -1 : b.score.Beats(a.score) ? 1 : 0);
-            int tier = all[0].score.Tier;
-            return all.TakeWhile(x => x.score.Tier == tier).Take(MaxCandidates).Select(x => x.choice).ToList();
+            var ranked = all.Select((x, index) => (x.score, x.choice, index)).ToList();
+            ranked.Sort((a, b) => a.score.Beats(b.score) ? -1 : b.score.Beats(a.score) ? 1 : a.index.CompareTo(b.index));
+            int tier = ranked[0].score.Tier;
+            return ranked.Where(x => x.score.Tier == tier).Take(MaxCandidates).Select(x => x.choice).ToList();
         }
 
         Score Evaluate(int[] choice)
