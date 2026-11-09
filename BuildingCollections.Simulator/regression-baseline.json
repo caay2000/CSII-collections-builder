@@ -400,19 +400,19 @@
       "Scenario": "diagonal at 10\u00B0 (80\u00B0 corner)",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 752.4,
-      "MaxGap": 24,
+      "GapMeters": 267.6,
+      "MaxGap": 7.9,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 84
+      "EmptyCells": 36
     },
     {
       "Scenario": "diagonal at 10\u00B0 (80\u00B0 corner)",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 489.6,
-      "MaxGap": 16.5,
+      "GapMeters": 242.4,
+      "MaxGap": 8.1,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 48
+      "EmptyCells": 24
     },
     {
       "Scenario": "diagonal at 10\u00B0 (80\u00B0 corner)",
@@ -490,10 +490,10 @@
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 48,
-      "MaxGap": 2,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
@@ -670,7 +670,7 @@
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 232.8,
+      "GapMeters": 180,
       "MaxGap": 3,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -733,19 +733,19 @@
       "Scenario": "gentle S (amplitude 10 m, wavelength 200 m)",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 38.6,
-      "MaxGap": 4.4,
+      "GapMeters": 56.2,
+      "MaxGap": 3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 32
+      "EmptyCells": 16
     },
     {
       "Scenario": "gentle S (amplitude 10 m, wavelength 200 m)",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 33.6,
-      "MaxGap": 3.2,
+      "GapMeters": 46.2,
+      "MaxGap": 3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 27
+      "EmptyCells": 16
     },
     {
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
@@ -760,28 +760,28 @@
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 362.4,
-      "MaxGap": 10.8,
+      "GapMeters": 141.4,
+      "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 330.9,
-      "MaxGap": 10.9,
+      "GapMeters": 110.9,
+      "MaxGap": 3.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 314.4,
-      "MaxGap": 10.8,
+      "GapMeters": 43.2,
+      "MaxGap": 3.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 7
     },
     {
       "Scenario": "wavy (amplitude 15 m, wavelength 100 m)",
@@ -814,10 +814,10 @@
       "Scenario": "wavy (amplitude 15 m, wavelength 100 m)",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 79.2,
-      "MaxGap": 3.3,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48
+      "EmptyCells": 24
     },
     {
       "Scenario": "tight S (amplitude 28 m, wavelength 90 m)",
@@ -895,10 +895,10 @@
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 695.3,
-      "MaxGap": 11.2,
-      "GapsBetweenBuildings": 61,
-      "EmptyCells": 105
+      "GapMeters": 583.4,
+      "MaxGap": 11.5,
+      "GapsBetweenBuildings": 33,
+      "EmptyCells": 99
     },
     {
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
@@ -922,10 +922,10 @@
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 178.4,
+      "GapMeters": 89.2,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 9
+      "EmptyCells": 5
     },
     {
       "Scenario": "parallelogram 80\u00B0 / 100\u00B0",
@@ -1111,10 +1111,10 @@
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 361.3,
-      "MaxGap": 11.5,
-      "GapsBetweenBuildings": 29,
-      "EmptyCells": 51
+      "GapMeters": 209.9,
+      "MaxGap": 4.6,
+      "GapsBetweenBuildings": 4,
+      "EmptyCells": 48
     },
     {
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
@@ -1138,10 +1138,10 @@
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 76.8,
-      "MaxGap": 3.2,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 11
+      "EmptyCells": 4
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
@@ -1192,19 +1192,19 @@
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 230.6,
-      "MaxGap": 8,
+      "GapMeters": 101.5,
+      "MaxGap": 3.1,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 12
+      "EmptyCells": 0
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 217.6,
-      "MaxGap": 8,
-      "GapsBetweenBuildings": 12,
-      "EmptyCells": 16
+      "GapMeters": 148.4,
+      "MaxGap": 4.5,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 7
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
@@ -1372,10 +1372,10 @@
       "Scenario": "side curved inwards (sagitta 8 m) ending at a corner",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 184.1,
-      "MaxGap": 6.8,
+      "GapMeters": 140.6,
+      "MaxGap": 4.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "side curved inwards (sagitta 8 m) ending at a corner",
@@ -1399,17 +1399,17 @@
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 416.4,
-      "MaxGap": 8.4,
-      "GapsBetweenBuildings": 1,
-      "EmptyCells": 72
+      "GapMeters": 268.8,
+      "MaxGap": 5.7,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 48
     },
     {
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 194.4,
-      "MaxGap": 4.2,
+      "GapMeters": 211.2,
+      "MaxGap": 4.6,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 48
     },
@@ -1417,8 +1417,8 @@
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 194.4,
-      "MaxGap": 4.2,
+      "GapMeters": 211.2,
+      "MaxGap": 4.6,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 48
     },
@@ -1426,10 +1426,10 @@
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 93.6,
-      "MaxGap": 3.9,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "two curved sides in a row (sagitta 8 m) with a corner between them",
@@ -1615,10 +1615,10 @@
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 1054,
-      "MaxGap": 11.3,
-      "GapsBetweenBuildings": 50,
-      "EmptyCells": 168
+      "GapMeters": 849.6,
+      "MaxGap": 9.4,
+      "GapsBetweenBuildings": 24,
+      "EmptyCells": 96
     },
     {
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
@@ -1633,19 +1633,19 @@
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 753.6,
-      "MaxGap": 9.3,
-      "GapsBetweenBuildings": 38,
-      "EmptyCells": 120
+      "GapMeters": 624,
+      "MaxGap": 6.8,
+      "GapsBetweenBuildings": 24,
+      "EmptyCells": 72
     },
     {
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 498,
-      "MaxGap": 6.7,
-      "GapsBetweenBuildings": 24,
-      "EmptyCells": 72
+      "GapMeters": 424.8,
+      "MaxGap": 6.8,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 24
     },
     {
       "Scenario": "block (17569, -10291)",
@@ -1723,10 +1723,10 @@
       "Scenario": "block (17618, -10274), 3 existing in the game",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 281.7,
-      "MaxGap": 9.2,
-      "GapsBetweenBuildings": 72,
-      "EmptyCells": 158
+      "GapMeters": 271.4,
+      "MaxGap": 11.2,
+      "GapsBetweenBuildings": 48,
+      "EmptyCells": 58
     },
     {
       "Scenario": "block (17618, -10274), 3 existing in the game",
@@ -1750,10 +1750,10 @@
       "Scenario": "block (17618, -10274), 3 existing in the game",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 132.4,
-      "MaxGap": 6.5,
+      "GapMeters": 15.4,
+      "MaxGap": 2.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 45
+      "EmptyCells": 3
     },
     {
       "Scenario": "block (17647, -10363)",
@@ -1903,10 +1903,10 @@
       "Scenario": "block (17925, -10139)",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 463.7,
+      "GapMeters": 361,
       "MaxGap": 7.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 59
+      "EmptyCells": 46
     },
     {
       "Scenario": "block (17925, -10139)",
@@ -1948,10 +1948,10 @@
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 367.2,
+      "GapMeters": 208.8,
       "MaxGap": 8,
       "GapsBetweenBuildings": 12,
-      "EmptyCells": 60
+      "EmptyCells": 36
     },
     {
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
@@ -1975,10 +1975,10 @@
       "Scenario": "long block (18633, -11042), 34 existing in the game",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 1064.6,
-      "MaxGap": 11.1,
-      "GapsBetweenBuildings": 25,
-      "EmptyCells": 175
+      "GapMeters": 1015.2,
+      "MaxGap": 8.1,
+      "GapsBetweenBuildings": 16,
+      "EmptyCells": 168
     },
     {
       "Scenario": "long block (18633, -11042), 34 existing in the game",
@@ -2002,10 +2002,10 @@
       "Scenario": "long block (18633, -11042), 34 existing in the game",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 424.8,
-      "MaxGap": 11.1,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 36
+      "EmptyCells": 11
     },
     {
       "Scenario": "block_18681_-11093",
@@ -2047,10 +2047,10 @@
       "Scenario": "block_18707_-11058",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 879.6,
-      "MaxGap": 16,
-      "GapsBetweenBuildings": 10,
-      "EmptyCells": 127
+      "GapMeters": 735.6,
+      "MaxGap": 15.6,
+      "GapsBetweenBuildings": 3,
+      "EmptyCells": 108
     },
     {
       "Scenario": "block_18707_-11058",
@@ -2065,10 +2065,10 @@
       "Scenario": "block_18707_-11058",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 282.3,
+      "GapMeters": 247.2,
       "MaxGap": 6.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 55
+      "EmptyCells": 36
     },
     {
       "Scenario": "block_18707_-11058",
@@ -2128,19 +2128,19 @@
       "Scenario": "block_18838_-11127",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 333.6,
-      "MaxGap": 5.9,
+      "GapMeters": 297.6,
+      "MaxGap": 9.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 72
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18838_-11127",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 324,
-      "MaxGap": 5.9,
+      "GapMeters": 297.6,
+      "MaxGap": 9.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 72
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18838_-11127",
@@ -2155,28 +2155,28 @@
       "Scenario": "block_18840_-11167",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 972.2,
-      "MaxGap": 23.8,
-      "GapsBetweenBuildings": 15,
-      "EmptyCells": 96
+      "GapMeters": 601.7,
+      "MaxGap": 11.7,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_18840_-11167",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 601.7,
-      "MaxGap": 11.7,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18840_-11167",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 601.7,
-      "MaxGap": 11.7,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18840_-11167",
@@ -2236,28 +2236,28 @@
       "Scenario": "block_18912_-11131",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 176.7,
-      "MaxGap": 4.9,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18912_-11131",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 187.2,
-      "MaxGap": 4.7,
-      "GapsBetweenBuildings": 24,
-      "EmptyCells": 24
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18912_-11131",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 251.9,
+      "GapMeters": 103.2,
       "MaxGap": 4.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_18930_-11180",
@@ -2272,8 +2272,8 @@
       "Scenario": "block_18930_-11180",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 290.4,
-      "MaxGap": 5.6,
+      "GapMeters": 117.6,
+      "MaxGap": 4.9,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 24
     },
@@ -2281,8 +2281,8 @@
       "Scenario": "block_18930_-11180",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 172.8,
-      "MaxGap": 5.6,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -2290,8 +2290,8 @@
       "Scenario": "block_18930_-11180",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 172.8,
-      "MaxGap": 5.6,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -2398,10 +2398,10 @@
       "Scenario": "block_18972_-11204",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 309.7,
+      "GapMeters": 237.7,
       "MaxGap": 7.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 15
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19010_-11078",
@@ -2434,10 +2434,10 @@
       "Scenario": "block_19010_-11078",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 96,
-      "MaxGap": 3.2,
-      "GapsBetweenBuildings": 12,
-      "EmptyCells": 12
+      "GapMeters": 28,
+      "MaxGap": 3.5,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 8
     },
     {
       "Scenario": "block_19014_-11067",
@@ -2605,8 +2605,8 @@
       "Scenario": "block_19060_-11269",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 259.2,
-      "MaxGap": 3.5,
+      "GapMeters": 115.2,
+      "MaxGap": 2.9,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -2614,8 +2614,8 @@
       "Scenario": "block_19060_-11269",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 362.8,
-      "MaxGap": 5.8,
+      "GapMeters": 160.8,
+      "MaxGap": 4.8,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -2623,37 +2623,37 @@
       "Scenario": "block_19061_-11054",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 649.2,
-      "MaxGap": 15.9,
-      "GapsBetweenBuildings": 36,
-      "EmptyCells": 108
+      "GapMeters": 330.4,
+      "MaxGap": 8,
+      "GapsBetweenBuildings": 11,
+      "EmptyCells": 59
     },
     {
       "Scenario": "block_19061_-11054",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 189.6,
-      "MaxGap": 5.4,
+      "GapMeters": 79.2,
+      "MaxGap": 3.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19061_-11054",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 60,
-      "MaxGap": 2.5,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19061_-11054",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 60,
-      "MaxGap": 2.5,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19087_-11072",
@@ -2695,7 +2695,7 @@
       "Scenario": "block_19099_-11311",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 225.6,
+      "GapMeters": 160.8,
       "MaxGap": 6.7,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 24
@@ -2704,17 +2704,17 @@
       "Scenario": "block_19099_-11311",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 225.6,
-      "MaxGap": 6.7,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19099_-11311",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 64.8,
-      "MaxGap": 2.7,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -2722,8 +2722,8 @@
       "Scenario": "block_19099_-11311",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 64.8,
-      "MaxGap": 2.7,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -2740,10 +2740,10 @@
       "Scenario": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 118.8,
-      "MaxGap": 5.5,
+      "GapMeters": 57.6,
+      "MaxGap": 2.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 12
+      "EmptyCells": 0
     },
     {
       "Scenario": "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
@@ -2767,10 +2767,10 @@
       "Scenario": "block_19138_-11226",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 335.7,
-      "MaxGap": 7,
-      "GapsBetweenBuildings": 24,
-      "EmptyCells": 48
+      "GapMeters": 69.6,
+      "MaxGap": 2.9,
+      "GapsBetweenBuildings": 12,
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19138_-11226",
@@ -2866,10 +2866,10 @@
       "Scenario": "block_19176_-11299",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 387,
-      "MaxGap": 10.3,
+      "GapMeters": 226.2,
+      "MaxGap": 9.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19219_-11235",
@@ -3019,10 +3019,10 @@
       "Scenario": "Prospect, tight curve",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 2887.9,
+      "GapMeters": 2727.6,
       "MaxGap": 8.1,
-      "GapsBetweenBuildings": 51,
-      "EmptyCells": 367
+      "GapsBetweenBuildings": 47,
+      "EmptyCells": 339
     },
     {
       "Scenario": "Prospect, tight curve",

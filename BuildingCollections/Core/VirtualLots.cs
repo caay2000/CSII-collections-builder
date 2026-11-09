@@ -39,7 +39,8 @@ namespace BuildingCollections.Core
                 sidePlans.Add(SideStripBuilder.For(merged, mergedChunks, sideIndex, settings).Plan());
             }
 
-            strips.AddRange(AlignmentChooser.Choose(sidePlans, merged.Count, notes));
+            var probe = new AlignmentProbe(sides, clip ?? outline, obstacles, curveOverlap);
+            strips.AddRange(AlignmentChooser.Choose(sidePlans, merged.Count, notes, probe.Best));
             return strips;
         }
 

@@ -14,16 +14,26 @@ namespace BuildingCollections.Core
 
         public static IEnumerable<string> Uncovered(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks)
         {
+            foreach (var (st, runs) in Sidewalks(lots, existing, blocks))
+            {
+                yield return runs.Count == 0
+                    ? $"  sidewalk side {st.SideIndex} segment {st.ChunkIndex + 1}/{st.ChunkCount} ({st.ChunkLength:F1} m): fully covered."
+                    : $"  sidewalk side {st.SideIndex} segment {st.ChunkIndex + 1}/{st.ChunkCount} ({st.ChunkLength:F1} m): UNCOVERED {string.Join("; ", runs.Select(r => r.Text))}";
+            }
+        }
+
+        public static int GapsBetweenOwn(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks) =>
+            Sidewalks(lots, existing, blocks).Sum(s => s.runs.Count(r => r.BetweenOwn));
+
+        static IEnumerable<(LotStrip strip, List<UncoveredRun> runs)> Sidewalks(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks)
+        {
             var all = lots.Select(p => (q: p.Footprint(0), strip: p.Owner?.Strip)).Concat(existing.Select(q => (q, strip: (LotStrip)null))).ToList();
             foreach (var st in blocks.Where(b => b.Strip != null).Select(b => b.Strip))
             {
                 var area = Reach(st);
                 var owned = all.Where(o => area.Overlaps(o.q)).ToList();
                 var quads = owned.Select(o => o.q).ToList();
-                var runs = UncoveredRuns(quads, st, u => Neighbour(owned, st, u));
-                yield return runs.Count == 0
-                    ? $"  sidewalk side {st.SideIndex} segment {st.ChunkIndex + 1}/{st.ChunkCount} ({st.ChunkLength:F1} m): fully covered."
-                    : $"  sidewalk side {st.SideIndex} segment {st.ChunkIndex + 1}/{st.ChunkCount} ({st.ChunkLength:F1} m): UNCOVERED {string.Join("; ", runs)}";
+                yield return (st, UncoveredRuns(quads, st, u => Neighbour(owned, st, u)));
             }
         }
 
@@ -49,11 +59,11 @@ namespace BuildingCollections.Core
 
         static bool SameSide(LotStrip a, LotStrip b) => a != null && a.BlockIndex == b.BlockIndex && a.SideIndex == b.SideIndex;
 
-        static List<string> UncoveredRuns(List<Quad> quads, LotStrip st, Func<double, string> neighbour)
+        static List<UncoveredRun> UncoveredRuns(List<Quad> quads, LotStrip st, Func<double, string> neighbour)
         {
             const double step = 0.25;
             double depth = st.Inward + 1.5;
-            var runs = new List<string>();
+            var runs = new List<UncoveredRun>();
             double runStart = -1;
             for (double u = 0; u <= st.ChunkLength + 1e-6; u += step)
             {
@@ -69,7 +79,13 @@ namespace BuildingCollections.Core
                     if (end - runStart >= 0.5)
                     {
                         string where = runStart < 0.01 ? "at the start" : end > st.ChunkLength - 0.01 ? "at the end" : "in the middle";
-                        runs.Add($"{runStart:F1}-{end:F1} m ({end - runStart:F1} m, {where}){Surroundings(quads, st, depth, runStart, end, neighbour)}");
+                        string around = Surroundings(quads, st, depth, runStart, end, neighbour);
+                        runs.Add(new UncoveredRun
+                        {
+                            Length = end - runStart,
+                            BetweenOwn = around.Contains(BetweenOwn),
+                            Text = $"{runStart:F1}-{end:F1} m ({end - runStart:F1} m, {where}){around}",
+                        });
                     }
 
                     runStart = -1;
@@ -77,6 +93,13 @@ namespace BuildingCollections.Core
             }
 
             return runs;
+        }
+
+        sealed class UncoveredRun
+        {
+            public double Length;
+            public bool BetweenOwn;
+            public string Text;
         }
 
         static Pt AlongSidewalk(LotStrip st, double u, double depth) => st.ChunkStart + st.T * u + st.N * depth;
