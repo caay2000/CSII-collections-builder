@@ -20,6 +20,8 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   edificios −4 % con 0,05 y −20 a −27 % con 1 y 2.
 - Coste: construir las tiras pasa de ~8 a ~42 ms por manzana (código ya compilado). El simulador guarda las tiras
   por escenario y solape, así que la regresión tarda ahora ~12 s en lugar de ~53.
+- Ficha de Paradox Mods: capturas reordenadas (primero la pestaña Collections, luego Builder y después el resto) y
+  una imagen nueva, `simulator.jpg`, con 12 escenarios del simulador. La genera `tools/make_simulator_image.sh`.
 
 ## 0.3.7
 - Shift+clic en Find It sobre el edificio que ya está seleccionado no lo añadía: Find It no reactiva el mismo prefab

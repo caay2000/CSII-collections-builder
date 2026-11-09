@@ -45,12 +45,13 @@ The builder tab shows a warning if either is missing.
 Find It is optional (it is only used for adding buildings and for tags). Early version: feedback and bug reports are welcome on GitHub.
 	</LongDescription>
 	<Thumbnail Value="Properties/Thumbnail.png" />
+	<Screenshot Value="Properties/Screenshots/collections.jpg" />
 	<Screenshot Value="Properties/Screenshots/preview.jpg" />
 	<Screenshot Value="Properties/Screenshots/select-and-preview.jpg" />
 	<Screenshot Value="Properties/Screenshots/reshuffle.jpg" />
 	<Screenshot Value="Properties/Screenshots/polygon.jpg" />
 	<Screenshot Value="Properties/Screenshots/trees.jpg" />
-	<Screenshot Value="Properties/Screenshots/collections.jpg" />
+	<Screenshot Value="Properties/Screenshots/simulator.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="" />
 	<ModVersion Value="0.3.8" />
@@ -60,6 +61,7 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<ChangeLog>
 0.3.8
 - Better street coverage: when several ways of lining up the buildings along the sides take the same corners, the one that leaves the least sidewalk uncovered is used (about 13% less uncovered sidewalk at the default overlap in the test blocks).
+- Mod page: screenshots reordered (collections tab first, then the builder) and a new image of the placement simulator.
 
 0.3.7
 - Shift+click on the building already selected in Find It now adds it to the collection.
