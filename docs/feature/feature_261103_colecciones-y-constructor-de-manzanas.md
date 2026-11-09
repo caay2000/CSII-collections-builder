@@ -313,8 +313,9 @@ lado C# o del flujo de trabajo.
   - Vista previa con `CreateDefinitions` del juego, posición y rotación de `ZoneSpawnSystem` y altura con
     `CalculateFrontPosition`.
   - Build con `applyMode = Apply`; no aplica si hay errores, salvo que se desactive en `dev.json`.
-- `BuiltGuardSystem`: marca `BcBuilt` (`IEmptySerializable`), quita `Condemned` y su icono, y registra el estado
-  de los edificios tras la espera.
+- `BuiltGuardSystem`: marcaba `BcBuilt` (`IEmptySerializable`) y quitaba `Condemned` y su icono; desde la 0.3.4
+  solo registra el estado de los edificios tras la espera (la protección es de Plop the Growables, y en la 0.3.6 se
+  eliminó `BcBuilt`).
 - `dev.json` (`DevConfig`): `BlockTouchTolerance`, `ClickSnapDistance`, `SwapCornerSides`, `RequireNoErrors`,
   `UsePlacementOffset`, `LogCells` y `ReportAfterFrames`.
 - `UI/deploy-ui.sh` compila la UI y toca el `.css` para la recarga en caliente.

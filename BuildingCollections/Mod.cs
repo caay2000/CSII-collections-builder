@@ -34,7 +34,6 @@ namespace BuildingCollections
 
                 updateSystem.UpdateAt<BlockBuilderToolSystem>(SystemUpdatePhase.ToolUpdate);
                 updateSystem.UpdateAt<BuiltGuardSystem>(SystemUpdatePhase.ModificationEnd);
-                updateSystem.UpdateAt<LegacyMarkerSystem>(SystemUpdatePhase.ModificationEnd);
                 updateSystem.UpdateAt<ToolActivatorSystem>(SystemUpdatePhase.UIUpdate);
                 updateSystem.UpdateAt<BcUISystem>(SystemUpdatePhase.UIUpdate);
             }
