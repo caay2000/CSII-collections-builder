@@ -6,7 +6,7 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
 ## 0.3.5
 - Ficha de Paradox Mods: nuevo texto inicial sobre el origen del mod (las colecciones de JustJoeG, y Placemaker y
-  Street Builder para rellenar manzanas). Se publica como versión nueva porque el publicador no deja actualizar la
+  Street Builder para rellenar manzanas), y la miniatura y capturas de la 0.3.3, que no llegaron a la ficha. Se publica como versión nueva porque el publicador no deja actualizar la
   ficha de una versión ya subida.
 
 ## 0.3.4
