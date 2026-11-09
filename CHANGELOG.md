@@ -4,6 +4,12 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.7
+- Shift+clic en Find It sobre el edificio que ya está seleccionado no lo añadía: Find It no reactiva el mismo prefab
+  y `ObjectToolSystem` no lanza `EventPrefabChanged` si no cambia. Ahora la interfaz detecta el Shift+clic sobre un
+  elemento de Find It ya seleccionado (clases `gridItem_*` y `selected_*`) y llama a `addActivePrefab`, que añade
+  el prefab activo. El clic sobre uno no seleccionado sigue entrando por `EventPrefabChanged`, sin duplicarse.
+
 ## 0.3.6
 - Se elimina el tipo `BcBuilt` y `LegacyMarkerSystem`: la partida ya se cargó y guardó con la 0.3.5 (636
   edificios limpiados, todos en pie con PtG). En el código del mod ya no queda ningún componente que vaya a la partida.

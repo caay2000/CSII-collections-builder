@@ -103,6 +103,7 @@ namespace BuildingCollections.Systems
                     SetSelected(CollectionStore.Find(name)?.Name ?? string.Empty);
                 }
             })));
+            AddBinding(new TriggerBinding(Group, "addActivePrefab", () => AddClickedPrefab(toolSystem.activePrefab)));
             AddBinding(new TriggerBinding(Group, "addAll", () => Safe(() => Report(CollectionService.AddAllFromFindIt(selected.value)))));
             AddBinding(new TriggerBinding(Group, "clear", () => Safe(() => Report(CollectionService.Clear(selected.value)))));
             AddBinding(new TriggerBinding(Group, "delete", () => Safe(() =>
@@ -474,15 +475,18 @@ namespace BuildingCollections.Systems
 
         void OnPrefabChanged(PrefabBase prefab)
         {
+            var kb = Keyboard.current;
+            if (kb != null && kb.shiftKey.isPressed)
+            {
+                AddClickedPrefab(prefab);
+            }
+        }
+
+        void AddClickedPrefab(PrefabBase prefab)
+        {
             try
             {
                 if (IsOwnPlop(prefab) || !panelOpen.value || string.IsNullOrEmpty(selected.value) || !(prefab is BuildingPrefab))
-                {
-                    return;
-                }
-
-                var kb = Keyboard.current;
-                if (kb == null || !kb.shiftKey.isPressed)
                 {
                     return;
                 }

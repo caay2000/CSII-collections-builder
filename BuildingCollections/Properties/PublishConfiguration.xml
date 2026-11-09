@@ -53,11 +53,14 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/collections.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="" />
-	<ModVersion Value="0.3.6" />
+	<ModVersion Value="0.3.7" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.7
+- Shift+click on the building already selected in Find It now adds it to the collection.
+
 0.3.6
 - Removed the old save marker left over from 0.3.3 and earlier; nothing from this mod is stored in the save.
 
