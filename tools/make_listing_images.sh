@@ -9,11 +9,11 @@ img(){ echo "$IN/Screenshot 2026-11-09 $1.png"; }
 label(){ convert -background "#0f1b26e0" -fill white -font $F -pointsize ${3:-30} label:"$1" -bordercolor "#0f1b26e0" -border 18x10 "$2"; }
 put(){ convert "$1" "$2" -geometry +${3}+${4} -composite "$1"; }
 
-convert "$(img 001756)" -gravity center -crop 964x482+0+0 +repage -resize 800x400! "$T/thumb.png"
-convert -size 800x400 gradient:"#00000000-#000000b0" "$T/shade.png"
+convert "$(img 001756)" -gravity center -crop 553x553+0+0 +repage -resize 512x512! "$T/thumb.png"
+convert -size 512x512 gradient:"#00000000-#000000c8" "$T/shade.png"
 convert "$T/thumb.png" "$T/shade.png" -composite "$T/thumb.png"
-convert "$T/thumb.png" -font $F -pointsize 52 -fill white -gravity southwest -annotate +28+52 "Collections Builder" \
-  -font $FL -pointsize 24 -fill "#cfe6ff" -annotate +30+22 "Fill whole city blocks from your own building collections" "$OUT/Thumbnail.png"
+convert "$T/thumb.png" -gravity south -font $F -pointsize 60 -fill white -annotate +0+122 "Collections" -annotate +0+56 "Builder" \
+  -font $FL -pointsize 21 -fill "#cfe6ff" -annotate +0+24 "Fill whole city blocks from your collections" "$OUT/Thumbnail.png"
 
 convert "$(img 002025)" -resize 1600x "$T/a.png"
 convert "$(img 001750)" -resize x700 -bordercolor "#0b1218" -border 1 "$T/panel.png"
