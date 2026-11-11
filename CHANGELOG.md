@@ -5,14 +5,15 @@ La versión se define en `<Version>` de `BuildingCollections/BuildingCollections
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
 ## 0.3.10
-- Esquineros en ángulo (assets con el ángulo en el nombre, como "EU Corner 1 Left - 117 Degree" o "UK London Townhouse
-  63 Deg Left"): `AngledCorner` lee el ángulo y el lado del nombre del prefab, y `BuildingInfo.CornerAngle` lo guarda.
-  El constructor los deja fuera de la vista previa hasta que sepa colocarlos: como solares normales acababan en
-  esquinas de 90° con la parte que sobresale invadiendo la calle. Se pueden seguir colocando a mano desde la colección.
-- Sondeo para colocarlos más adelante: al rehacer el catálogo, el log lista (`[angled]`) los edificios con "deg",
-  "corner", "angle" o "°" en el nombre, con ángulo, lado, solar, acceso y medidas del modelo. Al seleccionar una
-  manzana, `[data] angled placed` da la posición, el giro, las esquinas del solar y las del modelo de los que ya hay
-  colocados, para medir cómo encajan en una esquina real.
+- Esquineros en ángulo (`EU_ResidentialCorner1Deg117L`, `UK_LondonTownhouse63DegR`...): `AngledCorner` lee el ángulo
+  del nombre del prefab, delante o detrás de "Deg", y `BuildingInfo.CornerAngle` lo guarda; 90° ± 2 no cuenta. El lado
+  sale del tipo de acceso (Left/Right), no del nombre. El constructor los deja fuera de la vista previa hasta que sepa
+  colocarlos: como solares normales acababan en esquinas de 90° con la parte que sobresale invadiendo la calle. Se
+  pueden seguir colocando a mano desde la colección.
+- Sondeo: `ObjectGeometryData` de estos edificios mide justo el solar, sin lo que sobresale. Al rehacer el catálogo,
+  `[angled]` lista los que tienen ángulo con el solar y las medidas de sus mallas (`SubMesh` y `MeshData.m_Bounds`,
+  `PrefabCatalog.TryMeshBounds`). Al seleccionar una manzana, `[data] angled placed` da la posición, el giro, las
+  esquinas del solar y las de la malla de los que ya hay colocados.
 - `BuildingFootprints` y el nuevo `AngledPlaced` comparten `NearbyBuildings` y `BoundsQuad`.
 
 ## 0.3.9

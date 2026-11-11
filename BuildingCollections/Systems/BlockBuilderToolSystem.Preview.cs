@@ -435,13 +435,12 @@ namespace BuildingCollections.Systems
 
                 var lot = EntityManager.GetComponentData<BuildingData>(prefab).m_LotSize;
                 float hw = lot.x * 4f, hd = lot.y * 4f;
-                var lotQuad = Corners(tr, -hw, -hd, hw, hd);
-                var bounds = BoundsQuad(prefab, tr);
+                string mesh = PrefabCatalog.TryMeshBounds(EntityManager, prefab, out var min, out var max) ? PointList(Corners(tr, min.x, min.y, max.x, max.y)) : "-";
                 float3 forward = math.rotate(tr.m_Rotation, new float3(0, 0, 1));
                 double yaw = math.degrees(math.atan2(forward.x, forward.z));
-                yield return string.Format(CultureInfo.InvariantCulture, "  [data] angled placed {0} angle {1} side {2} lot {3}x{4}: pos {5:F2},{6:F2} yaw {7:F1} lot {8} bounds {9}",
-                    p.name.Replace(":", "_"), AngledCorner.Angle(p.name), AngledCorner.Side(p.name), lot.x, lot.y, tr.m_Position.x, tr.m_Position.z, yaw,
-                    PointList(lotQuad), bounds == null ? "-" : PointList(bounds));
+                yield return string.Format(CultureInfo.InvariantCulture, "  [data] angled placed {0} angle {1} lot {2}x{3}: pos {4:F2},{5:F2} yaw {6:F1} lot {7} mesh {8}",
+                    p.name.Replace(":", "_"), AngledCorner.Angle(p.name), lot.x, lot.y, tr.m_Position.x, tr.m_Position.z, yaw,
+                    PointList(Corners(tr, -hw, -hd, hw, hd)), mesh);
             }
         }
 
