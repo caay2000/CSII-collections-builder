@@ -14,7 +14,7 @@ ICON="$(dirname "$0")/../BuildingCollections/UI/icon.svg"
 convert -background none -density 828 "$ICON" -resize 276x276 "$T/crane.png"
 convert -size 512x512 gradient:"#1b3247-#0b1520" "$T/crane.png" -geometry +118+22 -composite \
   -gravity north -font $F -pointsize 34 -kerning 9 -fill "#4cc9f0" -annotate +0+330 "COLLECTIONS" \
-  -font $FB -pointsize 108 -kerning 0 -fill white -annotate +0+362 "Builder" "$OUT/Thumbnail.png"
+  -font $FB -pointsize 108 -kerning 0 -fill white -annotate +0+362 "Builder" -depth 8 "$OUT/Thumbnail.png"
 
 convert "$(img 002025)" -resize 1600x "$T/a.png"
 convert "$(img 001750)" -resize x700 -bordercolor "#0b1218" -border 1 "$T/panel.png"
