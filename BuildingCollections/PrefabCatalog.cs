@@ -7,6 +7,7 @@ using Game.Prefabs;
 using Game.UI;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace BuildingCollections
 {
@@ -113,7 +114,7 @@ namespace BuildingCollections
                         },
                     };
 
-                    if (AngledCorner.WorthProbing(prefab.name))
+                    if (byName[prefab.name].Info.IsAngledCorner)
                     {
                         probe.Add(ProbeLine(em, e, byName[prefab.name]));
                     }
@@ -141,21 +142,49 @@ namespace BuildingCollections
             Version++;
             Mod.Log.Info($"Building catalog: {byName.Count} prefabs ({duplicates} duplicate names ignored).");
             probe.Sort(StringComparer.OrdinalIgnoreCase);
-            Mod.Log.Info($"[angled] {probe.Count} buildings with corner or angle names, {byName.Values.Count(c => c.Info.IsAngledCorner)} with an angle:\n  " + string.Join("\n  ", probe));
+            Mod.Log.Info($"[angled] {probe.Count} buildings with a corner angle in their name:\n  " + string.Join("\n  ", probe));
         }
 
         static string ProbeLine(EntityManager em, Entity e, CatalogEntry entry)
         {
             var info = entry.Info;
-            string geometry = "no geometry";
-            if (em.HasComponent<ObjectGeometryData>(e))
+            string lot = string.Format(CultureInfo.InvariantCulture, "lot x {0:F2}..{1:F2} z {2:F2}..{3:F2}", -info.LotWidth * 4f, info.LotWidth * 4f, -info.LotDepth * 4f, info.LotDepth * 4f);
+            string mesh = TryMeshBounds(em, e, out var min, out var max)
+                ? string.Format(CultureInfo.InvariantCulture, "mesh x {0:F2}..{1:F2} z {2:F2}..{3:F2}", min.x, max.x, min.y, max.y)
+                : "no mesh";
+            return $"{info.PrefabName}: angle {info.CornerAngle}, lot {info.LotWidth}x{info.LotDepth}, access {entry.AccessType} ({info.Corner}), {lot}, {mesh}";
+        }
+
+        public static bool TryMeshBounds(EntityManager em, Entity prefab, out float2 min, out float2 max)
+        {
+            min = new float2(float.MaxValue);
+            max = new float2(float.MinValue);
+            if (!em.HasBuffer<SubMesh>(prefab))
             {
-                var g = em.GetComponentData<ObjectGeometryData>(e);
-                geometry = string.Format(CultureInfo.InvariantCulture, "bounds x {0:F2}..{1:F2} z {2:F2}..{3:F2} height {4:F2}, size {5:F2}x{6:F2}",
-                    g.m_Bounds.min.x, g.m_Bounds.max.x, g.m_Bounds.min.z, g.m_Bounds.max.z, g.m_Bounds.max.y, g.m_Size.x, g.m_Size.z);
+                return false;
             }
 
-            return $"{info.PrefabName}: angle {(info.IsAngledCorner ? info.CornerAngle.ToString(CultureInfo.InvariantCulture) : "-")}, side {AngledCorner.Side(info.PrefabName)}, lot {info.LotWidth}x{info.LotDepth}, access {entry.AccessType} ({info.Corner}), {geometry}";
+            var subMeshes = em.GetBuffer<SubMesh>(prefab, true);
+            bool any = false;
+            for (int i = 0; i < subMeshes.Length; i++)
+            {
+                var sm = subMeshes[i];
+                if (!em.HasComponent<MeshData>(sm.m_SubMesh))
+                {
+                    continue;
+                }
+
+                var b = em.GetComponentData<MeshData>(sm.m_SubMesh).m_Bounds;
+                foreach (var corner in new[] { new float3(b.min.x, 0, b.min.z), new float3(b.max.x, 0, b.min.z), new float3(b.max.x, 0, b.max.z), new float3(b.min.x, 0, b.max.z) })
+                {
+                    var p = sm.m_Position + math.rotate(sm.m_Rotation, corner);
+                    min = math.min(min, p.xz);
+                    max = math.max(max, p.xz);
+                    any = true;
+                }
+            }
+
+            return any;
         }
     }
 }
