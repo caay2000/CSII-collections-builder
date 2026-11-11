@@ -7,11 +7,11 @@ namespace BuildingCollections.Core
     {
         const int RightAngleTolerance = 2;
 
-        static readonly Regex AnglePattern = new Regex(@"(?<![\d.])(\d{2,3})[\s_-]*(?:°|deg(?:ree)?s?(?![a-z]))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        static readonly Regex AnglePattern = new Regex(@"(?<![\d.])(\d{2,3})[\s_-]*(?:°|[Dd]eg(?:ree)?s?(?![a-z])|DEG(?:REE)?S?(?![A-Za-z]))", RegexOptions.CultureInvariant);
 
-        static readonly Regex SidePattern = new Regex(@"(?<![a-z])(left|right)(?![a-z])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        static readonly Regex SidePattern = new Regex(@"(?:(?<![A-Za-z])(?:[Ll]eft|[Rr]ight|LEFT|RIGHT)|(?<=[a-z])(?:Left|Right))(?![a-z])", RegexOptions.CultureInvariant);
 
-        static readonly Regex ProbePattern = new Regex(@"deg|corner|angle|°", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        static readonly Regex ProbePattern = new Regex(@"deg|corner|(?<![a-z])angle|°", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         public static int Angle(string prefabName)
         {

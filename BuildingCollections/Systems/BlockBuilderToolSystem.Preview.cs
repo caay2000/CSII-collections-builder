@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using BuildingCollections.Core;
@@ -43,8 +44,9 @@ namespace BuildingCollections.Systems
                 autoCleanPasses = 0;
                 definitionsDirty = true;
                 var cfg = DevConfig.Load();
-                var angled = candidates.Where(c => c.Info.IsAngledCorner).Select(c => c.Info.PrefabName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-                var usable = candidates.Where(c => c.Info.Corner != CornerKind.None && c.Info.LotWidth > 0 && c.Info.LotDepth > 0 && !c.Info.IsAngledCorner).ToList();
+                var placeable = candidates.Where(c => c.Info.Corner != CornerKind.None && c.Info.LotWidth > 0 && c.Info.LotDepth > 0).ToList();
+                var angled = placeable.Where(c => c.Info.IsAngledCorner).Select(c => c.Info.PrefabName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                var usable = placeable.Where(c => !c.Info.IsAngledCorner).ToList();
                 var plain = usable.Where(c => AccessMapping.FitsFront(c.Info.Corner)).Select(c => c.Info).ToList();
                 var corners = usable.Where(c => AccessMapping.FitsCorner(c.Info.Corner)).Select(c => c.Info).ToList();
                 var prefabs = usable.GroupBy(c => c.Info.PrefabName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Prefab, StringComparer.OrdinalIgnoreCase);
@@ -437,13 +439,13 @@ namespace BuildingCollections.Systems
                 var bounds = BoundsQuad(prefab, tr);
                 float3 forward = math.rotate(tr.m_Rotation, new float3(0, 0, 1));
                 double yaw = math.degrees(math.atan2(forward.x, forward.z));
-                yield return string.Format(System.Globalization.CultureInfo.InvariantCulture, "  [data] angled placed {0} angle {1} side {2} lot {3}x{4}: pos {5:F2},{6:F2} yaw {7:F1} lot {8} bounds {9}",
+                yield return string.Format(CultureInfo.InvariantCulture, "  [data] angled placed {0} angle {1} side {2} lot {3}x{4}: pos {5:F2},{6:F2} yaw {7:F1} lot {8} bounds {9}",
                     p.name.Replace(":", "_"), AngledCorner.Angle(p.name), AngledCorner.Side(p.name), lot.x, lot.y, tr.m_Position.x, tr.m_Position.z, yaw,
                     PointList(lotQuad), bounds == null ? "-" : PointList(bounds));
             }
         }
 
-        static string PointList(Quad q) => string.Join(";", q.P.Select(pt => string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F2},{1:F2}", pt.X, pt.Y)));
+        static string PointList(Quad q) => string.Join(";", q.P.Select(pt => string.Format(CultureInfo.InvariantCulture, "{0:F2},{1:F2}", pt.X, pt.Y)));
 
         static Quad Corners(Transform tr, float minX, float minZ, float maxX, float maxZ)
         {
