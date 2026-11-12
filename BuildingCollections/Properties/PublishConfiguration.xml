@@ -54,11 +54,13 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/simulator.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-collections-builder.1949529/" />
-	<ModVersion Value="0.3.8" />
+	<ModVersion Value="0.3.9" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.9
+- Mixed collections now follow the slider: the block is first filled with the collection that has the bigger share, then some of its buildings, spread over the block, make room for the other collection, which also fills what the first one could not (corners, narrow gaps). Before, a collection without corner or one-cell-wide buildings could end up with far less than its share. The preview shows the share each collection got.
 0.3.8
 - Better street coverage: when several ways of lining up the buildings along the sides take the same corners, the one that leaves the least sidewalk uncovered is used (about 13% less uncovered sidewalk at the default overlap in the test blocks).
 - Mod page: screenshots reordered (collections tab first, then the builder) and a new image of the placement simulator.

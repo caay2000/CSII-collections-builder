@@ -4,6 +4,17 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.9
+- Mezcla de colecciones por fachada: antes el porcentaje se aplicaba edificio a edificio y solo cuando las dos
+  colecciones tenían uno que cupiera, así que una colección sin esquineros ni edificios de 1 celda (p. ej. EU Low
+  80% con Med Row City 20%) acababa con una fracción mínima. Ahora `PreviewPlanner` llena la manzana solo con la
+  colección de mayor porcentaje, `MixSplit.Surplus` quita edificios suyos repartidos (en tramos del ancho mínimo que
+  quepa de la otra) hasta dejarla en su parte de las celdas de calle, y `GridPlanner.Refill` rellena lo liberado y
+  lo que no pudo cubrir con la otra colección (esquineros incluidos), y lo que aún quede con la primera.
+- La vista previa muestra el reparto real (`mix 78% / 22%`) y el log lo detalla (`mix:`).
+- Simulador: `mix` mide el reparto obtenido con una colección ancha sin esquineros y otra estrecha con esquineros
+  (80/20: 77,8%; 50/50: 53%; 20/80: 11% por manzanas pequeñas donde un solo edificio ancho ya se pasa).
+
 ## 0.3.8
 - Alineación por acera cubierta: `AlignmentChooser` devuelve las combinaciones de alineación (al inicio o al final
   de cada lado) que empatan en esquinas y redondeos, hasta 6. Antes desempataba por celdas y por número de cambios,

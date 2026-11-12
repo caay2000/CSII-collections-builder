@@ -12,6 +12,32 @@ namespace BuildingCollections.Core
             return frontCells.Count(c => quads.Any(q => q.Contains(c)));
         }
 
+        public static List<(PlannedLot lot, int cells)> CellsPerLot(IEnumerable<PlannedLot> lots, IReadOnlyList<Pt> frontCells)
+        {
+            var taken = new bool[frontCells.Count];
+            var front = new List<(PlannedLot lot, int cells)>();
+            foreach (var lot in lots)
+            {
+                var q = lot.Footprint(0.5);
+                int n = 0;
+                for (int i = 0; i < frontCells.Count; i++)
+                {
+                    if (!taken[i] && q.Contains(frontCells[i]))
+                    {
+                        taken[i] = true;
+                        n++;
+                    }
+                }
+
+                if (n > 0)
+                {
+                    front.Add((lot, n));
+                }
+            }
+
+            return front;
+        }
+
         public static IEnumerable<string> Uncovered(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks)
         {
             foreach (var (st, runs) in Sidewalks(lots, existing, blocks))

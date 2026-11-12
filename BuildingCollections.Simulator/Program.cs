@@ -16,6 +16,11 @@ namespace BuildingCollections.Simulator
                 return 0;
             }
 
+            if (args.Length > 0 && args[0] == "mix")
+            {
+                return MixCommand.Run(args);
+            }
+
             if (args.Length > 0 && args[0] == "regress")
             {
                 return RegressionCommand.Run(args);

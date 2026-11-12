@@ -65,7 +65,7 @@ namespace BuildingCollections.Simulator
             B("corner 2x2 L", 2, 2, CornerKind.Front | CornerKind.Left), B("corner 2x2 R", 2, 2, CornerKind.Front | CornerKind.Right),
         };
 
-        static BuildingInfo B(string name, int w, int d, CornerKind corner = CornerKind.Front) =>
+        internal static BuildingInfo B(string name, int w, int d, CornerKind corner = CornerKind.Front) =>
             new BuildingInfo { PrefabName = name, LotWidth = w, LotDepth = d, Corner = corner };
 
         static readonly ConcurrentDictionary<(Scenario, double), Lazy<(List<LotStrip>, List<string>)>> StripCache =
@@ -79,7 +79,9 @@ namespace BuildingCollections.Simulator
                 return (strips, notes);
             })).Value;
 
-        public static Run Simulate(Scenario scenario, float overlap, int seed)
+        public static Run Simulate(Scenario scenario, float overlap, int seed) => Simulate(scenario, overlap, seed, Plain, Corners);
+
+        public static Run Simulate(Scenario scenario, float overlap, int seed, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> cornerSet)
         {
             var curve = overlap > FootprintMask.StrictOverlap ? overlap : 0;
             var (strips, built) = StripsFor(scenario, curve);
@@ -96,7 +98,7 @@ namespace BuildingCollections.Simulator
             }).ToList();
             var result = PreviewPlanner.Plan(new PreviewRequest
             {
-                Blocks = blocks, Existing = scenario.Existing, Outline = outline, Plain = Plain, Corners = Corners, Overlap = overlap, Seed = seed,
+                Blocks = blocks, Existing = scenario.Existing, Outline = outline, Plain = plain, Corners = cornerSet, Overlap = overlap, Seed = seed,
             });
             result.Log.InsertRange(0, notes);
             var gaps = FindGaps(strips, result);

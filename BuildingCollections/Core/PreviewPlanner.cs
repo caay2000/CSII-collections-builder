@@ -15,10 +15,22 @@ namespace BuildingCollections.Core
         readonly Stopwatch clock = new Stopwatch();
         int seedIndex;
         int frontDepth = 1;
+        readonly MixSplit mix;
+        readonly IReadOnlyList<BuildingInfo> firstPlain;
+        readonly IReadOnlyList<BuildingInfo> firstCorners;
 
         PreviewPlanner(PreviewRequest request)
         {
             this.request = request;
+            mix = MixSplit.Of(request.Plain.Concat(request.Corners));
+            firstPlain = Own(request.Plain);
+            firstCorners = mix == null ? request.Corners : MixSplit.InGroup(request.Corners, mix.First);
+        }
+
+        IReadOnlyList<BuildingInfo> Own(IReadOnlyList<BuildingInfo> plain)
+        {
+            var own = mix == null ? plain : MixSplit.InGroup(plain, mix.First);
+            return own.Count > 0 ? own : plain;
         }
 
         public static PreviewResult Plan(PreviewRequest request) => new PreviewPlanner(request).Run();
@@ -32,6 +44,12 @@ namespace BuildingCollections.Core
             var cornerPlans = ReserveCorners();
             Fill(cornerPlans);
             Lap($"corners and fill ({grids.Count} strips)");
+            if (mix != null)
+            {
+                BalanceMix();
+                Lap("mix");
+            }
+
             ApplyDensity();
             Lap("density");
             CloseEndGaps();
@@ -223,7 +241,7 @@ namespace BuildingCollections.Core
             foreach (var (block, grid) in grids)
             {
                 MaskOthers(block, grid, withFronts: false);
-                var corners = GridPlanner.PlanCorners(grid, request.Plain, request.Corners, NextSeed());
+                var corners = GridPlanner.PlanCorners(grid, firstPlain, firstCorners, NextSeed());
                 plans[block] = corners;
                 footprints.AddRange(corners.Select(p => (Footprint(block, p), FrontRow(block, p), block)));
             }
@@ -239,42 +257,82 @@ namespace BuildingCollections.Core
             {
                 int masked = MaskOthers(block, grid, withFronts: true);
                 string depths = FreeDepths(grid);
-                var plan = GridPlanner.Plan(grid, PlainFor(block, grid), request.Corners, 100, NextSeed(), cornerPlans[block]);
-                footprints.RemoveAll(f => f.owner == block);
-                foreach (var p in plan)
-                {
-                    footprints.Add((Footprint(block, p), FrontRow(block, p), block));
-                    result.Lots.Add(new PlannedLot
-                    {
-                        Building = p.Building,
-                        Owner = block,
-                        MinX = block.AreaX + p.X,
-                        MinY = block.AreaY + p.Y,
-                        MaxX = block.AreaX + p.X + p.Building.LotWidth,
-                        MaxY = block.AreaY + p.Y + p.Building.LotDepth,
-                        Corner = p.IsCorner,
-                    });
-                }
+                var plan = GridPlanner.Plan(grid, PlainFor(block, grid, firstPlain), firstCorners, 100, NextSeed(), cornerPlans[block]);
+                Replace(block, plan);
+                result.Log.Add($"  {block.Label}: grid {grid.Width}x{grid.Depth}, {grid.FreeCount()} free ({masked} covered by other blocks), corners L={grid.LeftCorner} R={grid.RightCorner}, free depth {depths} -> {Describe(plan)}");
+            }
+        }
 
-                result.Log.Add($"  {block.Label}: grid {grid.Width}x{grid.Depth}, {grid.FreeCount()} free ({masked} covered by other blocks), corners L={grid.LeftCorner} R={grid.RightCorner}, free depth {depths} -> {string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [corner]" : string.Empty)}"))}");
+        static string Describe(IEnumerable<Placement> plan) =>
+            string.Join("; ", plan.Select(p => $"x{p.X} {p.Building}{(p.IsCorner ? " [corner]" : string.Empty)}"));
+
+        void Replace(PlanBlock block, IEnumerable<Placement> plan)
+        {
+            footprints.RemoveAll(f => f.owner == block);
+            result.Lots.RemoveAll(l => l.Owner == block);
+            foreach (var p in plan)
+            {
+                footprints.Add((Footprint(block, p), FrontRow(block, p), block));
+                result.Lots.Add(new PlannedLot
+                {
+                    Building = p.Building,
+                    Owner = block,
+                    MinX = block.AreaX + p.X,
+                    MinY = block.AreaY + p.Y,
+                    MaxX = block.AreaX + p.X + p.Building.LotWidth,
+                    MaxY = block.AreaY + p.Y + p.Building.LotDepth,
+                    Corner = p.IsCorner,
+                });
+            }
+        }
+
+        static Placement Kept(PlannedLot lot) => new Placement
+        {
+            X = lot.MinX - lot.Owner.AreaX, Y = lot.MinY - lot.Owner.AreaY, Building = lot.Building, IsCorner = lot.Corner,
+        };
+
+        void BalanceMix()
+        {
+            var front = FrontCoverage.CellsPerLot(result.Lots, result.FrontCells);
+            double before = mix.MeasuredFirstShare(result.Lots, result.FrontCells);
+            var secondPlain = MixSplit.InGroup(request.Plain, mix.Second);
+            var secondCorners = MixSplit.InGroup(request.Corners, mix.Second);
+            var depth = grids.ToDictionary(g => g.block, g => Enumerable.Range(0, g.grid.Width).Select(x => FreeDepth(g.grid, x)).DefaultIfEmpty(0).Max());
+            int Room(PlanBlock block) => secondPlain.Concat(secondCorners).Where(b => b.LotDepth <= depth[block]).Select(b => b.LotWidth).DefaultIfEmpty(1).Min();
+            var surplus = mix.Surplus(front, result.FrontCells.Count, Room, new Random(request.Seed ^ 0x5bd1e995));
+            result.Lots.RemoveAll(surplus.Contains);
+            result.Log.Add($"  mix: first pass with group {mix.First} only covers {before:P0} of the filled street cells (target {mix.FirstShare:P0}); {surplus.Count} of its buildings make room for group {mix.Second}.");
+
+            foreach (var (block, grid) in grids)
+            {
+                var kept = result.Lots.Where(l => l.Owner == block).Select(Kept).ToList();
+                footprints.RemoveAll(f => f.owner == block);
+                MaskOthers(block, grid, withFronts: true);
+                var plan = GridPlanner.Refill(grid, PlainFor(block, grid, secondPlain), secondCorners, firstPlain, NextSeed(), kept);
+                Replace(block, plan);
+                var added = plan.Where(p => !kept.Contains(p)).ToList();
+                if (added.Count > 0)
+                {
+                    result.Log.Add($"  {block.Label}: mix refill -> {Describe(added)}");
+                }
             }
         }
 
         const double TypicalWidth = 2;
         const double MinSlack = 1;
 
-        IReadOnlyList<BuildingInfo> PlainFor(PlanBlock block, PlanGrid grid)
+        IReadOnlyList<BuildingInfo> PlainFor(PlanBlock block, PlanGrid grid, IReadOnlyList<BuildingInfo> pool)
         {
             var st = block.Strip;
             if (st == null || st.Slack < MinSlack)
             {
-                return request.Plain;
+                return pool;
             }
 
-            var narrow = request.Plain.Where(b => b.LotWidth == 1).ToList();
+            var narrow = pool.Where(b => b.LotWidth == 1).ToList();
             if (narrow.Count == 0)
             {
-                return request.Plain;
+                return pool;
             }
 
             int free = Enumerable.Range(0, grid.Width).Count(x => grid.Free[x, 0]);
@@ -284,7 +342,7 @@ namespace BuildingCollections.Core
                 : Math.Ceiling(st.Slack / EndGapCloser.MaxSpreadSliver) - 1;
             if (needed <= movable || needed > free)
             {
-                return request.Plain;
+                return pool;
             }
 
             result.Log.Add($"  {block.Label}: {st.Slack:F1} m left over and {needed:F0} movable buildings needed; using only one-cell-wide buildings.");
@@ -321,26 +379,7 @@ namespace BuildingCollections.Core
             }
 
             var frontCells = result.FrontCells;
-            var taken = new bool[frontCells.Count];
-            var front = new List<(PlannedLot lot, int cells)>();
-            foreach (var lot in result.Lots)
-            {
-                var q = lot.Footprint(0.5);
-                int n = 0;
-                for (int i = 0; i < frontCells.Count; i++)
-                {
-                    if (!taken[i] && q.Contains(frontCells[i]))
-                    {
-                        taken[i] = true;
-                        n++;
-                    }
-                }
-
-                if (n > 0)
-                {
-                    front.Add((lot, n));
-                }
-            }
+            var front = FrontCoverage.CellsPerLot(result.Lots, frontCells);
 
             var removed = GridPlanner.Thin(front.Select(f => (f.cells, f.lot.Corner)).ToList(), frontCells.Count, request.Density,
                 new Random(request.Seed ^ 0x1b873593));
@@ -379,6 +418,12 @@ namespace BuildingCollections.Core
         {
             result.FrontFilled = FrontCoverage.CountFilled(result.Lots, result.FrontCells);
             result.Log.Add($"  frontage: {result.FrontFilled} of {result.FrontCells.Count} street cells filled.");
+            if (mix != null)
+            {
+                double first = mix.MeasuredFirstShare(result.Lots, result.FrontCells);
+                result.FirstGroupShare = mix.First == 0 ? first : 1 - first;
+                result.Log.Add($"  mix: group 0 covers {result.FirstGroupShare:P0} of the filled street cells, group 1 {1 - result.FirstGroupShare:P0}.");
+            }
         }
 
         void Diagnose()

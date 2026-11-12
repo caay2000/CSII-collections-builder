@@ -94,7 +94,7 @@ namespace BuildingCollections.Systems
                 log.AppendLine($"  timings: {string.Join(", ", times)}.");
                 Mod.Log.Info(log.ToString().TrimEnd());
                 Say(buildingsPlanned == 0 && plants == 0 ? "Nothing fits in the selected area with these filters."
-                    : plants > 0 ? $"Preview: {buildingsPlanned} buildings, {plants} plants." : $"Preview: {buildingsPlanned} buildings.", error: buildingsPlanned == 0 && plants == 0);
+                    : plants > 0 ? $"Preview: {buildingsPlanned} buildings{MixNote(planned)}, {plants} plants." : $"Preview: {buildingsPlanned} buildings{MixNote(planned)}.", error: buildingsPlanned == 0 && plants == 0);
             }
             catch (Exception e)
             {
@@ -178,6 +178,10 @@ namespace BuildingCollections.Systems
 
             return blocks;
         }
+
+        static string MixNote(PreviewResult planned) => planned.FirstGroupShare is double first
+            ? $" (mix {Math.Round(first * 100):0}% / {Math.Round((1 - first) * 100):0}%)"
+            : string.Empty;
 
         static CellFrame FrameOf(Block b)
         {
