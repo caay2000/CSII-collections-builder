@@ -76,6 +76,7 @@ namespace BuildingCollections.Core
         public List<Pt> FrontCells = new List<Pt>();
         public List<Pt> Thinned = new List<Pt>();
         public int FrontFilled;
+        public double? FirstGroupShare;
         public List<string> Log = new List<string>();
         public List<string> Timings = new List<string>();
     }

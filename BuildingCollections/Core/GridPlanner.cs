@@ -93,6 +93,29 @@ namespace BuildingCollections.Core
             return result.Where((p, i) => !removed.Contains(i)).OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
         }
 
+        public static List<Placement> Refill(PlanGrid grid, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> corners,
+            IReadOnlyList<BuildingInfo> fallback, int seed, IReadOnlyList<Placement> kept)
+        {
+            var result = new List<Placement>();
+            if (grid.Width <= 0 || grid.Depth <= 0)
+            {
+                return result;
+            }
+
+            var rng = new Random(seed);
+            var used = (bool[,])grid.Free.Clone();
+            foreach (var p in kept)
+            {
+                Occupy(used, p.X, p.Y, p.Building);
+                result.Add(p);
+            }
+
+            Corners(grid, used, plain, corners, rng, result);
+            FillMax(grid, used, plain, rng, result);
+            FillMax(grid, used, fallback, rng, result);
+            return result.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
+        }
+
         public static HashSet<int> Thin(IReadOnlyList<(int width, bool corner)> items, int front, int density, Random rng)
         {
             var removed = new HashSet<int>();
@@ -302,23 +325,7 @@ namespace BuildingCollections.Core
             return deep.Count > 0 ? deep : fitting;
         }
 
-        internal static BuildingInfo Pick(List<BuildingInfo> options, Random rng)
-        {
-            int first = 0;
-            foreach (var b in options)
-            {
-                first += b.Group == 0 ? 1 : 0;
-            }
-
-            if (first == 0 || first == options.Count)
-            {
-                return options[rng.Next(options.Count)];
-            }
-
-            bool fromFirst = rng.NextDouble() < options.First(b => b.Group == 0).Share;
-            var pool = options.Where(b => (b.Group == 0) == fromFirst).ToList();
-            return pool[rng.Next(pool.Count)];
-        }
+        internal static BuildingInfo Pick(List<BuildingInfo> options, Random rng) => options[rng.Next(options.Count)];
 
         static bool Fits(bool[,] used, PlanGrid grid, int x, int y, BuildingInfo b)
         {
