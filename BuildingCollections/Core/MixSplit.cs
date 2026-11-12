@@ -31,7 +31,7 @@ namespace BuildingCollections.Core
         {
             var front = FrontCoverage.CellsPerLot(lots, frontCells);
             int all = front.Sum(f => f.cells);
-            return all == 0 ? 0 : (double)front.Where(f => f.lot.Building.Group == First).Sum(f => f.cells) / all;
+            return all == 0 ? FirstShare : (double)front.Where(f => f.lot.Building.Group == First).Sum(f => f.cells) / all;
         }
 
         public HashSet<PlannedLot> Surplus(IReadOnlyList<(PlannedLot lot, int cells)> front, int frontTotal, Func<PlanBlock, int> room, Random rng)

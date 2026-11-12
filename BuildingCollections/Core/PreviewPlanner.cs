@@ -291,6 +291,10 @@ namespace BuildingCollections.Core
             X = lot.MinX - lot.Owner.AreaX, Y = lot.MinY - lot.Owner.AreaY, Building = lot.Building, IsCorner = lot.Corner,
         };
 
+        const int MixSalt = 0x5bd1e995;
+
+        static Quad FrontRow(PlannedLot lot) => lot.Owner.Frame.Rect(lot.MinX, lot.MinY, lot.MaxX, lot.MinY + 1);
+
         void BalanceMix()
         {
             var front = FrontCoverage.CellsPerLot(result.Lots, result.FrontCells);
@@ -299,8 +303,10 @@ namespace BuildingCollections.Core
             var secondCorners = MixSplit.InGroup(request.Corners, mix.Second);
             var depth = grids.ToDictionary(g => g.block, g => Enumerable.Range(0, g.grid.Width).Select(x => FreeDepth(g.grid, x)).DefaultIfEmpty(0).Max());
             int Room(PlanBlock block) => secondPlain.Concat(secondCorners).Where(b => b.LotDepth <= depth[block]).Select(b => b.LotWidth).DefaultIfEmpty(1).Min();
-            var surplus = mix.Surplus(front, result.FrontCells.Count, Room, new Random(request.Seed ^ 0x5bd1e995));
+            var surplus = mix.Surplus(front, result.FrontCells.Count, Room, new Random(request.Seed ^ MixSalt));
             result.Lots.RemoveAll(surplus.Contains);
+            footprints.Clear();
+            footprints.AddRange(result.Lots.Select(l => (l.Footprint(0), FrontRow(l), l.Owner)));
             result.Log.Add($"  mix: first pass with group {mix.First} only covers {before:P0} of the filled street cells (target {mix.FirstShare:P0}); {surplus.Count} of its buildings make room for group {mix.Second}.");
 
             foreach (var (block, grid) in grids)
