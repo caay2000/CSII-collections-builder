@@ -15,6 +15,9 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   `PrefabCatalog.TryMeshBounds`). Al seleccionar una manzana, `[data] angled placed` da la posición, el giro, las
   esquinas del solar y las de la malla de los que ya hay colocados.
 - `BuildingFootprints` y el nuevo `AngledPlaced` comparten `NearbyBuildings` y `BoundsQuad`.
+- Los esquineros en ángulo ya colocados en una manzana ocupan, para el constructor, el rectángulo que une su solar
+  y su malla (`BoundsQuad`): antes contaban solo el solar y la vista previa ponía edificios encima de la parte que
+  sobresale (visto en el juego con `EU_ResidentialCorner1Deg135L` y `EU_ResidentialCorner4Deg45R`).
 
 ## 0.3.9
 - Mezcla de colecciones por fachada: antes el porcentaje se aplicaba edificio a edificio y solo cuando las dos
