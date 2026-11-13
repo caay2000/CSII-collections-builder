@@ -19,8 +19,9 @@ for f in Whitestone_with_Prospect_closed_loop_and_80_corner_ Cobblestone_long_cu
     -extent 380x270 -bordercolor "#0b1218" -border 10 "$T/tiles/$(printf %02d $i).png"
 done
 montage "$T"/tiles/*.png -tile 4x3 -geometry +0+0 -background "#0b1218" "$T/grid.png"
-convert -size 1600x100 xc:"#0b1218" -font $F -pointsize 34 -fill white -gravity north -annotate +0+12 "Tested in a simulator before every release" \
+convert -size 1600x130 xc:"#0b1218" -font $F -pointsize 34 -fill white -gravity north -annotate +0+12 "Simulated on every change, tested in-game before every release" \
   -font $FL -pointsize 22 -fill "#cfe6ff" \
   -annotate +0+60 "86 block shapes (curves, S-bends, triangles, real city blocks) × 24 reshuffles × 4 overlaps: corners and sidewalk coverage must never get worse" \
+  -fill "#ffd28a" -annotate +0+92 "Every release is then checked in game before publishing, though no test can cover every block" \
   "$T/head.png"
 convert "$T/head.png" "$T/grid.png" -append -quality 90 "$OUT"
