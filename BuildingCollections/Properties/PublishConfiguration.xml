@@ -42,7 +42,12 @@ The builder tab shows a warning if either is missing.
 - With "Overlap per joint" (0.5 to 2 m), neighbouring buildings may overlap each other by up to that much, so they always touch and the leftover goes to the corner instead of showing as gaps between buildings. Existing buildings are never removed or overlapped.
 - Overlap uses the **Anarchy** mod: the builder turns Anarchy on while its tab is open and turns it back off when you leave (only if it was the one that turned it on). Set it to Off to build without overlap.
 
-Find It is optional (it is only used for adding buildings and for tags). Early version: feedback and bug reports are welcome on the forum thread (linked on this page) or on GitHub.
+**How it is tested**
+- Every change to the layout runs through a simulator that builds 86 block shapes (curves, S-bends, triangles and real city blocks taken from the game) with 24 reshuffles and 4 overlap settings, and checks that corners and sidewalk coverage never get worse.
+- Every release is then tested in game before it is published.
+- No amount of testing covers every block a city can have, so if a block comes out wrong, please report it with a screenshot.
+
+Find It is optional (it is only used for adding buildings and for tags). Early version: feedback and bug reports are welcome on the forum thread (linked on this page) or on GitHub: https://github.com/caay2000/CSII-collections-builder/issues
 	</LongDescription>
 	<Thumbnail Value="Properties/Thumbnail.png" />
 	<Screenshot Value="Properties/Screenshots/collections.jpg" />
