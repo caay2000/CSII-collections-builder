@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using BuildingCollections.Core;
 using Game.Prefabs;
@@ -74,6 +75,7 @@ namespace BuildingCollections
             var prefabSystem = world.GetOrCreateSystemManaged<PrefabSystem>();
             byName.Clear();
             int duplicates = 0;
+            var probe = new List<string>();
             using (var entities = query.ToEntityArray(Allocator.Temp))
             {
                 foreach (var e in entities)
@@ -107,8 +109,14 @@ namespace BuildingCollections
                             LotDepth = data.m_LotSize.y,
                             Level = level,
                             Corner = AccessMapping.ToCorner(access, swap),
+                            CornerAngle = AngledCorner.Angle(prefab.name),
                         },
                     };
+
+                    if (AngledCorner.WorthProbing(prefab.name))
+                    {
+                        probe.Add(ProbeLine(em, e, byName[prefab.name]));
+                    }
                 }
             }
 
@@ -132,6 +140,22 @@ namespace BuildingCollections
 
             Version++;
             Mod.Log.Info($"Building catalog: {byName.Count} prefabs ({duplicates} duplicate names ignored).");
+            probe.Sort(StringComparer.OrdinalIgnoreCase);
+            Mod.Log.Info($"[angled] {probe.Count} buildings with corner or angle names, {byName.Values.Count(c => c.Info.IsAngledCorner)} with an angle:\n  " + string.Join("\n  ", probe));
+        }
+
+        static string ProbeLine(EntityManager em, Entity e, CatalogEntry entry)
+        {
+            var info = entry.Info;
+            string geometry = "no geometry";
+            if (em.HasComponent<ObjectGeometryData>(e))
+            {
+                var g = em.GetComponentData<ObjectGeometryData>(e);
+                geometry = string.Format(CultureInfo.InvariantCulture, "bounds x {0:F2}..{1:F2} z {2:F2}..{3:F2} height {4:F2}, size {5:F2}x{6:F2}",
+                    g.m_Bounds.min.x, g.m_Bounds.max.x, g.m_Bounds.min.z, g.m_Bounds.max.z, g.m_Bounds.max.y, g.m_Size.x, g.m_Size.z);
+            }
+
+            return $"{info.PrefabName}: angle {(info.IsAngledCorner ? info.CornerAngle.ToString(CultureInfo.InvariantCulture) : "-")}, side {AngledCorner.Side(info.PrefabName)}, lot {info.LotWidth}x{info.LotDepth}, access {entry.AccessType} ({info.Corner}), {geometry}";
         }
     }
 }

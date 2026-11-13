@@ -43,12 +43,17 @@ namespace BuildingCollections.Systems
                 autoCleanPasses = 0;
                 definitionsDirty = true;
                 var cfg = DevConfig.Load();
-                var usable = candidates.Where(c => c.Info.Corner != CornerKind.None && c.Info.LotWidth > 0 && c.Info.LotDepth > 0).ToList();
+                var angled = candidates.Where(c => c.Info.IsAngledCorner).Select(c => c.Info.PrefabName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                var usable = candidates.Where(c => c.Info.Corner != CornerKind.None && c.Info.LotWidth > 0 && c.Info.LotDepth > 0 && !c.Info.IsAngledCorner).ToList();
                 var plain = usable.Where(c => AccessMapping.FitsFront(c.Info.Corner)).Select(c => c.Info).ToList();
                 var corners = usable.Where(c => AccessMapping.FitsCorner(c.Info.Corner)).Select(c => c.Info).ToList();
                 var prefabs = usable.GroupBy(c => c.Info.PrefabName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Prefab, StringComparer.OrdinalIgnoreCase);
 
                 var log = new StringBuilder($"[preview] seed {seed}, density {density}%, {plain.Count} regular, {corners.Count} corner buildings.\n");
+                if (angled.Count > 0)
+                {
+                    log.Append($"  {angled.Count} angled corner buildings left out (not supported yet): {string.Join(", ", angled)}.\n");
+                }
 
                 bool anarchy = AnarchyBridge.Enabled;
                 float overlap = CurrentOverlap();
@@ -404,40 +409,91 @@ namespace BuildingCollections.Systems
 
             double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
             double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
-            const double Reach = 300;
-            using (var entities = buildingQuery.ToEntityArray(Allocator.Temp))
-            using (var transforms = buildingQuery.ToComponentDataArray<Transform>(Allocator.Temp))
-            using (var prefabRefs = buildingQuery.ToComponentDataArray<PrefabRef>(Allocator.Temp))
+            foreach (var (prefab, tr) in NearbyBuildings(outline))
             {
-                for (int i = 0; i < entities.Length; i++)
+                var q = BoundsQuad(prefab, tr);
+                if (q != null && q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
                 {
-                    var tr = transforms[i];
-                    if (tr.m_Position.x < minX - Reach || tr.m_Position.x > maxX + Reach || tr.m_Position.z < minZ - Reach || tr.m_Position.z > maxZ + Reach)
-                    {
-                        continue;
-                    }
-
-                    var prefab = prefabRefs[i].m_Prefab;
-                    if (!EntityManager.HasComponent<ObjectGeometryData>(prefab))
-                    {
-                        continue;
-                    }
-
-                    var bounds = EntityManager.GetComponentData<ObjectGeometryData>(prefab).m_Bounds;
-                    float3 P(float x, float z) => tr.m_Position + math.rotate(tr.m_Rotation, new float3(x, 0, z));
-                    var a = P(bounds.min.x, bounds.min.z);
-                    var b = P(bounds.max.x, bounds.min.z);
-                    var c = P(bounds.max.x, bounds.max.z);
-                    var d = P(bounds.min.x, bounds.max.z);
-                    var q = new Quad(new Pt(a.x, a.z), new Pt(b.x, b.z), new Pt(c.x, c.z), new Pt(d.x, d.z));
-                    if (q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
-                    {
-                        result.Add(q);
-                    }
+                    result.Add(q);
                 }
             }
 
             return result;
+        }
+
+        IEnumerable<string> AngledPlaced(List<Pt> outline)
+        {
+            var prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            foreach (var (prefab, tr) in NearbyBuildings(outline))
+            {
+                if (!prefabSystem.TryGetPrefab(prefab, out PrefabBase p) || p == null || AngledCorner.Angle(p.name) == 0 || !EntityManager.HasComponent<BuildingData>(prefab))
+                {
+                    continue;
+                }
+
+                var lot = EntityManager.GetComponentData<BuildingData>(prefab).m_LotSize;
+                float hw = lot.x * 4f, hd = lot.y * 4f;
+                var lotQuad = Corners(tr, -hw, -hd, hw, hd);
+                var bounds = BoundsQuad(prefab, tr);
+                float3 forward = math.rotate(tr.m_Rotation, new float3(0, 0, 1));
+                double yaw = math.degrees(math.atan2(forward.x, forward.z));
+                yield return string.Format(System.Globalization.CultureInfo.InvariantCulture, "  [data] angled placed {0} angle {1} side {2} lot {3}x{4}: pos {5:F2},{6:F2} yaw {7:F1} lot {8} bounds {9}",
+                    p.name.Replace(":", "_"), AngledCorner.Angle(p.name), AngledCorner.Side(p.name), lot.x, lot.y, tr.m_Position.x, tr.m_Position.z, yaw,
+                    PointList(lotQuad), bounds == null ? "-" : PointList(bounds));
+            }
+        }
+
+        static string PointList(Quad q) => string.Join(";", q.P.Select(pt => string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F2},{1:F2}", pt.X, pt.Y)));
+
+        static Quad Corners(Transform tr, float minX, float minZ, float maxX, float maxZ)
+        {
+            float3 P(float x, float z) => tr.m_Position + math.rotate(tr.m_Rotation, new float3(x, 0, z));
+            var a = P(minX, minZ);
+            var b = P(maxX, minZ);
+            var c = P(maxX, maxZ);
+            var d = P(minX, maxZ);
+            return new Quad(new Pt(a.x, a.z), new Pt(b.x, b.z), new Pt(c.x, c.z), new Pt(d.x, d.z));
+        }
+
+        Quad BoundsQuad(Entity prefab, Transform tr)
+        {
+            if (!EntityManager.HasComponent<ObjectGeometryData>(prefab))
+            {
+                return null;
+            }
+
+            var bounds = EntityManager.GetComponentData<ObjectGeometryData>(prefab).m_Bounds;
+            return Corners(tr, bounds.min.x, bounds.min.z, bounds.max.x, bounds.max.z);
+        }
+
+        IEnumerable<(Entity Prefab, Transform Transform)> NearbyBuildings(List<Pt> outline)
+        {
+            if (outline == null || outline.Count == 0)
+            {
+                yield break;
+            }
+
+            double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
+            double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
+            const double Reach = 300;
+            var found = new List<(Entity, Transform)>();
+            using (var transforms = buildingQuery.ToComponentDataArray<Transform>(Allocator.Temp))
+            using (var prefabRefs = buildingQuery.ToComponentDataArray<PrefabRef>(Allocator.Temp))
+            {
+                for (int i = 0; i < transforms.Length; i++)
+                {
+                    var tr = transforms[i];
+                    if (tr.m_Position.x >= minX - Reach && tr.m_Position.x <= maxX + Reach && tr.m_Position.z >= minZ - Reach && tr.m_Position.z <= maxZ + Reach)
+                    {
+                        found.Add((prefabRefs[i].m_Prefab, tr));
+                    }
+                }
+            }
+
+            foreach (var item in found)
+            {
+                yield return item;
+            }
         }
 
         List<Pt> TreePoints(List<Pt> outline)

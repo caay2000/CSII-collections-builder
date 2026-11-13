@@ -464,7 +464,7 @@ namespace BuildingCollections.Systems
             var notes = new List<string>();
             var strips = VirtualLots.Build(sides, obstacles, frontage: frontage, notes: notes, curveOverlap: stripsOverlap);
             Mod.Log.Info($"[selection] outline: {sides.Count} sidewalks, {outline.Count} points, {obstacles.Count} existing buildings.\n  " + string.Join("\n  ", notes)
-                + "\n" + string.Join("\n", DataLog.Sides(sides, frontage).Concat(DataLog.Existing(obstacles))));
+                + "\n" + string.Join("\n", DataLog.Sides(sides, frontage).Concat(DataLog.Existing(obstacles)).Concat(AngledPlaced(outline))));
             lastSidesFull = strips.Count > 0 && strips.All(st => st.Grid.FreeCount() == 0);
             if (!SelectStrips(strips, outline, $"{description}: {sides.Count} sidewalks, {obstacles.Count} existing buildings"))
             {

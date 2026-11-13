@@ -19,13 +19,17 @@ namespace BuildingCollections.Core
         public int Level { get; set; }
         public CornerKind Corner { get; set; } = CornerKind.Front;
 
+        public int CornerAngle { get; set; }
+
+        public bool IsAngledCorner => CornerAngle != 0;
+
         public int Group { get; set; }
 
         public double Share { get; set; } = 1;
 
         public BuildingInfo InGroup(int group, double share) => new BuildingInfo
         {
-            PrefabName = PrefabName, LotWidth = LotWidth, LotDepth = LotDepth, Level = Level, Corner = Corner,
+            PrefabName = PrefabName, LotWidth = LotWidth, LotDepth = LotDepth, Level = Level, Corner = Corner, CornerAngle = CornerAngle,
             Group = group, Share = share,
         };
 
