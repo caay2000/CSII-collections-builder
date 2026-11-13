@@ -66,6 +66,7 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<ChangeLog>
 0.3.10
 - Corner buildings made for angled corners (with the angle in their name, such as "117 Degree" or "63 Deg") are no longer used by the block builder, which placed them in regular corners where they stuck out into the street. You can still place them by hand from a collection; proper support for angled corners is in progress.
+- Angled corner buildings already placed in a block are no longer covered by the builder's new buildings: their whole shape is now kept free, not just their lot.
 	</ChangeLog>
 	<ExternalLink Type="github" Url="https://github.com/caay2000/CSII-collections-builder" />
 	<!--Public, Private or Unlisted. Private while testing.-->

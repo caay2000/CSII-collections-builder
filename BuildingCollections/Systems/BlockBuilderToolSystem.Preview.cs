@@ -425,10 +425,9 @@ namespace BuildingCollections.Systems
 
         IEnumerable<string> AngledPlaced(List<Pt> outline)
         {
-            var prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
             foreach (var (prefab, tr) in NearbyBuildings(outline))
             {
-                if (!prefabSystem.TryGetPrefab(prefab, out PrefabBase p) || p == null || AngledCorner.Angle(p.name) == 0 || !EntityManager.HasComponent<BuildingData>(prefab))
+                if (!IsAngledCorner(prefab, out PrefabBase p))
                 {
                     continue;
                 }
@@ -464,7 +463,21 @@ namespace BuildingCollections.Systems
             }
 
             var bounds = EntityManager.GetComponentData<ObjectGeometryData>(prefab).m_Bounds;
-            return Corners(tr, bounds.min.x, bounds.min.z, bounds.max.x, bounds.max.z);
+            float2 min = bounds.min.xz, max = bounds.max.xz;
+            if (IsAngledCorner(prefab, out _) && PrefabCatalog.TryMeshBounds(EntityManager, prefab, out var meshMin, out var meshMax))
+            {
+                min = math.min(min, meshMin);
+                max = math.max(max, meshMax);
+            }
+
+            return Corners(tr, min.x, min.y, max.x, max.y);
+        }
+
+        bool IsAngledCorner(Entity prefab, out PrefabBase p)
+        {
+            p = null;
+            return World.GetOrCreateSystemManaged<PrefabSystem>().TryGetPrefab(prefab, out p) && p != null
+                && AngledCorner.Angle(p.name) != 0 && EntityManager.HasComponent<BuildingData>(prefab);
         }
 
         IEnumerable<(Entity Prefab, Transform Transform)> NearbyBuildings(List<Pt> outline)
