@@ -4,6 +4,17 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.10
+- Esquineros en ángulo (assets con el ángulo en el nombre, como "EU Corner 1 Left - 117 Degree" o "UK London Townhouse
+  63 Deg Left"): `AngledCorner` lee el ángulo y el lado del nombre del prefab, y `BuildingInfo.CornerAngle` lo guarda.
+  El constructor los deja fuera de la vista previa hasta que sepa colocarlos: como solares normales acababan en
+  esquinas de 90° con la parte que sobresale invadiendo la calle. Se pueden seguir colocando a mano desde la colección.
+- Sondeo para colocarlos más adelante: al rehacer el catálogo, el log lista (`[angled]`) los edificios con "deg",
+  "corner", "angle" o "°" en el nombre, con ángulo, lado, solar, acceso y medidas del modelo. Al seleccionar una
+  manzana, `[data] angled placed` da la posición, el giro, las esquinas del solar y las del modelo de los que ya hay
+  colocados, para medir cómo encajan en una esquina real.
+- `BuildingFootprints` y el nuevo `AngledPlaced` comparten `NearbyBuildings` y `BoundsQuad`.
+
 ## 0.3.9
 - Mezcla de colecciones por fachada: antes el porcentaje se aplicaba edificio a edificio y solo cuando las dos
   colecciones tenían uno que cupiera, así que una colección sin esquineros ni edificios de 1 celda (p. ej. EU Low
