@@ -13,6 +13,12 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   y su posición, la dirección de entrada y cada salida con su giro (marcando la elegida), y vuelca como `[data] road`
   los tramos cercanos para reproducir el cruce en un test. `RoadFace.Explain` reutiliza la misma elección de giro que
   el trazado; `ReadRoadGraph` devuelve un `RoadGraph`.
+- Arreglo: dos calles que se juntan casi en paralelo (la cuña de Jasmine Street y Garnet Street) hacían que el trazado
+  siguiera recto y se comiera la manzana vecina. Con la dirección de los últimos 4 m, el giro de vuelta por la otra
+  calle salía -179,7° en lugar de +179,7°, y dos salidas casi paralelas (86° y 87°) se elegían al revés. `RoadFace`
+  mide ahora a 30 m del nodo las salidas casi opuestas a la entrada (más de 170°) y ordena por su posición a 30 m las
+  que quedan a menos de 10° entre sí. Con los tramos reales del log: la cuña 1,03 ha, la manzana del sur 0,37 ha y la
+  grande 12,2 ha (antes las tres daban 13,6 ha).
 
 ## 0.3.10
 - Esquineros en ángulo (`EU_ResidentialCorner1Deg117L`, `UK_LondonTownhouse63DegR`...): `AngledCorner` lee el ángulo

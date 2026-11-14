@@ -16,6 +16,7 @@ namespace BuildingCollections.Core
         public int Edge;
         public bool Forward;
         public Pt Out;
+        public Pt Far;
         public double Turn;
     }
 
@@ -156,6 +157,10 @@ namespace BuildingCollections.Core
             }).ToList();
         }
 
+        const double NearReverse = 170 * Math.PI / 180;
+        const double FarDistance = 30;
+        const double Tied = 10 * Math.PI / 180;
+
         static List<TurnOption> Options(IReadOnlyList<RoadEdge> edges, Dictionary<int, List<int>> byNode, int edge, bool forward, out int node, out Pt inDir)
         {
             var pts = edges[edge].Points;
@@ -168,28 +173,127 @@ namespace BuildingCollections.Core
                 return options;
             }
 
+            var arrival = new Arrival(edges[edge], forward, inDir);
             foreach (int k in around)
             {
-                var kp = edges[k].Points;
                 if (edges[k].Start == node)
                 {
-                    options.Add(Option(k, true, kp[1] - kp[0], edge, forward, inDir));
+                    options.Add(Option(edges, k, true, edge, forward, arrival));
                 }
 
                 if (edges[k].End == node)
                 {
-                    options.Add(Option(k, false, kp[kp.Count - 2] - kp[kp.Count - 1], edge, forward, inDir));
+                    options.Add(Option(edges, k, false, edge, forward, arrival));
                 }
             }
 
+            SeparateTied(options);
             return options;
         }
 
-        static TurnOption Option(int k, bool fwd, Pt outDir, int edge, bool forward, Pt inDir)
+        static void SeparateTied(List<TurnOption> options)
         {
-            bool uTurn = k == edge && fwd != forward;
-            double turn = uTurn ? -10 : Math.Atan2(Pt.Cross(inDir, outDir), Pt.Dot(inDir, outDir));
-            return new TurnOption { Edge = k, Forward = fwd, Out = outDir, Turn = turn };
+            var ranked = Enumerable.Range(0, options.Count).Where(i => options[i].Turn > -Math.PI - 1).OrderBy(i => options[i].Turn).ToList();
+            int start = 0;
+            for (int i = 1; i <= ranked.Count; i++)
+            {
+                if (i < ranked.Count && options[ranked[i]].Turn - options[ranked[i - 1]].Turn < Tied)
+                {
+                    continue;
+                }
+
+                if (i - start > 1)
+                {
+                    Reorder(options, ranked.GetRange(start, i - start));
+                }
+
+                start = i;
+            }
+        }
+
+        static void Reorder(List<TurnOption> options, List<int> group)
+        {
+            var heading = group.Aggregate(new Pt(0, 0), (sum, i) => sum + Unit(options[i].Out));
+            var turns = group.Select(i => options[i].Turn).OrderBy(t => t).ToList();
+            var byLeft = group.OrderBy(i => Pt.Cross(heading, options[i].Far)).ToList();
+            for (int r = 0; r < byLeft.Count; r++)
+            {
+                var o = options[byLeft[r]];
+                o.Turn = turns[r];
+                options[byLeft[r]] = o;
+            }
+        }
+
+        static Pt Unit(Pt d)
+        {
+            double len = Math.Sqrt(Pt.Dot(d, d));
+            return len > 0 ? new Pt(d.X / len, d.Y / len) : d;
+        }
+
+        sealed class Arrival
+        {
+            public readonly Pt At;
+            public readonly Pt In;
+            public readonly Pt FarBack;
+
+            public Arrival(RoadEdge edge, bool forward, Pt inDir)
+            {
+                var path = Leaving(edge, !forward);
+                At = path[0];
+                In = inDir;
+                FarBack = PointAlong(path, FarDistance) - At;
+            }
+        }
+
+        static TurnOption Option(IReadOnlyList<RoadEdge> edges, int k, bool fwd, int edge, bool forward, Arrival arrival)
+        {
+            var path = Leaving(edges[k], fwd);
+            var outDir = path[1] - path[0];
+            var far = PointAlong(path, FarDistance);
+            if (k == edge && fwd != forward)
+            {
+                return new TurnOption { Edge = k, Forward = fwd, Out = outDir, Far = far, Turn = -10 };
+            }
+
+            double turn = Angle(arrival.In, outDir);
+            if (Math.Abs(turn) > NearReverse)
+            {
+                turn = Angle(new Pt(-arrival.FarBack.X, -arrival.FarBack.Y), far - arrival.At);
+            }
+
+            return new TurnOption { Edge = k, Forward = fwd, Out = outDir, Far = far, Turn = turn };
+        }
+
+        static double Angle(Pt from, Pt to) => Math.Atan2(Pt.Cross(from, to), Pt.Dot(from, to));
+
+        static List<Pt> Leaving(RoadEdge edge, bool fromStart)
+        {
+            var pts = new List<Pt>(edge.Points);
+            if (!fromStart)
+            {
+                pts.Reverse();
+            }
+
+            return pts;
+        }
+
+        static Pt PointAlong(List<Pt> path, double distance)
+        {
+            double left = distance;
+            for (int i = 1; i < path.Count; i++)
+            {
+                var d = path[i] - path[i - 1];
+                double len = Math.Sqrt(Pt.Dot(d, d));
+                if (len >= left && len > 0)
+                {
+                    double t = left / len;
+                    return new Pt(path[i - 1].X + d.X * t, path[i - 1].Y + d.Y * t);
+                }
+
+                left -= len;
+            }
+
+            return path[path.Count - 1];
         }
 
         static void Add(Dictionary<int, List<int>> map, int node, int edge)
