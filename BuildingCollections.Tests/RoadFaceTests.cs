@@ -115,5 +115,42 @@ namespace BuildingCollections.Tests
                 Assert.Equal((next.edge, next.forward), (best.Edge, best.Forward));
             }
         }
+
+        [Fact]
+        public void Two_streets_meeting_almost_parallel_close_the_wedge_between_them()
+        {
+            var south = new RoadEdge { Start = 1, End = 0, Points = { new Pt(-100, -12), new Pt(-60, -6), new Pt(-20, -1), new Pt(-4, 0.01), new Pt(0, 0) } };
+            var north = new RoadEdge { Start = 2, End = 0, Points = { new Pt(-100, 12), new Pt(-60, 6), new Pt(-20, 1), new Pt(-4, -0.01), new Pt(0, 0) } };
+            var east = Line(0, 3, new Pt(0, 0), new Pt(100, 0));
+            var west = Line(1, 2, new Pt(-100, -12), new Pt(-100, 12));
+
+            var poly = RoadFace.Trace(new List<RoadEdge> { south, north, east, west }, new Pt(-70, 0));
+
+            Assert.NotNull(poly);
+            Assert.Equal((-100.0, -12.0, 0.0, 12.0), Bounds(poly));
+        }
+
+        [Fact]
+        public void Two_almost_parallel_exits_take_the_one_on_the_block_side()
+        {
+            var south = new RoadEdge { Start = 1, End = 0, Points = { new Pt(-100, -12), new Pt(-60, -6), new Pt(-20, -1), new Pt(-4, 0.01), new Pt(0, 0) } };
+            var north = new RoadEdge { Start = 2, End = 0, Points = { new Pt(-100, 12), new Pt(-60, 6), new Pt(-20, 1), new Pt(-4, -0.01), new Pt(0, 0) } };
+            var edges = new List<RoadEdge>
+            {
+                south,
+                north,
+                Line(4, 0, new Pt(0, -60), new Pt(0, 0)),
+                Line(4, 5, new Pt(0, -60), new Pt(-100, -60)),
+                Line(5, 1, new Pt(-100, -60), new Pt(-100, -12)),
+                Line(1, 2, new Pt(-100, -12), new Pt(-100, 12)),
+            };
+
+            var poly = RoadFace.Trace(edges, new Pt(-50, -40));
+
+            Assert.NotNull(poly);
+            var (minX, minY, maxX, maxY) = Bounds(poly);
+            Assert.Equal((-100.0, -60.0, 0.0), (minX, minY, maxX));
+            Assert.True(maxY < 1, $"the face reaches the north street (max y {maxY})");
+        }
     }
 }
