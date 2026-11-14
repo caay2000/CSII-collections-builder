@@ -65,7 +65,7 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Dependency Id="74604" />
 	<ChangeLog>
 0.3.12
-- Angled corner buildings already placed in a block (45°, 63°, 117°, 135°) now keep free only the space their building really takes. Before, the whole box around them was kept free, which in 45° and 135° corners covered the empty courtyard between the two wings and left the next street unbuilt. If a building's shape cannot be read, the old box is used.
+- Angled corner buildings already placed in a block (45°, 63°, 117°, 135°) now keep free only their lot and the space their building really takes. Before, the whole box around them was kept free, which in 45° and 135° corners covered the empty courtyard between the two wings and left the next street unbuilt. If a building's shape cannot be read or is unusable, the old box is used.
 - Fixed: some blocks next to a crossing where two streets meet almost in parallel were traced wrongly and swallowed the neighbouring block, so the selection came out far bigger than the real block (and could go over the size limit).
 - When a block is still over the size limit, the log now explains how it was traced, to make these cases easier to report.
 	</ChangeLog>
