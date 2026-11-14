@@ -126,7 +126,15 @@ namespace BuildingCollections.Core
                     }
                 }
             }
+
+            var centre = new Pt((a.X + b.X + c.X) / 3, (a.Y + b.Y + c.Y) / 3);
+            Pt In(Pt p) => new Pt(p.X + Math.Sign(centre.X - p.X) * EdgeInset, p.Y + Math.Sign(centre.Y - p.Y) * EdgeInset);
+            AddSegment(In(a), In(b));
+            AddSegment(In(b), In(c));
+            AddSegment(In(c), In(a));
         }
+
+        const double EdgeInset = 1e-4;
 
         void AddSegment(Pt a, Pt b)
         {

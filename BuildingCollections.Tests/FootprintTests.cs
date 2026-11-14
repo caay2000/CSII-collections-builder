@@ -58,6 +58,16 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void A_thin_triangle_narrower_than_a_cell_is_still_covered()
+        {
+            var sliver = new[] { (new Pt(0.1, 0.2), new Pt(9.9, 0.4), new Pt(9.9, 0.3)) };
+
+            var footprint = Footprint.FromTriangles(sliver);
+
+            Assert.True(footprint.CellCount >= 10);
+        }
+
+        [Fact]
         public void Rects_survive_a_round_trip_through_the_log_format()
         {
             var rects = new List<FootprintRect> { new FootprintRect(-8, -8, 8, 8), new FootprintRect(8, -2.5, 12.25, 7) };
