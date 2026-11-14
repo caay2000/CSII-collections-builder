@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 using BuildingCollections.Core;
 using Colossal.Mathematics;
 using Game.Buildings;
@@ -108,7 +109,8 @@ namespace BuildingCollections.Systems
                 int maxHa = Math.Max(1, Mod.Settings?.MaxBlockHectares ?? 5);
                 if (area > maxHa * 10000.0)
                 {
-                    Mod.Log.Info($"[selection] click at ({point.x:F1}, {point.z:F1}): block of {area / 10000:F1} ha, over the {maxHa} ha limit; not selected.");
+                    Mod.Log.Info($"[selection] click at ({point.x:F1}, {point.z:F1}): block of {area / 10000:F1} ha, over the {maxHa} ha limit; not selected.\n  "
+                        + string.Join("\n  ", OversizedFaceDetails(face, path)));
                     Say($"This block is {area / 10000:F1} ha, over the {maxHa} ha limit (Options). Use Polygon, or raise the limit.", error: true);
                     return;
                 }
@@ -383,10 +385,33 @@ namespace BuildingCollections.Systems
             return face;
         }
 
+        readonly List<string> skippedElevated = new List<string>();
+
+        IEnumerable<string> OversizedFaceDetails(List<Pt> face, List<(Entity edge, bool forward)> path)
+        {
+            yield return string.Format(CultureInfo.InvariantCulture, "outline {0} points, x {1:F1}..{2:F1}, z {3:F1}..{4:F1}, {5} road segments",
+                face.Count, face.Min(p => p.X), face.Max(p => p.X), face.Min(p => p.Y), face.Max(p => p.Y), path?.Count ?? 0);
+            if (path != null)
+            {
+                foreach (var (edge, _) in path)
+                {
+                    var bz = EntityManager.GetComponentData<Curve>(edge).m_Bezier;
+                    yield return string.Format(CultureInfo.InvariantCulture, "segment {0}: {1:F1},{2:F1} -> {3:F1},{4:F1}", edge.Index, bz.a.x, bz.a.z, bz.d.x, bz.d.z);
+                }
+            }
+
+            yield return skippedElevated.Count == 0 ? "no raised road segments left out" : $"{skippedElevated.Count} raised road segments left out (3 m or more):";
+            foreach (var line in skippedElevated)
+            {
+                yield return "  " + line;
+            }
+        }
+
         void ReadRoadGraph(float2 point, double radius, out List<RoadEdge> edges, out List<Entity> owners)
         {
             edges = new List<RoadEdge>();
             owners = new List<Entity>();
+            skippedElevated.Clear();
             var nodes = new Dictionary<Entity, int>();
             int Id(Entity n)
             {
@@ -416,6 +441,8 @@ namespace BuildingCollections.Systems
                         var el = EntityManager.GetComponentData<Game.Net.Elevation>(e).m_Elevation;
                         if (math.abs(el.x + el.y) * 0.5f >= 3f)
                         {
+                            var mid = MathUtils.Position(bz, 0.5f);
+                            skippedElevated.Add(string.Format(CultureInfo.InvariantCulture, "edge {0} at {1:F1},{2:F1} elevation {3:F1}/{4:F1} m", e.Index, mid.x, mid.z, el.x, el.y));
                             continue;
                         }
                     }
