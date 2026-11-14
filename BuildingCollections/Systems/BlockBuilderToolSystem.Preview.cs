@@ -413,14 +413,39 @@ namespace BuildingCollections.Systems
             double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
             foreach (var (prefab, tr) in NearbyBuildings(outline))
             {
-                var q = BoundsQuad(prefab, tr);
-                if (q != null && q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
+                foreach (var q in BuildingQuads(prefab, tr))
                 {
-                    result.Add(q);
+                    if (q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
+                    {
+                        result.Add(q);
+                    }
                 }
             }
 
             return result;
+        }
+
+        IEnumerable<Quad> BuildingQuads(Entity prefab, Transform tr)
+        {
+            if (IsAngledCorner(prefab, out _) && EntityManager.HasComponent<BuildingData>(prefab)
+                && MeshFootprints.TryGet(EntityManager, World.GetOrCreateSystemManaged<PrefabSystem>(), prefab, out var rects))
+            {
+                var lot = EntityManager.GetComponentData<BuildingData>(prefab).m_LotSize;
+                float hw = lot.x * 4f, hd = lot.y * 4f;
+                yield return Corners(tr, -hw, -hd, hw, hd);
+                foreach (var r in rects)
+                {
+                    yield return Corners(tr, (float)r.MinX, (float)r.MinZ, (float)r.MaxX, (float)r.MaxZ);
+                }
+
+                yield break;
+            }
+
+            var q = BoundsQuad(prefab, tr);
+            if (q != null)
+            {
+                yield return q;
+            }
         }
 
         IEnumerable<string> AngledPlaced(List<Pt> outline)
