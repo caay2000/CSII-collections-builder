@@ -112,7 +112,7 @@ namespace BuildingCollections.Systems
                 if (area > maxHa * 10000.0)
                 {
                     Mod.Log.Info($"[selection] click at ({point.x:F1}, {point.z:F1}): block of {area / 10000:F1} ha, over the {maxHa} ha limit; not selected.\n  "
-                        + string.Join("\n  ", OversizedFaceDetails(face, graph, steps)));
+                        + SafeDetails(() => string.Join("\n  ", OversizedFaceDetails(face, graph, steps))));
                     Say($"This block is {area / 10000:F1} ha, over the {maxHa} ha limit (Options). Use Polygon, or raise the limit.", error: true);
                     return;
                 }
@@ -378,13 +378,25 @@ namespace BuildingCollections.Systems
             public readonly List<RoadEdge> Edges = new List<RoadEdge>();
             public readonly List<Entity> Owners = new List<Entity>();
             public readonly List<Entity> Nodes = new List<Entity>();
-            public readonly List<string> SkippedElevated = new List<string>();
+            public readonly List<(int index, float3 mid, float2 elevation)> SkippedElevated = new List<(int, float3, float2)>();
         }
 
         List<Pt> TraceRoadFace(float2 point, double radius, out RoadGraph graph, out List<(int edge, bool forward)> steps)
         {
             graph = ReadRoadGraph(point, radius);
             return RoadFace.Trace(graph.Edges, new Pt(point.x, point.y), out steps);
+        }
+
+        static string SafeDetails(Func<string> details)
+        {
+            try
+            {
+                return details();
+            }
+            catch (Exception e)
+            {
+                return $"details unavailable: {e.GetType().Name}: {e.Message}";
+            }
         }
 
         IEnumerable<string> OversizedFaceDetails(List<Pt> face, RoadGraph graph, List<(int edge, bool forward)> steps)
@@ -402,9 +414,9 @@ namespace BuildingCollections.Systems
             }
 
             yield return graph.SkippedElevated.Count == 0 ? "no raised road segments left out" : $"{graph.SkippedElevated.Count} raised road segments left out (3 m or more):";
-            foreach (var line in graph.SkippedElevated)
+            foreach (var (index, mid, el) in graph.SkippedElevated)
             {
-                yield return "  " + line;
+                yield return string.Format(CultureInfo.InvariantCulture, "  edge {0} at {1:F1},{2:F1} elevation {3:F1}/{4:F1} m", index, mid.x, mid.z, el.x, el.y);
             }
 
             double minX = face.Min(p => p.X) - 60, maxX = face.Max(p => p.X) + 60, minZ = face.Min(p => p.Y) - 60, maxZ = face.Max(p => p.Y) + 60;
@@ -468,8 +480,7 @@ namespace BuildingCollections.Systems
                         var el = EntityManager.GetComponentData<Game.Net.Elevation>(e).m_Elevation;
                         if (math.abs(el.x + el.y) * 0.5f >= 3f)
                         {
-                            var mid = MathUtils.Position(bz, 0.5f);
-                            graph.SkippedElevated.Add(string.Format(CultureInfo.InvariantCulture, "edge {0} at {1:F1},{2:F1} elevation {3:F1}/{4:F1} m", e.Index, mid.x, mid.z, el.x, el.y));
+                            graph.SkippedElevated.Add((e.Index, MathUtils.Position(bz, 0.5f), el));
                             continue;
                         }
                     }

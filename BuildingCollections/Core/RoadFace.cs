@@ -187,11 +187,11 @@ namespace BuildingCollections.Core
                 }
             }
 
-            SeparateTied(options);
+            SeparateTied(options, arrival.At);
             return options;
         }
 
-        static void SeparateTied(List<TurnOption> options)
+        static void SeparateTied(List<TurnOption> options, Pt at)
         {
             var ranked = Enumerable.Range(0, options.Count).Where(i => options[i].Turn > -Math.PI - 1).OrderBy(i => options[i].Turn).ToList();
             int start = 0;
@@ -204,18 +204,18 @@ namespace BuildingCollections.Core
 
                 if (i - start > 1)
                 {
-                    Reorder(options, ranked.GetRange(start, i - start));
+                    Reorder(options, ranked.GetRange(start, i - start), at);
                 }
 
                 start = i;
             }
         }
 
-        static void Reorder(List<TurnOption> options, List<int> group)
+        static void Reorder(List<TurnOption> options, List<int> group, Pt at)
         {
             var heading = group.Aggregate(new Pt(0, 0), (sum, i) => sum + Unit(options[i].Out));
             var turns = group.Select(i => options[i].Turn).OrderBy(t => t).ToList();
-            var byLeft = group.OrderBy(i => Pt.Cross(heading, options[i].Far)).ToList();
+            var byLeft = group.OrderBy(i => Angle(heading, options[i].Far - at)).ToList();
             for (int r = 0; r < byLeft.Count; r++)
             {
                 var o = options[byLeft[r]];
