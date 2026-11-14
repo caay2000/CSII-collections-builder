@@ -473,11 +473,19 @@ namespace BuildingCollections.Systems
             return Corners(tr, min.x, min.y, max.x, max.y);
         }
 
+        readonly Dictionary<Entity, PrefabBase> angledCorners = new Dictionary<Entity, PrefabBase>();
+
         bool IsAngledCorner(Entity prefab, out PrefabBase p)
         {
-            p = null;
-            return World.GetOrCreateSystemManaged<PrefabSystem>().TryGetPrefab(prefab, out p) && p != null
-                && AngledCorner.Angle(p.name) != 0 && EntityManager.HasComponent<BuildingData>(prefab);
+            if (!angledCorners.TryGetValue(prefab, out p))
+            {
+                p = EntityManager.HasComponent<BuildingData>(prefab)
+                    && World.GetOrCreateSystemManaged<PrefabSystem>().TryGetPrefab(prefab, out PrefabBase found)
+                    && found != null && AngledCorner.Angle(found.name) != 0 ? found : null;
+                angledCorners[prefab] = p;
+            }
+
+            return p != null;
         }
 
         IEnumerable<(Entity Prefab, Transform Transform)> NearbyBuildings(List<Pt> outline)
