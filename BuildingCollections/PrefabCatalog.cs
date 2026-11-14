@@ -117,6 +117,7 @@ namespace BuildingCollections
                     if (byName[prefab.name].Info.IsAngledCorner)
                     {
                         probe.Add(ProbeLine(em, e, byName[prefab.name]));
+                        MeshFootprints.TryGet(em, prefabSystem, e, out _);
                     }
                 }
             }

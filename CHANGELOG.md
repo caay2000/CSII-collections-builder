@@ -4,6 +4,13 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.12
+- Esquineros en ángulo ya colocados (45°, 63°, 117°, 135°): su huella ya no es el rectángulo del solar más la caja de
+  la malla, que en 45° y 135° tapaba el patio vacío entre las dos alas y dejaba sin llenar la calle de al lado. Ahora
+  se lee la malla del edificio (triángulos a más de 1 m del suelo, en celdas de 1 m) y la huella es el solar más esas
+  celdas. Si la malla no se puede leer, se usa el rectángulo de antes. El log escribe la huella de cada esquinero en
+  ángulo (`[footprint]`) al cargar el catálogo.
+
 ## 0.3.11
 - Diagnóstico: cuando una manzana pasa del límite de hectáreas, el log da el contorno (extremos), los tramos de calle
   que recorre y los tramos elevados (3 m o más) que se han dejado fuera al buscar la manzana. Visto en el juego: dos
