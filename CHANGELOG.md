@@ -8,6 +8,11 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
 - Diagnóstico: cuando una manzana pasa del límite de hectáreas, el log da el contorno (extremos), los tramos de calle
   que recorre y los tramos elevados (3 m o más) que se han dejado fuera al buscar la manzana. Visto en el juego: dos
   manzanas pequeñas junto al cruce de Garnet Street y Jasmine Street daban las dos 13,6 ha.
+- Los tramos elevados quedan descartados: los de ese log están a ~700 m. El recorrido se escapa en un cruce vanilla
+  cuyos tramos no acaban en el mismo punto del nodo (hasta 13 m de separación). Ahora el log da, en cada paso, el nodo
+  y su posición, la dirección de entrada y cada salida con su giro (marcando la elegida), y vuelca como `[data] road`
+  los tramos cercanos para reproducir el cruce en un test. `RoadFace.Explain` reutiliza la misma elección de giro que
+  el trazado; `ReadRoadGraph` devuelve un `RoadGraph`.
 
 ## 0.3.10
 - Esquineros en ángulo (`EU_ResidentialCorner1Deg117L`, `UK_LondonTownhouse63DegR`...): `AngledCorner` lee el ángulo

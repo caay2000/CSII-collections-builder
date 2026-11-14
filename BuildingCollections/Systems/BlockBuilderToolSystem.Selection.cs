@@ -95,7 +95,9 @@ namespace BuildingCollections.Systems
 
             if (cfg.UseRoadFace)
             {
-                var face = TraceRoadFace(point.xz, cfg.RoadSearchRadius, out int roads, out var path);
+                var face = TraceRoadFace(point.xz, cfg.RoadSearchRadius, out var graph, out var steps);
+                int roads = graph.Edges.Count;
+                var path = steps?.Select(st => (graph.Owners[st.edge], st.forward)).ToList();
                 lastSidesFull = false;
 
                 if (face == null)
@@ -110,7 +112,7 @@ namespace BuildingCollections.Systems
                 if (area > maxHa * 10000.0)
                 {
                     Mod.Log.Info($"[selection] click at ({point.x:F1}, {point.z:F1}): block of {area / 10000:F1} ha, over the {maxHa} ha limit; not selected.\n  "
-                        + string.Join("\n  ", OversizedFaceDetails(face, path)));
+                        + string.Join("\n  ", OversizedFaceDetails(face, graph, steps)));
                     Say($"This block is {area / 10000:F1} ha, over the {maxHa} ha limit (Options). Use Polygon, or raise the limit.", error: true);
                     return;
                 }
@@ -371,53 +373,78 @@ namespace BuildingCollections.Systems
             return true;
         }
 
-        List<Pt> TraceRoadFace(float2 point, double radius, out int count, out List<(Entity edge, bool forward)> path)
+        sealed class RoadGraph
         {
-            path = null;
-            ReadRoadGraph(point, radius, out var edges, out var owners);
-            count = edges.Count;
-            var face = RoadFace.Trace(edges, new Pt(point.x, point.y), out var steps);
-            if (face != null)
-            {
-                path = steps.Select(st => (owners[st.edge], st.forward)).ToList();
-            }
-
-            return face;
+            public readonly List<RoadEdge> Edges = new List<RoadEdge>();
+            public readonly List<Entity> Owners = new List<Entity>();
+            public readonly List<Entity> Nodes = new List<Entity>();
+            public readonly List<string> SkippedElevated = new List<string>();
         }
 
-        readonly List<string> skippedElevated = new List<string>();
+        List<Pt> TraceRoadFace(float2 point, double radius, out RoadGraph graph, out List<(int edge, bool forward)> steps)
+        {
+            graph = ReadRoadGraph(point, radius);
+            return RoadFace.Trace(graph.Edges, new Pt(point.x, point.y), out steps);
+        }
 
-        IEnumerable<string> OversizedFaceDetails(List<Pt> face, List<(Entity edge, bool forward)> path)
+        IEnumerable<string> OversizedFaceDetails(List<Pt> face, RoadGraph graph, List<(int edge, bool forward)> steps)
         {
             yield return string.Format(CultureInfo.InvariantCulture, "outline {0} points, x {1:F1}..{2:F1}, z {3:F1}..{4:F1}, {5} road segments",
-                face.Count, face.Min(p => p.X), face.Max(p => p.X), face.Min(p => p.Y), face.Max(p => p.Y), path?.Count ?? 0);
-            if (path != null)
+                face.Count, face.Min(p => p.X), face.Max(p => p.X), face.Min(p => p.Y), face.Max(p => p.Y), steps.Count);
+            var turns = RoadFace.Explain(graph.Edges, steps);
+            for (int i = 0; i < turns.Count; i++)
             {
-                foreach (var (edge, _) in path)
+                var next = steps[(i + 1) % steps.Count];
+                foreach (var line in DescribeTurn(i, turns[i], next, graph))
                 {
-                    var bz = EntityManager.GetComponentData<Curve>(edge).m_Bezier;
-                    yield return string.Format(CultureInfo.InvariantCulture, "segment {0}: {1:F1},{2:F1} -> {3:F1},{4:F1}", edge.Index, bz.a.x, bz.a.z, bz.d.x, bz.d.z);
+                    yield return line;
                 }
             }
 
-            yield return skippedElevated.Count == 0 ? "no raised road segments left out" : $"{skippedElevated.Count} raised road segments left out (3 m or more):";
-            foreach (var line in skippedElevated)
+            yield return graph.SkippedElevated.Count == 0 ? "no raised road segments left out" : $"{graph.SkippedElevated.Count} raised road segments left out (3 m or more):";
+            foreach (var line in graph.SkippedElevated)
             {
                 yield return "  " + line;
             }
+
+            double minX = face.Min(p => p.X) - 60, maxX = face.Max(p => p.X) + 60, minZ = face.Min(p => p.Y) - 60, maxZ = face.Max(p => p.Y) + 60;
+            var near = Enumerable.Range(0, graph.Edges.Count)
+                .Where(k => graph.Edges[k].Points.Any(p => p.X >= minX && p.X <= maxX && p.Y >= minZ && p.Y <= maxZ))
+                .Select(k => (graph.Owners[k].Index, graph.Edges[k]));
+            foreach (var line in DataLog.Roads(near))
+            {
+                yield return line.TrimStart();
+            }
         }
 
-        void ReadRoadGraph(float2 point, double radius, out List<RoadEdge> edges, out List<Entity> owners)
+        IEnumerable<string> DescribeTurn(int index, TurnStep turn, (int edge, bool forward) next, RoadGraph graph)
         {
-            edges = new List<RoadEdge>();
-            owners = new List<Entity>();
-            skippedElevated.Clear();
+            var owner = graph.Owners[turn.Edge];
+            var bz = EntityManager.GetComponentData<Curve>(owner).m_Bezier;
+            var nodeEntity = graph.Nodes[turn.Node];
+            var node = EntityManager.GetComponentData<Game.Net.Node>(nodeEntity).m_Position;
+            yield return string.Format(CultureInfo.InvariantCulture, "step {0}: segment {1} {2}, curve {3:F1},{4:F1} -> {5:F1},{6:F1}; node {7} at {8:F1},{9:F1}, heading in {10:F0}°",
+                index, owner.Index, turn.Forward ? "forward" : "backward", bz.a.x, bz.a.z, bz.d.x, bz.d.z, nodeEntity.Index, node.x, node.z, Heading(turn.In));
+            foreach (var o in turn.Options.OrderByDescending(o => o.Turn))
+            {
+                bool chosen = o.Edge == next.edge && o.Forward == next.forward;
+                yield return string.Format(CultureInfo.InvariantCulture, "    {0} segment {1} {2}: heading out {3:F0}°, turn {4:F1}°",
+                    chosen ? "->" : "  ", graph.Owners[o.Edge].Index, o.Forward ? "forward" : "backward", Heading(o.Out), o.Turn * 180 / Math.PI);
+            }
+        }
+
+        static double Heading(Pt d) => Math.Atan2(d.Y, d.X) * 180 / Math.PI;
+
+        RoadGraph ReadRoadGraph(float2 point, double radius)
+        {
+            var graph = new RoadGraph();
             var nodes = new Dictionary<Entity, int>();
             int Id(Entity n)
             {
                 if (!nodes.TryGetValue(n, out int id))
                 {
                     nodes[n] = id = nodes.Count;
+                    graph.Nodes.Add(n);
                 }
 
                 return id;
@@ -442,7 +469,7 @@ namespace BuildingCollections.Systems
                         if (math.abs(el.x + el.y) * 0.5f >= 3f)
                         {
                             var mid = MathUtils.Position(bz, 0.5f);
-                            skippedElevated.Add(string.Format(CultureInfo.InvariantCulture, "edge {0} at {1:F1},{2:F1} elevation {3:F1}/{4:F1} m", e.Index, mid.x, mid.z, el.x, el.y));
+                            graph.SkippedElevated.Add(string.Format(CultureInfo.InvariantCulture, "edge {0} at {1:F1},{2:F1} elevation {3:F1}/{4:F1} m", e.Index, mid.x, mid.z, el.x, el.y));
                             continue;
                         }
                     }
@@ -456,10 +483,12 @@ namespace BuildingCollections.Systems
                         re.Points.Add(new Pt(p.x, p.z));
                     }
 
-                    edges.Add(re);
-                    owners.Add(e);
+                    graph.Edges.Add(re);
+                    graph.Owners.Add(e);
                 }
             }
+
+            return graph;
         }
 
         bool lastSidesFull;
@@ -513,7 +542,9 @@ namespace BuildingCollections.Systems
             double minX = clip.Min(p => p.X), maxX = clip.Max(p => p.X), minZ = clip.Min(p => p.Y), maxZ = clip.Max(p => p.Y);
             var center = new float2((float)((minX + maxX) / 2), (float)((minZ + maxZ) / 2));
             double radius = Math.Sqrt((maxX - minX) * (maxX - minX) + (maxZ - minZ) * (maxZ - minZ)) / 2 + 600;
-            ReadRoadGraph(center, radius, out var edges, out var owners);
+            var graph = ReadRoadGraph(center, radius);
+            var edges = graph.Edges;
+            var owners = graph.Owners;
             var adjacency = RoadFace.Adjacency(edges);
             var faces = new List<List<Pt>>();
             var outlines = new List<List<Pt>>();

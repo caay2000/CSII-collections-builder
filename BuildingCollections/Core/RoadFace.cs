@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BuildingCollections.Core
 {
@@ -8,6 +9,23 @@ namespace BuildingCollections.Core
         public int Start;
         public int End;
         public List<Pt> Points = new List<Pt>();
+    }
+
+    public struct TurnOption
+    {
+        public int Edge;
+        public bool Forward;
+        public Pt Out;
+        public double Turn;
+    }
+
+    public sealed class TurnStep
+    {
+        public int Edge;
+        public bool Forward;
+        public int Node;
+        public Pt In;
+        public List<TurnOption> Options;
     }
 
     public static class RoadFace
@@ -105,45 +123,15 @@ namespace BuildingCollections.Core
                     poly.Add(forward ? pts[i] : pts[n - 1 - i]);
                 }
 
-                int node = forward ? edges[edge].End : edges[edge].Start;
-                Pt inDir = forward ? pts[n - 1] - pts[n - 2] : pts[0] - pts[1];
-
-                int nextEdge = -1;
-                bool nextForward = true;
-                double bestTurn = double.NegativeInfinity;
-                if (byNode.TryGetValue(node, out var around))
-                {
-                    foreach (int k in around)
-                    {
-                        var kp = edges[k].Points;
-                        if (edges[k].Start == node)
-                        {
-                            Consider(k, true, kp[1] - kp[0]);
-                        }
-
-                        if (edges[k].End == node)
-                        {
-                            Consider(k, false, kp[kp.Count - 2] - kp[kp.Count - 1]);
-                        }
-                    }
-                }
-
-                void Consider(int k, bool fwd, Pt outDir)
-                {
-                    bool uTurn = k == edge && fwd != forward;
-                    double turn = uTurn ? -10 : Math.Atan2(Pt.Cross(inDir, outDir), Pt.Dot(inDir, outDir));
-                    if (turn > bestTurn)
-                    {
-                        bestTurn = turn;
-                        nextEdge = k;
-                        nextForward = fwd;
-                    }
-                }
-
-                if (nextEdge < 0)
+                var options = Options(edges, byNode, edge, forward, out _, out _);
+                if (options.Count == 0)
                 {
                     return null;
                 }
+
+                var best = options.OrderByDescending(o => o.Turn).First();
+                int nextEdge = best.Edge;
+                bool nextForward = best.Forward;
 
                 if (nextEdge == startEdge && nextForward == startForward)
                 {
@@ -156,6 +144,52 @@ namespace BuildingCollections.Core
             }
 
             return null;
+        }
+
+        public static List<TurnStep> Explain(IReadOnlyList<RoadEdge> edges, IReadOnlyList<(int edge, bool forward)> path)
+        {
+            var byNode = Adjacency(edges);
+            return path.Select(st =>
+            {
+                var options = Options(edges, byNode, st.edge, st.forward, out int node, out var inDir);
+                return new TurnStep { Edge = st.edge, Forward = st.forward, Node = node, In = inDir, Options = options };
+            }).ToList();
+        }
+
+        static List<TurnOption> Options(IReadOnlyList<RoadEdge> edges, Dictionary<int, List<int>> byNode, int edge, bool forward, out int node, out Pt inDir)
+        {
+            var pts = edges[edge].Points;
+            int n = pts.Count;
+            node = forward ? edges[edge].End : edges[edge].Start;
+            inDir = forward ? pts[n - 1] - pts[n - 2] : pts[0] - pts[1];
+            var options = new List<TurnOption>();
+            if (!byNode.TryGetValue(node, out var around))
+            {
+                return options;
+            }
+
+            foreach (int k in around)
+            {
+                var kp = edges[k].Points;
+                if (edges[k].Start == node)
+                {
+                    options.Add(Option(k, true, kp[1] - kp[0], edge, forward, inDir));
+                }
+
+                if (edges[k].End == node)
+                {
+                    options.Add(Option(k, false, kp[kp.Count - 2] - kp[kp.Count - 1], edge, forward, inDir));
+                }
+            }
+
+            return options;
+        }
+
+        static TurnOption Option(int k, bool fwd, Pt outDir, int edge, bool forward, Pt inDir)
+        {
+            bool uTurn = k == edge && fwd != forward;
+            double turn = uTurn ? -10 : Math.Atan2(Pt.Cross(inDir, outDir), Pt.Dot(inDir, outDir));
+            return new TurnOption { Edge = k, Forward = fwd, Out = outDir, Turn = turn };
         }
 
         static void Add(Dictionary<int, List<int>> map, int node, int edge)
