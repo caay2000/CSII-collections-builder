@@ -4,6 +4,11 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.11
+- Diagnóstico: cuando una manzana pasa del límite de hectáreas, el log da el contorno (extremos), los tramos de calle
+  que recorre y los tramos elevados (3 m o más) que se han dejado fuera al buscar la manzana. Visto en el juego: dos
+  manzanas pequeñas junto al cruce de Garnet Street y Jasmine Street daban las dos 13,6 ha.
+
 ## 0.3.10
 - Esquineros en ángulo (`EU_ResidentialCorner1Deg117L`, `UK_LondonTownhouse63DegR`...): `AngledCorner` lee el ángulo
   del nombre del prefab, delante o detrás de "Deg", y `BuildingInfo.CornerAngle` lo guarda; 90° ± 2 no cuenta. El lado
