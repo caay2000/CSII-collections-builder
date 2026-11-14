@@ -99,5 +99,21 @@ namespace BuildingCollections.Tests
             var single = new List<RoadEdge> { Line(0, 1, new Pt(0, 0), new Pt(100, 0)) };
             Assert.Null(RoadFace.Trace(single, new Pt(50, 10)));
         }
+
+        [Fact]
+        public void Explain_shows_the_walk_taking_the_sharpest_turn_at_every_node()
+        {
+            var edges = Grid();
+            RoadFace.Trace(edges, new Pt(30, 40), out var path);
+            var turns = RoadFace.Explain(edges, path);
+
+            Assert.Equal(path.Count, turns.Count);
+            for (int i = 0; i < turns.Count; i++)
+            {
+                var best = turns[i].Options.OrderByDescending(o => o.Turn).First();
+                var next = path[(i + 1) % path.Count];
+                Assert.Equal((next.edge, next.forward), (best.Edge, best.Forward));
+            }
+        }
     }
 }
