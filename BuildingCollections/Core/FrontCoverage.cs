@@ -53,7 +53,7 @@ namespace BuildingCollections.Core
 
         static IEnumerable<(LotStrip strip, List<UncoveredRun> runs)> Sidewalks(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks)
         {
-            var all = lots.Select(p => (q: p.Footprint(0), strip: p.Owner?.Strip)).Concat(existing.Select(q => (q, strip: (LotStrip)null))).ToList();
+            var all = lots.SelectMany(p => p.Shapes().Select(q => (q, strip: p.Owner?.Strip))).Concat(existing.Select(q => (q, strip: (LotStrip)null))).ToList();
             foreach (var st in blocks.Where(b => b.Strip != null).Select(b => b.Strip))
             {
                 var area = Reach(st);
