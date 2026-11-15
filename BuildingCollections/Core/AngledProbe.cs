@@ -13,16 +13,20 @@ namespace BuildingCollections.Core
         {
             var placer = AngledCornerPlacer.Place(request.Sides, request.Frontage, request.Outline, request.Existing, request.Corners, request.Seed);
             var notes = new List<string>(placer.Log);
-            var best = plan(new List<PlannedLot>());
             var strips = request.Blocks.Select(b => b.Strip).Where(s => s != null).ToList();
-            if (placer.Placed.Count > 0 && strips.Count == 0)
+            PreviewResult best;
+            if (placer.Placed.Count == 0)
+            {
+                best = plan(new List<PlannedLot>());
+            }
+            else if (strips.Count == 0)
             {
                 best = plan(placer.Placed);
                 notes.Add("  angled corners kept without comparing: the area has no sidewalk strips to measure.");
             }
-            else if (placer.Placed.Count > 0)
+            else
             {
-                best = KeepWhatHelps(placer.Placed, request, strips, best, plan, notes);
+                best = KeepWhatHelps(placer.Placed, request, strips, plan(new List<PlannedLot>()), plan, notes);
             }
 
             best.Log.InsertRange(0, notes);
@@ -33,13 +37,14 @@ namespace BuildingCollections.Core
             Func<IReadOnlyList<PlannedLot>, PreviewResult> plan, List<string> notes)
         {
             var bestScore = Score.Of(best, request, strips);
+            var baseline = bestScore;
             var kept = new List<PlannedLot>();
             foreach (var candidate in candidates)
             {
                 var trial = kept.Append(candidate).ToList();
                 var result = plan(trial);
                 var score = Score.Of(result, request, strips);
-                bool keep = score.NoWorseThan(bestScore);
+                bool keep = score.NoWorseThan(bestScore) && score.NoWorseThan(baseline);
                 notes.Add($"  angled corner {candidate.Building.PrefabName}: with it {score}, without it {bestScore}; {(keep ? "kept" : "left out")}.");
                 if (keep)
                 {

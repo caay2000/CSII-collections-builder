@@ -349,7 +349,8 @@ namespace BuildingCollections.Systems
                     continue;
                 }
 
-                var culprits = plants.Where(t => lot.DistanceTo(new Pt(t.Pos.x, t.Pos.z)) < PlantRadius(t.Prefab) + 1.0).ToList();
+                var shapes = p.Lot.Shapes().ToList();
+                var culprits = plants.Where(t => shapes.Min(s => s.DistanceTo(new Pt(t.Pos.x, t.Pos.z))) < PlantRadius(t.Prefab) + 1.0).ToList();
                 if (culprits.Count > 0)
                 {
                     drop.UnionWith(culprits);
