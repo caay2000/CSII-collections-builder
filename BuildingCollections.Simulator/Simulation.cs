@@ -65,6 +65,32 @@ namespace BuildingCollections.Simulator
             B("corner 2x2 L", 2, 2, CornerKind.Front | CornerKind.Left), B("corner 2x2 R", 2, 2, CornerKind.Front | CornerKind.Right),
         };
 
+        public static readonly IReadOnlyList<BuildingInfo> AngledCorners = LoadAngled();
+
+        public static bool WithAngled { get; set; } = Environment.GetEnvironmentVariable("SIM_ANGLED") == "1";
+
+        public static string RegressionCatalog => WithAngled ? DefaultCatalog + "+angled" : DefaultCatalog;
+
+        public static IReadOnlyList<BuildingInfo> CornerSet => WithAngled ? Corners.Concat(AngledCorners).ToList() : Corners;
+
+        static IReadOnlyList<BuildingInfo> LoadAngled()
+        {
+            var path = System.IO.Path.Combine(GameBlocks.ProjectFolder, "angled-corners.txt");
+            return System.IO.File.ReadAllLines(path)
+                .Where(l => l.Trim().Length > 0)
+                .Select(l => l.Split('|'))
+                .Select(f => new BuildingInfo
+                {
+                    PrefabName = f[0],
+                    CornerAngle = int.Parse(f[1], System.Globalization.CultureInfo.InvariantCulture),
+                    Corner = f[2] == "Left" ? CornerKind.Left : CornerKind.Right,
+                    LotWidth = int.Parse(f[3], System.Globalization.CultureInfo.InvariantCulture),
+                    LotDepth = int.Parse(f[4], System.Globalization.CultureInfo.InvariantCulture),
+                    Footprint = Footprint.Decode(f[5]),
+                })
+                .ToList();
+        }
+
         internal static BuildingInfo B(string name, int w, int d, CornerKind corner = CornerKind.Front) =>
             new BuildingInfo { PrefabName = name, LotWidth = w, LotDepth = d, Corner = corner };
 
@@ -79,7 +105,7 @@ namespace BuildingCollections.Simulator
                 return (strips, notes);
             })).Value;
 
-        public static Run Simulate(Scenario scenario, float overlap, int seed) => Simulate(scenario, overlap, seed, Plain, Corners);
+        public static Run Simulate(Scenario scenario, float overlap, int seed) => Simulate(scenario, overlap, seed, Plain, CornerSet);
 
         public static Run Simulate(Scenario scenario, float overlap, int seed, IReadOnlyList<BuildingInfo> plain, IReadOnlyList<BuildingInfo> cornerSet)
         {
@@ -98,7 +124,7 @@ namespace BuildingCollections.Simulator
             }).ToList();
             var result = PreviewPlanner.Plan(new PreviewRequest
             {
-                Blocks = blocks, Existing = scenario.Existing, Outline = outline, Plain = plain, Corners = cornerSet, Overlap = overlap, Seed = seed,
+                Blocks = blocks, Existing = scenario.Existing, Outline = outline, Sides = scenario.Sides, Frontage = scenario.Frontage, Plain = plain, Corners = cornerSet, Overlap = overlap, Seed = seed,
             });
             result.Log.InsertRange(0, notes);
             var gaps = FindGaps(strips, result);
@@ -107,25 +133,11 @@ namespace BuildingCollections.Simulator
             return new Run { Scenario = scenario, Overlap = overlap, Strips = strips, Outline = outline, Result = result, Gaps = gaps, Corners = corners };
         }
 
-        const double WedgeDepth = 16;
-        const double WedgeSlack = 1.5;
-        const double WedgeFactor = 1.25;
-        const double WedgeReach = 3;
-
         static void MarkWedges(List<Gap> gaps, List<CornerResult> corners)
         {
             foreach (var g in gaps)
             {
-                double allowed = 0;
-                foreach (var c in corners.Where(c => Math.Abs(c.Angle - 90) > 5 && c.Angle < 175))
-                {
-                    if (Dist(g.From, c.At) <= WedgeReach || Dist(g.To, c.At) <= WedgeReach)
-                    {
-                        allowed += WedgeFactor * WedgeDepth / Math.Abs(Math.Tan(c.Angle * Math.PI / 180)) + WedgeSlack;
-                    }
-                }
-
-                g.Wedge = allowed > 0 && g.Length <= allowed;
+                g.Wedge = CornerWedges.IsWedge(g.From, g.To, g.Length, corners);
             }
         }
 

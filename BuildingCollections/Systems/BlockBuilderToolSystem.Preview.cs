@@ -45,16 +45,17 @@ namespace BuildingCollections.Systems
                 definitionsDirty = true;
                 var cfg = DevConfig.Load();
                 var placeable = candidates.Where(c => c.Info.Corner != CornerKind.None && c.Info.LotWidth > 0 && c.Info.LotDepth > 0).ToList();
-                var angled = placeable.Where(c => c.Info.IsAngledCorner).Select(c => c.Info.PrefabName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                 var usable = placeable.Where(c => !c.Info.IsAngledCorner).ToList();
                 var plain = usable.Where(c => AccessMapping.FitsFront(c.Info.Corner)).Select(c => c.Info).ToList();
                 var corners = usable.Where(c => AccessMapping.FitsCorner(c.Info.Corner)).Select(c => c.Info).ToList();
-                var prefabs = usable.GroupBy(c => c.Info.PrefabName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Prefab, StringComparer.OrdinalIgnoreCase);
+                var angledEntries = placeable.Where(c => c.Info.IsAngledCorner).ToList();
+                var angled = WithFootprints(angledEntries, out var noShape);
+                var prefabs = usable.Concat(angledEntries).GroupBy(c => c.Info.PrefabName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Prefab, StringComparer.OrdinalIgnoreCase);
 
-                var log = new StringBuilder($"[preview] seed {seed}, density {density}%, {plain.Count} regular, {corners.Count} corner buildings.\n");
-                if (angled.Count > 0)
+                var log = new StringBuilder($"[preview] seed {seed}, density {density}%, {plain.Count} regular, {corners.Count} corner, {angled.Count} angled corner buildings.\n");
+                if (noShape.Count > 0)
                 {
-                    log.Append($"  {angled.Count} angled corner buildings left out (not supported yet): {string.Join(", ", angled)}.\n");
+                    log.Append($"  {noShape.Count} angled corner buildings left out (their shape could not be read): {string.Join(", ", noShape)}.\n");
                 }
 
                 bool anarchy = AnarchyBridge.Enabled;
@@ -74,8 +75,10 @@ namespace BuildingCollections.Systems
                     Blocks = PlanBlocks(),
                     Existing = existing,
                     Outline = areaOutline,
+                    Sides = areaSides,
+                    Frontage = areaFrontage,
                     Plain = plain,
-                    Corners = corners,
+                    Corners = corners.Concat(angled).ToList(),
                     Overlap = overlap,
                     Density = density,
                     Seed = seed,
@@ -86,8 +89,9 @@ namespace BuildingCollections.Systems
                 frontCells = planned.FrontCells;
                 foreach (var lot in planned.Lots)
                 {
-                    var owner = (SelectedBlock)lot.Owner.Tag;
-                    preview.Add(new Planned { Lot = lot, Prefab = prefabs[lot.Building.PrefabName], Block = owner.Block });
+                    preview.Add(lot.Owner.Tag is SelectedBlock owner
+                        ? new Planned { Lot = lot, Prefab = prefabs[lot.Building.PrefabName], Block = owner.Block }
+                        : Angled(lot, prefabs[lot.Building.PrefabName]));
                 }
 
                 FrontTotal = frontCells.Count;
@@ -95,7 +99,7 @@ namespace BuildingCollections.Systems
                 clock.Restart();
 
                 int buildingsPlanned = preview.Count;
-                var blockers = planned.Lots.Select(l => l.Footprint(0)).Concat(existing).ToList();
+                var blockers = planned.Lots.SelectMany(l => l.Shapes()).Concat(existing).ToList();
                 int plants = PlanDecor(decor, blockers, decorDensity, ageMask, seed, log);
                 Lap("decoration");
                 log.AppendLine($"  timings: {string.Join(", ", times)}.");
@@ -109,6 +113,42 @@ namespace BuildingCollections.Systems
                 preview.Clear();
                 Say("Preview failed (see log).", error: true);
             }
+        }
+
+        List<BuildingInfo> WithFootprints(List<CatalogEntry> entries, out List<string> noShape)
+        {
+            var prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            var withShape = new List<BuildingInfo>();
+            noShape = new List<string>();
+            foreach (var e in entries)
+            {
+                if (MeshFootprints.TryGet(EntityManager, prefabSystem, e.Prefab, out var rects))
+                {
+                    var info = e.Info.InGroup(e.Info.Group, e.Info.Share);
+                    info.Footprint = rects;
+                    withShape.Add(info);
+                }
+                else
+                {
+                    noShape.Add(e.Info.PrefabName);
+                }
+            }
+
+            return withShape;
+        }
+
+        static Planned Angled(PlannedLot lot, Entity prefab)
+        {
+            var c = lot.Center;
+            var x = lot.Owner.Frame.AxisX;
+            return new Planned
+            {
+                Lot = lot,
+                Prefab = prefab,
+                IsAngled = true,
+                Pos = new float3((float)c.X, 0, (float)c.Y),
+                Rot = quaternion.RotateY((float)Math.Atan2(-x.Y, x.X)),
+            };
         }
 
         int PlanDecor(IReadOnlyList<CatalogEntry> decor, List<Quad> blockers, int decorDensity, int ageMask, int seed, StringBuilder log)
@@ -356,6 +396,12 @@ namespace BuildingCollections.Systems
                 {
                     t = new Transform(p.Pos, p.Rot);
                     y = TerrainUtils.SampleHeight(ref heights, p.Pos);
+                }
+                else if (p.IsAngled)
+                {
+                    t = new Transform(p.Pos, p.Rot);
+                    float3 front = BuildingUtils.CalculateFrontPosition(t, p.Lot.Depth);
+                    y = TerrainUtils.SampleHeight(ref heights, front);
                 }
                 else
                 {

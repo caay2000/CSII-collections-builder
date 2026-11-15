@@ -20,7 +20,7 @@ namespace BuildingCollections.Core
 
         public static List<SidewalkGap> Find(IEnumerable<LotStrip> strips, IEnumerable<PlannedLot> lots)
         {
-            var quads = lots.Select(l => l.Footprint(0)).ToList();
+            var quads = lots.SelectMany(l => l.Shapes()).ToList();
             var gaps = new List<SidewalkGap>();
             foreach (var st in strips)
             {

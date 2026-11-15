@@ -194,6 +194,7 @@ namespace BuildingCollections.Systems
                 areaFill.Clear();
                 areaEdge.Clear();
                 areaOutline = null;
+                areaSides = null;
             decorAreas = new List<List<Pt>>();
             decorClip = null;
                 definitionsDirty = true;
@@ -540,6 +541,8 @@ namespace BuildingCollections.Systems
 
             decorAreas = new List<List<Pt>> { outline };
             decorClip = null;
+            areaSides = sides;
+            areaFrontage = frontage;
             return true;
         }
 
@@ -742,6 +745,8 @@ namespace BuildingCollections.Systems
             areaFill.Clear();
             areaEdge.Clear();
             areaOutline = outline != null && outline.Count >= 3 ? outline : null;
+            areaSides = null;
+            areaFrontage = null;
             if (outline == null || outline.Count < 3)
             {
                 return;
@@ -794,6 +799,7 @@ namespace BuildingCollections.Systems
             areaFill.Clear();
             areaEdge.Clear();
             areaOutline = null;
+            areaSides = null;
             decorAreas = new List<List<Pt>>();
             decorClip = null;
             definitionsDirty = true;

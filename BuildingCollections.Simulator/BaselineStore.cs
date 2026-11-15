@@ -9,7 +9,9 @@ namespace BuildingCollections.Simulator
     {
         static readonly JsonSerializerOptions Json = new JsonSerializerOptions { WriteIndented = true };
 
-        public static string DefaultPath => Path.Combine(GameBlocks.ProjectFolder, "regression-baseline.json");
+        public static string DefaultPath => PathFor(false);
+
+        public static string PathFor(bool angled) => Path.Combine(GameBlocks.ProjectFolder, angled ? "regression-baseline-angled.json" : "regression-baseline.json");
 
         public static Baseline Load(string path)
         {

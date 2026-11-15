@@ -18,13 +18,19 @@ namespace BuildingCollections.Core
         readonly MixSplit mix;
         readonly IReadOnlyList<BuildingInfo> firstPlain;
         readonly IReadOnlyList<BuildingInfo> firstCorners;
+        readonly IReadOnlyList<BuildingInfo> corners;
+        readonly IReadOnlyList<Quad> existing;
+        readonly List<PlannedLot> angled;
 
-        PreviewPlanner(PreviewRequest request)
+        PreviewPlanner(PreviewRequest request, IReadOnlyList<PlannedLot> angledLots)
         {
             this.request = request;
-            mix = MixSplit.Of(request.Plain.Concat(request.Corners));
+            corners = request.Corners.Where(c => !c.IsAngledCorner).ToList();
+            mix = MixSplit.Of(request.Plain.Concat(corners));
             firstPlain = Own(request.Plain);
-            firstCorners = mix == null ? request.Corners : MixSplit.InGroup(request.Corners, mix.First);
+            firstCorners = mix == null ? corners : MixSplit.InGroup(corners, mix.First);
+            angled = angledLots.ToList();
+            existing = request.Existing.Concat(angled.SelectMany(l => l.Shapes())).ToList();
         }
 
         IReadOnlyList<BuildingInfo> Own(IReadOnlyList<BuildingInfo> plain)
@@ -33,7 +39,7 @@ namespace BuildingCollections.Core
             return own.Count > 0 ? own : plain;
         }
 
-        public static PreviewResult Plan(PreviewRequest request) => new PreviewPlanner(request).Run();
+        public static PreviewResult Plan(PreviewRequest request) => AngledProbe.Plan(request, lots => new PreviewPlanner(request, lots).Run());
 
         PreviewResult Run()
         {
@@ -60,6 +66,7 @@ namespace BuildingCollections.Core
             Lap("frontage");
             Diagnose();
             Lap("diagnostics");
+            result.Lots.AddRange(angled);
             return result;
         }
 
@@ -178,7 +185,7 @@ namespace BuildingCollections.Core
             foreach (var block in request.Blocks.OrderByDescending(b => b.Priority))
             {
                 var grid = Clone(block.Grid);
-                FootprintMask.Apply(grid, block, request.Existing, FootprintMask.StrictOverlap);
+                FootprintMask.Apply(grid, block, existing, FootprintMask.StrictOverlap);
                 grids.Add((block, grid));
                 for (int x = 0; x < grid.Width; x++)
                 {
@@ -300,7 +307,7 @@ namespace BuildingCollections.Core
             var front = FrontCoverage.CellsPerLot(result.Lots, result.FrontCells);
             double before = mix.MeasuredFirstShare(result.Lots, result.FrontCells);
             var secondPlain = MixSplit.InGroup(request.Plain, mix.Second);
-            var secondCorners = MixSplit.InGroup(request.Corners, mix.Second);
+            var secondCorners = MixSplit.InGroup(corners, mix.Second);
             var depth = grids.ToDictionary(g => g.block, g => Enumerable.Range(0, g.grid.Width).Select(x => FreeDepth(g.grid, x)).DefaultIfEmpty(0).Max());
             int Room(PlanBlock block) => secondPlain.Concat(secondCorners).Where(b => b.LotDepth <= depth[block]).Select(b => b.LotWidth).DefaultIfEmpty(1).Min();
             var surplus = mix.Surplus(front, result.FrontCells.Count, Room, new Random(request.Seed ^ MixSalt));
@@ -397,7 +404,7 @@ namespace BuildingCollections.Core
 
         void CloseEndGaps()
         {
-            var closer = new EndGapCloser(result.Lots, request.Blocks, request.Existing, result.Thinned, request.Outline,
+            var closer = new EndGapCloser(result.Lots, request.Blocks, existing, result.Thinned, request.Outline,
                 request.Plain, request.Overlap, new Random(request.Seed ^ 0x2545f491), result.Log);
             foreach (var (block, _) in grids)
             {
@@ -412,7 +419,7 @@ namespace BuildingCollections.Core
                 return;
             }
 
-            var filler = new FrontGapFiller(result.Lots, request.Existing, result.Thinned, request.Outline, request.Plain, request.Overlap,
+            var filler = new FrontGapFiller(result.Lots, existing, result.Thinned, request.Outline, request.Plain, request.Overlap,
                 new Random(request.Seed ^ 0x3c6ef372), result.Log);
             foreach (var (block, _) in grids)
             {
@@ -436,7 +443,7 @@ namespace BuildingCollections.Core
         {
             try
             {
-                result.Log.AddRange(FrontCoverage.Uncovered(result.Lots, request.Existing, request.Blocks));
+                result.Log.AddRange(FrontCoverage.Uncovered(result.Lots, existing, request.Blocks));
             }
             catch (Exception e)
             {
