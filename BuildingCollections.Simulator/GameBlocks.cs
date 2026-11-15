@@ -31,6 +31,7 @@ namespace BuildingCollections.Simulator
             ["block_18946_-11057"] = "block (18946, -11057), 21 existing in the game",
             ["block_19034_-11154"] = "block (19034, -11154), 11 existing in the game",
             ["block_19101_-11125"] = "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
+            ["block_13230_-7079"] = "block with a 45° and a 135° corner (13230, -7079), angled corners placed by hand in the game",
         };
 
         public static string ProjectFolder => FindProjectFolder(AppContext.BaseDirectory);

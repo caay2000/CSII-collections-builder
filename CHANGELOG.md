@@ -4,6 +4,20 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.13
+- El constructor coloca esquineros en ángulo (45°, 63°, 117°, 135°) cuando la colección los tiene. En cada esquina
+  cuyo ángulo coincide con el del nombre (±4°) y con las dos calles rectas junto a la esquina, `AngledCornerPlacer`
+  prueba cada esquinero con su huella real (leída de la malla, 0.3.12): el solar a la calle, el ala hacia la otra
+  calle, retirado de la esquina lo mínimo para que el ala quepa (hasta 2 m sobre la acera, lo mismo que el juego deja
+  al esquinero de 135° colocado a mano). Elige al azar entre los que quedan a 4 m o menos del mejor retiro.
+- `AngledProbe` solo se queda con un esquinero en ángulo si el resto de la manzana no sale peor: planifica sin él y
+  con él y compara metros de hueco entre edificios (sin contar la cuña de una esquina aguda, `CornerWedges`), número de
+  huecos y celdas a la calle vacías. El log dice para cada uno si se queda o no y por qué.
+- Simulador: catálogo de 38 esquineros en ángulo con sus huellas (`angled-corners.txt`), manzana real con una esquina
+  de 45° y otra de 135° (13230, -7079), y el informe dibuja el ala. `regress` hace dos pasadas, sin y con esquineros
+  en ángulo, cada una con su referencia (`regression-baseline-angled.json`). Con ellos, respecto a la referencia sin
+  ellos: ningún escenario peor; menos metros sin cubrir con todos los solapes y menos huecos entre edificios con 1 m.
+
 ## 0.3.12
 - Esquineros en ángulo ya colocados (45°, 63°, 117°, 135°): su huella ya no es el rectángulo del solar más la caja de
   la malla, que en 45° y 135° tapaba el patio vacío entre las dos alas y dejaba sin llenar la calle de al lado. Ahora

@@ -1612,6 +1612,42 @@
       "EmptyCells": 0
     },
     {
+      "Scenario": "block with a 45\u00B0 and a 135\u00B0 corner (13230, -7079), angled corners placed by hand in the game",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 365.6,
+      "MaxGap": 13,
+      "GapsBetweenBuildings": 41,
+      "EmptyCells": 48
+    },
+    {
+      "Scenario": "block with a 45\u00B0 and a 135\u00B0 corner (13230, -7079), angled corners placed by hand in the game",
+      "Overlap": 0.5,
+      "MissedCorners": 0,
+      "GapMeters": 192.4,
+      "MaxGap": 8,
+      "GapsBetweenBuildings": 12,
+      "EmptyCells": 12
+    },
+    {
+      "Scenario": "block with a 45\u00B0 and a 135\u00B0 corner (13230, -7079), angled corners placed by hand in the game",
+      "Overlap": 1,
+      "MissedCorners": 0,
+      "GapMeters": 210,
+      "MaxGap": 8,
+      "GapsBetweenBuildings": 12,
+      "EmptyCells": 16
+    },
+    {
+      "Scenario": "block with a 45\u00B0 and a 135\u00B0 corner (13230, -7079), angled corners placed by hand in the game",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
       "Overlap": 0.05,
       "MissedCorners": 0,

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace BuildingCollections.Core
 {
@@ -23,13 +24,15 @@ namespace BuildingCollections.Core
 
         public bool IsAngledCorner => CornerAngle != 0;
 
+        public IReadOnlyList<FootprintRect> Footprint { get; set; }
+
         public int Group { get; set; }
 
         public double Share { get; set; } = 1;
 
         public BuildingInfo InGroup(int group, double share) => new BuildingInfo
         {
-            PrefabName = PrefabName, LotWidth = LotWidth, LotDepth = LotDepth, Level = Level, Corner = Corner, CornerAngle = CornerAngle,
+            PrefabName = PrefabName, LotWidth = LotWidth, LotDepth = LotDepth, Level = Level, Corner = Corner, CornerAngle = CornerAngle, Footprint = Footprint,
             Group = group, Share = share,
         };
 
