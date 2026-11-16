@@ -32,6 +32,19 @@ namespace BuildingCollections.Simulator
             ["block_19034_-11154"] = "block (19034, -11154), 11 existing in the game",
             ["block_19101_-11125"] = "Cornfield, Crestwood and Crescent (19101, -11125), gaps at the corners in the game",
             ["block_13230_-7079"] = "block with a 45° and a 135° corner (13230, -7079), angled corners placed by hand in the game",
+            ["block_13351_-7456"] = "block with a 53° and a 127° corner (13351, -7456), no angled building of that angle",
+            ["block_13413_-7458"] = "block with a 53° and a 127° corner (13413, -7458), no angled building of that angle",
+            ["block_13509_-8156"] = "angled block (13509, -8156), 67°, 69° and 24° corners",
+            ["block_13718_-8105"] = "angled block (13718, -8105), 119°, 106°, 142° and 70° corners",
+            ["block_13648_-8269"] = "angled block (13648, -8269), 110° and 126° corners",
+            ["block_14009_-8322"] = "angled block (14009, -8322), 113°, 111° and 134° corners, 80 existing",
+            ["block_13928_-8183"] = "angled block (13928, -8183), 61° and 54° corners",
+            ["block_14164_-8507"] = "angled block (14164, -8507), 108°, 102° and 159° corners, 29 existing",
+            ["block_14381_-7720"] = "angled block (14381, -7720), 112° and 68° corners, 14 existing",
+            ["block_14531_-8575"] = "angled block (14531, -8575), 145° and 23° corners",
+            ["block_14642_-8647"] = "angled block (14642, -8647), 76° and 112° corners, 8 existing",
+            ["block_15000_-8823"] = "angled block (15000, -8823), 77°, 159° and 119° corners, 7 existing",
+            ["block_15011_-8964"] = "angled block (15011, -8964), 103° corner, 4 existing",
         };
 
         public static string ProjectFolder => FindProjectFolder(AppContext.BaseDirectory);

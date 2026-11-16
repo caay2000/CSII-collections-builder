@@ -9,6 +9,7 @@ namespace BuildingCollections.Core
     public sealed class AngledCornerPlacer
     {
         public const double AngleTolerance = 4;
+        public const double MaxMismatch = 10;
         public const double Overhang = 2.0;
         const double LotSlack = 0.3;
         const double CellSlack = 0.5;
@@ -70,30 +71,42 @@ namespace BuildingCollections.Core
                 var dIn = Unit(arriving[arriving.Count - 1] - PointBack(arriving, DirectionReach));
                 var dOut = Unit(PointAlong(leaving, DirectionReach) - leaving[0]);
                 double interior = 180 - Angle(dIn, dOut);
-                var options = angled
-                    .Where(b => Math.Abs(b.CornerAngle - interior) <= AngleTolerance)
-                    .Select(b => Fit(b, corner, arriving, leaving))
-                    .Where(o => o.lot != null)
-                    .ToList();
-                if (options.Count == 0)
+                if (Math.Abs(interior - 90) <= AngleTolerance || Math.Abs(interior - 180) <= AngleTolerance)
                 {
-                    if (angled.Any(b => Math.Abs(b.CornerAngle - interior) <= AngleTolerance))
-                    {
-                        Log.Add(string.Format(CultureInfo.InvariantCulture, "  angled corner at ({0:F1},{1:F1}), {2:F0}°: no angled building fits.", corner.X, corner.Y, interior));
-                    }
-
                     continue;
                 }
 
-                double best = options.Min(o => o.setback);
-                var close = options.Where(o => o.setback <= best + CloseEnough).ToList();
+                var near = angled.Where(b => Mismatch(b, interior) <= MaxMismatch).ToList();
+                if (near.Count == 0)
+                {
+                    double closest = angled.Min(b => Mismatch(b, interior));
+                    Log.Add(string.Format(CultureInfo.InvariantCulture, "  angled corner at ({0:F1},{1:F1}), {2:F0}°: no angled building within {3:F0}° (closest {4:F0}° off).", corner.X, corner.Y, interior, MaxMismatch, closest));
+                    continue;
+                }
+
+                var options = near
+                    .Select(b => (fit: Fit(b, corner, arriving, leaving), mismatch: Mismatch(b, interior)))
+                    .Where(o => o.fit.lot != null)
+                    .ToList();
+                if (options.Count == 0)
+                {
+                    Log.Add(string.Format(CultureInfo.InvariantCulture, "  angled corner at ({0:F1},{1:F1}), {2:F0}°: none of the {3} angled buildings within {4:F0}° fits.", corner.X, corner.Y, interior, near.Count, MaxMismatch));
+                    continue;
+                }
+
+                double leastMismatch = options.Min(o => o.mismatch);
+                var closer = options.Where(o => o.mismatch <= leastMismatch + AngleTolerance).ToList();
+                double best = closer.Min(o => o.fit.setback);
+                var close = closer.Where(o => o.fit.setback <= best + CloseEnough).ToList();
                 var pick = close[rng.Next(close.Count)];
-                Placed.Add(pick.lot);
-                taken.AddRange(pick.lot.Shapes());
-                Log.Add(string.Format(CultureInfo.InvariantCulture, "  angled corner at ({0:F1},{1:F1}), {2:F0}°: {3} ({4}°), set back {5:F1} m from the corner; {6} of {7} angled buildings fit.",
-                    corner.X, corner.Y, interior, pick.lot.Building.PrefabName, pick.lot.Building.CornerAngle, pick.setback, options.Count, angled.Count));
+                Placed.Add(pick.fit.lot);
+                taken.AddRange(pick.fit.lot.Shapes());
+                Log.Add(string.Format(CultureInfo.InvariantCulture, "  angled corner at ({0:F1},{1:F1}), {2:F0}°: {3} ({4}°, {5:F0}° off), set back {6:F1} m from the corner; {7} of {8} angled buildings fit.",
+                    corner.X, corner.Y, interior, pick.fit.lot.Building.PrefabName, pick.fit.lot.Building.CornerAngle, pick.mismatch, pick.fit.setback, options.Count, angled.Count));
             }
         }
+
+        static double Mismatch(BuildingInfo building, double interior) => Math.Abs(building.CornerAngle - interior);
 
         bool IsStreet(int side) => frontage == null || side >= frontage.Count || frontage[side];
 

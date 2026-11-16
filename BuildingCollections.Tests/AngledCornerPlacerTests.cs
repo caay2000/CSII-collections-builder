@@ -58,11 +58,29 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
-        public void A_corner_whose_angle_matches_no_building_gets_none()
+        public void A_corner_far_from_every_building_angle_gets_none()
         {
-            var placer = Place(Parallelogram(54), Simulation.AngledCorners);
+            var placer = Place(Parallelogram(75), Simulation.AngledCorners);
 
             Assert.Empty(placer.Placed);
+        }
+
+        [Fact]
+        public void A_corner_close_to_a_building_angle_gets_the_closest_one_inside_the_block()
+        {
+            var sides = Parallelogram(54);
+            var outline = VirtualLots.Outline(sides);
+
+            var placer = Place(sides, Simulation.AngledCorners);
+
+            var acute = placer.Placed.Where(l => l.Building.CornerAngle < 90).ToList();
+            Assert.Equal(2, acute.Count);
+            Assert.All(acute, lot => Assert.True(Math.Abs(lot.Building.CornerAngle - 54) <= AngledCornerPlacer.MaxMismatch));
+            foreach (var lot in acute)
+            {
+                Assert.All(lot.Footprint(0.3).P, p => Assert.True(Inside(outline, p, 0)));
+                Assert.All(lot.Wings(0.5).SelectMany(q => q.P), p => Assert.True(Inside(outline, p, AngledCornerPlacer.Overhang)));
+            }
         }
 
         [Fact]

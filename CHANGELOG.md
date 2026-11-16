@@ -4,6 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.14
+- Los esquineros en ángulo se usan también cuando la esquina no coincide exactamente con su ángulo: si ninguno está a
+  ±4°, `AngledCornerPlacer` prueba los de ángulo más cercano hasta 10° de diferencia (por ejemplo 45° en una esquina de
+  53°, 117° en una de 127°) y elige primero los más cercanos. La comprobación de huella y la comparación con el plan sin
+  esquinero siguen igual. Con 12° salía peor una manzana real (117° en 128°), por eso el límite es 10°.
+- El log explica las esquinas en ángulo sin esquinero: `no angled building within 10° (closest N° off)` o `none of the
+  N angled buildings within 10° fits`, y cada esquinero elegido indica cuántos grados se desvía.
+- Simulador: 13 manzanas nuevas del juego con esquinas de 53°, 61°, 67°, 76°, 103°–127° y 145°.
+
 ## 0.3.13
 - El constructor coloca esquineros en ángulo (45°, 63°, 117°, 135°) cuando la colección los tiene. En cada esquina
   cuyo ángulo coincide con el del nombre (±4°) y con las dos calles rectas junto a la esquina, `AngledCornerPlacer`
