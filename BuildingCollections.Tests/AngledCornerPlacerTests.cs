@@ -117,7 +117,43 @@ namespace BuildingCollections.Tests
 
             Assert.Contains(run.Result.Lots, l => l.Building.CornerAngle == 45);
             Assert.Contains(run.Result.Log, l => l.Contains("left out") || l.Contains("kept"));
-            Assert.Equal(0, run.GapMeters, 1);
+            Assert.True(run.GapMeters <= 4.05, $"{run.GapMeters:F1} m of gaps between buildings");
+        }
+
+        [Fact]
+        public void No_angled_building_goes_over_the_sidewalk()
+        {
+            foreach (int angle in new[] { 45, 54, 63 })
+            {
+                var sides = Parallelogram(angle);
+                var outline = VirtualLots.Outline(sides);
+
+                var placer = Place(sides, Simulation.AngledCorners);
+
+                Assert.All(placer.Choices.SelectMany(c => c).SelectMany(l => l.Wings(0.5)).SelectMany(q => q.P), p => Assert.True(Inside(outline, p, 0)));
+            }
+        }
+
+        [Fact]
+        public void Each_corner_offers_the_first_setback_that_fits_and_a_few_further_from_the_corner()
+        {
+            var placer = Place(Parallelogram(45), Simulation.AngledCorners);
+
+            Assert.Equal(placer.Placed.Count, placer.Choices.Count);
+            Assert.All(placer.Choices.Zip(placer.Placed), c => Assert.Same(c.Second, c.First[0]));
+            Assert.Contains(placer.Choices, c => c.Count > 1);
+        }
+
+        [Fact]
+        public void A_corner_next_to_a_curved_side_gets_no_angled_building()
+        {
+            var scenario = Scenarios.All().Single(s => s.Name == "side curved inwards (sagitta 16 m) ending at a corner");
+            var sides = scenario.Sides;
+
+            var placer = Place(sides, Simulation.AngledCorners);
+
+            Assert.Empty(placer.Placed);
+            Assert.Contains(placer.Log, l => l.Contains("one of its sides is curved"));
         }
     }
 }

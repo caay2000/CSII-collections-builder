@@ -26,32 +26,41 @@ namespace BuildingCollections.Core
             }
             else
             {
-                best = KeepWhatHelps(placer.Placed, request, strips, plan(new List<PlannedLot>()), plan, notes);
+                best = KeepWhatHelps(placer.Choices, request, strips, plan(new List<PlannedLot>()), plan, notes);
             }
 
             best.Log.InsertRange(0, notes);
             return best;
         }
 
-        static PreviewResult KeepWhatHelps(IReadOnlyList<PlannedLot> candidates, PreviewRequest request, List<LotStrip> strips, PreviewResult best,
+        static PreviewResult KeepWhatHelps(IReadOnlyList<IReadOnlyList<PlannedLot>> choices, PreviewRequest request, List<LotStrip> strips, PreviewResult best,
             Func<IReadOnlyList<PlannedLot>, PreviewResult> plan, List<string> notes)
         {
             var bestScore = Score.Of(best, request, strips);
             var baseline = bestScore;
             var kept = new List<PlannedLot>();
-            foreach (var candidate in candidates)
+            foreach (var options in choices)
             {
-                var trial = kept.Append(candidate).ToList();
-                var result = plan(trial);
-                var score = Score.Of(result, request, strips);
-                bool keep = score.NoWorseThan(bestScore) && score.NoWorseThan(baseline);
-                notes.Add($"  angled corner {candidate.Building.PrefabName}: with it {score}, without it {bestScore}; {(keep ? "kept" : "left out")}.");
-                if (keep)
+                var trials = options.Select((lot, i) =>
                 {
-                    kept = trial;
-                    best = result;
-                    bestScore = score;
+                    var lots = kept.Append(lot).ToList();
+                    var result = plan(lots);
+                    return (lots, result, score: Score.Of(result, request, strips), option: i + 1);
+                }).ToList();
+                var pick = trials
+                    .Where(t => t.score.NoWorseThan(bestScore) && t.score.NoWorseThan(baseline))
+                    .OrderBy(t => t.score.GapMeters).ThenBy(t => t.score.Gaps).ThenBy(t => t.score.EmptyCells).ThenBy(t => t.option)
+                    .FirstOrDefault();
+                if (pick.lots == null)
+                {
+                    notes.Add($"  angled corner {options[0].Building.PrefabName}: with it {trials[0].score}, without it {bestScore}; left out after {options.Count} options.");
+                    continue;
                 }
+
+                notes.Add($"  angled corner {options[0].Building.PrefabName}: with it {pick.score}, without it {bestScore}; kept at option {pick.option} of {options.Count}.");
+                kept = pick.lots;
+                best = pick.result;
+                bestScore = pick.score;
             }
 
             return best;
@@ -62,6 +71,12 @@ namespace BuildingCollections.Core
             readonly double gapMeters;
             readonly int gaps;
             readonly int emptyCells;
+
+            public double GapMeters => gapMeters;
+
+            public int Gaps => gaps;
+
+            public int EmptyCells => emptyCells;
 
             Score(double gapMeters, int gaps, int emptyCells)
             {
