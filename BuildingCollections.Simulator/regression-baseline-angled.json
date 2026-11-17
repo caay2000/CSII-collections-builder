@@ -427,16 +427,16 @@
       "Scenario": "diagonal at 25\u00B0 (65\u00B0 corner)",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 63,
+      "GapMeters": 29.6,
       "MaxGap": 6.3,
-      "GapsBetweenBuildings": 24,
-      "EmptyCells": 84
+      "GapsBetweenBuildings": 12,
+      "EmptyCells": 72
     },
     {
       "Scenario": "diagonal at 25\u00B0 (65\u00B0 corner)",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 39.2,
+      "GapMeters": 47.2,
       "MaxGap": 5.1,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 48
@@ -445,8 +445,8 @@
       "Scenario": "diagonal at 25\u00B0 (65\u00B0 corner)",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 18,
-      "MaxGap": 4.9,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 48
     },
@@ -454,8 +454,8 @@
       "Scenario": "diagonal at 25\u00B0 (65\u00B0 corner)",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 12.4,
-      "MaxGap": 3.1,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -463,17 +463,17 @@
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 22,
+      "GapMeters": 42,
       "MaxGap": 2,
-      "GapsBetweenBuildings": 4,
-      "EmptyCells": 26
+      "GapsBetweenBuildings": 3,
+      "EmptyCells": 3
     },
     {
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 0,
-      "MaxGap": 0,
+      "GapMeters": 26,
+      "MaxGap": 2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 24
     },
@@ -481,10 +481,10 @@
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 6,
-      "MaxGap": 2,
+      "GapMeters": 19,
+      "MaxGap": 2.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 23
     },
     {
       "Scenario": "diagonal at 40\u00B0 (50\u00B0 corner)",
@@ -499,28 +499,28 @@
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 238.3,
+      "GapMeters": 240.1,
       "MaxGap": 12.2,
-      "GapsBetweenBuildings": 12,
-      "EmptyCells": 87
+      "GapsBetweenBuildings": 8,
+      "EmptyCells": 58
     },
     {
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 86.4,
+      "GapMeters": 55.8,
       "MaxGap": 4.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 44
+      "EmptyCells": 25
     },
     {
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 86.4,
+      "GapMeters": 48.9,
       "MaxGap": 4.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 44
+      "EmptyCells": 28
     },
     {
       "Scenario": "diagonal at 55\u00B0 (125\u00B0 corner)",
@@ -529,7 +529,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 11
     },
     {
       "Scenario": "rounded corner R 15 m",
@@ -643,25 +643,25 @@
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 1070.2,
+      "GapMeters": 1031.6,
       "MaxGap": 18.3,
       "GapsBetweenBuildings": 48,
-      "EmptyCells": 108
+      "EmptyCells": 107
     },
     {
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 176.7,
-      "MaxGap": 8.8,
+      "GapMeters": 184.5,
+      "MaxGap": 4.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 1
+      "EmptyCells": 2
     },
     {
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 158.4,
+      "GapMeters": 161.4,
       "MaxGap": 3,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -670,7 +670,7 @@
       "Scenario": "curve towards the block R 105 m, 62\u00B0 (Cobblestone-like)",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 155,
+      "GapMeters": 148.1,
       "MaxGap": 3,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -679,16 +679,16 @@
       "Scenario": "curve towards the block R 60 m, 90\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 1222.2,
+      "GapMeters": 1157.9,
       "MaxGap": 10.2,
-      "GapsBetweenBuildings": 8,
-      "EmptyCells": 131
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 83
     },
     {
       "Scenario": "curve towards the block R 60 m, 90\u00B0",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 213,
+      "GapMeters": 137,
       "MaxGap": 8.2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 5
@@ -751,16 +751,16 @@
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 1094.7,
+      "GapMeters": 1218,
       "MaxGap": 10.9,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 125
+      "EmptyCells": 144
     },
     {
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 146.6,
+      "GapMeters": 141.4,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -769,7 +769,7 @@
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 104.5,
+      "GapMeters": 110.9,
       "MaxGap": 3.4,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -778,10 +778,10 @@
       "Scenario": "marked S (amplitude 25 m, wavelength 200 m)",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 24.1,
+      "GapMeters": 43.2,
       "MaxGap": 3.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 4
+      "EmptyCells": 7
     },
     {
       "Scenario": "wavy (amplitude 15 m, wavelength 100 m)",
@@ -859,10 +859,10 @@
       "Scenario": "parallelogram 60\u00B0 / 120\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 331.3,
+      "GapMeters": 311.4,
       "MaxGap": 7.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 37
+      "EmptyCells": 35
     },
     {
       "Scenario": "parallelogram 60\u00B0 / 120\u00B0",
@@ -895,37 +895,37 @@
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 407.8,
-      "MaxGap": 11.4,
-      "GapsBetweenBuildings": 28,
-      "EmptyCells": 62
+      "GapMeters": 440.2,
+      "MaxGap": 11.5,
+      "GapsBetweenBuildings": 40,
+      "EmptyCells": 46
     },
     {
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 186.8,
-      "MaxGap": 4.2,
+      "GapMeters": 140.1,
+      "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 22
+      "EmptyCells": 4
     },
     {
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 48.6,
-      "MaxGap": 3.6,
+      "GapMeters": 124.5,
+      "MaxGap": 4.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0
+      "EmptyCells": 1
     },
     {
       "Scenario": "parallelogram 70\u00B0 / 110\u00B0",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 33.2,
+      "GapMeters": 59.4,
       "MaxGap": 3.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0
+      "EmptyCells": 1
     },
     {
       "Scenario": "parallelogram 80\u00B0 / 100\u00B0",
@@ -1003,28 +1003,28 @@
       "Scenario": "trapezoid, one end at 70\u00B0 / 110\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 197.7,
+      "GapMeters": 187.9,
       "MaxGap": 4.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48
+      "EmptyCells": 44
     },
     {
       "Scenario": "trapezoid, one end at 70\u00B0 / 110\u00B0",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 66,
+      "GapMeters": 63,
       "MaxGap": 5.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 12
+      "EmptyCells": 2
     },
     {
       "Scenario": "trapezoid, one end at 70\u00B0 / 110\u00B0",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 5.9,
+      "GapMeters": 26.7,
       "MaxGap": 3.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 1
+      "EmptyCells": 7
     },
     {
       "Scenario": "trapezoid, one end at 70\u00B0 / 110\u00B0",
@@ -1111,28 +1111,28 @@
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 201.3,
-      "MaxGap": 4.6,
+      "GapMeters": 189.8,
+      "MaxGap": 5.3,
       "GapsBetweenBuildings": 4,
-      "EmptyCells": 46
+      "EmptyCells": 38
     },
     {
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 69.5,
-      "MaxGap": 4.2,
+      "GapMeters": 89.9,
+      "MaxGap": 3.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 12
+      "EmptyCells": 24
     },
     {
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 36.1,
+      "GapMeters": 58.5,
       "MaxGap": 3.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 3
+      "EmptyCells": 7
     },
     {
       "Scenario": "trapezoid, one end at 110\u00B0 / 70\u00B0",
@@ -1141,34 +1141,34 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 1
+      "EmptyCells": 2
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 353.3,
-      "MaxGap": 12.5,
-      "GapsBetweenBuildings": 23,
-      "EmptyCells": 90
+      "GapMeters": 240.8,
+      "MaxGap": 12.8,
+      "GapsBetweenBuildings": 22,
+      "EmptyCells": 49
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 130,
-      "MaxGap": 4.5,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 17
+      "EmptyCells": 0
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 13,
+      "GapMeters": 9.8,
       "MaxGap": 4,
-      "GapsBetweenBuildings": 1,
-      "EmptyCells": 4
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 2
     },
     {
       "Scenario": "triangle 60\u00B0 / 60\u00B0 / 60\u00B0",
@@ -1183,35 +1183,35 @@
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 235.3,
-      "MaxGap": 8.7,
-      "GapsBetweenBuildings": 22,
-      "EmptyCells": 47
+      "GapMeters": 243.6,
+      "MaxGap": 9.4,
+      "GapsBetweenBuildings": 25,
+      "EmptyCells": 48
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 70.2,
-      "MaxGap": 3.5,
-      "GapsBetweenBuildings": 10,
+      "GapMeters": 26.7,
+      "MaxGap": 3.1,
+      "GapsBetweenBuildings": 3,
       "EmptyCells": 0
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 101.8,
-      "MaxGap": 4.5,
+      "GapMeters": 115.2,
+      "MaxGap": 4.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 6
+      "EmptyCells": 5
     },
     {
       "Scenario": "triangle 45\u00B0 / 75\u00B0 / 60\u00B0",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 36,
-      "MaxGap": 2.9,
+      "GapMeters": 15.5,
+      "MaxGap": 2.7,
       "GapsBetweenBuildings": 12,
       "EmptyCells": 0
     },
@@ -1291,10 +1291,10 @@
       "Scenario": "side curved outwards (sagitta 16 m) ending at a corner",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 981.5,
-      "MaxGap": 9.9,
+      "GapMeters": 1156.8,
+      "MaxGap": 8.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 104
+      "EmptyCells": 144
     },
     {
       "Scenario": "side curved outwards (sagitta 16 m) ending at a corner",
@@ -1417,10 +1417,10 @@
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 98.1,
-      "MaxGap": 2.6,
+      "GapMeters": 211.2,
+      "MaxGap": 4.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0
+      "EmptyCells": 48
     },
     {
       "Scenario": "side curved inwards (sagitta 16 m) ending at a corner",
@@ -1435,10 +1435,10 @@
       "Scenario": "two curved sides in a row (sagitta 8 m) with a corner between them",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 1272.9,
-      "MaxGap": 8.4,
+      "GapMeters": 1406.4,
+      "MaxGap": 8.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 138
+      "EmptyCells": 192
     },
     {
       "Scenario": "two curved sides in a row (sagitta 8 m) with a corner between them",
@@ -1615,28 +1615,28 @@
       "Scenario": "block with a 45\u00B0 and a 135\u00B0 corner (13230, -7079), angled corners placed by hand in the game",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 302.8,
+      "GapMeters": 178.3,
       "MaxGap": 13,
-      "GapsBetweenBuildings": 38,
-      "EmptyCells": 28
+      "GapsBetweenBuildings": 32,
+      "EmptyCells": 6
     },
     {
       "Scenario": "block with a 45\u00B0 and a 135\u00B0 corner (13230, -7079), angled corners placed by hand in the game",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 118.8,
-      "MaxGap": 8,
-      "GapsBetweenBuildings": 1,
-      "EmptyCells": 1
+      "GapMeters": 82.5,
+      "MaxGap": 3.3,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
     },
     {
       "Scenario": "block with a 45\u00B0 and a 135\u00B0 corner (13230, -7079), angled corners placed by hand in the game",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 70.3,
-      "MaxGap": 8,
-      "GapsBetweenBuildings": 1,
-      "EmptyCells": 1
+      "GapMeters": 65.4,
+      "MaxGap": 4.3,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
     },
     {
       "Scenario": "block with a 45\u00B0 and a 135\u00B0 corner (13230, -7079), angled corners placed by hand in the game",
@@ -1651,26 +1651,26 @@
       "Scenario": "block with a 53\u00B0 and a 127\u00B0 corner (13351, -7456), no angled building of that angle",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 811.1,
+      "GapMeters": 709.5,
       "MaxGap": 12.7,
       "GapsBetweenBuildings": 1,
-      "EmptyCells": 109
+      "EmptyCells": 84
     },
     {
       "Scenario": "block with a 53\u00B0 and a 127\u00B0 corner (13351, -7456), no angled building of that angle",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 85.9,
+      "GapMeters": 69.2,
       "MaxGap": 4.7,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 13
+      "EmptyCells": 8
     },
     {
       "Scenario": "block with a 53\u00B0 and a 127\u00B0 corner (13351, -7456), no angled building of that angle",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 68.9,
-      "MaxGap": 3.1,
+      "GapMeters": 51.6,
+      "MaxGap": 5.3,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -1687,19 +1687,19 @@
       "Scenario": "block with a 53\u00B0 and a 127\u00B0 corner (13413, -7458), no angled building of that angle",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 553.8,
-      "MaxGap": 15.1,
-      "GapsBetweenBuildings": 27,
-      "EmptyCells": 57
+      "GapMeters": 523.1,
+      "MaxGap": 10.8,
+      "GapsBetweenBuildings": 26,
+      "EmptyCells": 53
     },
     {
       "Scenario": "block with a 53\u00B0 and a 127\u00B0 corner (13413, -7458), no angled building of that angle",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 45.6,
-      "MaxGap": 5.1,
+      "GapMeters": 53.3,
+      "MaxGap": 7.5,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 4
+      "EmptyCells": 2
     },
     {
       "Scenario": "block with a 53\u00B0 and a 127\u00B0 corner (13413, -7458), no angled building of that angle",
@@ -1723,10 +1723,10 @@
       "Scenario": "angled block (13509, -8156), 67\u00B0, 69\u00B0 and 24\u00B0 corners",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 940,
+      "GapMeters": 1010.6,
       "MaxGap": 8.4,
-      "GapsBetweenBuildings": 96,
-      "EmptyCells": 108
+      "GapsBetweenBuildings": 86,
+      "EmptyCells": 110
     },
     {
       "Scenario": "angled block (13509, -8156), 67\u00B0, 69\u00B0 and 24\u00B0 corners",
@@ -1741,7 +1741,7 @@
       "Scenario": "angled block (13509, -8156), 67\u00B0, 69\u00B0 and 24\u00B0 corners",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 706.3,
+      "GapMeters": 713.7,
       "MaxGap": 7.9,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 72
@@ -1759,17 +1759,17 @@
       "Scenario": "angled block (13648, -8269), 110\u00B0 and 126\u00B0 corners",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 784.9,
+      "GapMeters": 782,
       "MaxGap": 8.2,
-      "GapsBetweenBuildings": 62,
-      "EmptyCells": 171
+      "GapsBetweenBuildings": 61,
+      "EmptyCells": 165
     },
     {
       "Scenario": "angled block (13648, -8269), 110\u00B0 and 126\u00B0 corners",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 28.5,
-      "MaxGap": 3.2,
+      "GapMeters": 27.6,
+      "MaxGap": 3.4,
       "GapsBetweenBuildings": 12,
       "EmptyCells": 0
     },
@@ -1777,8 +1777,8 @@
       "Scenario": "angled block (13648, -8269), 110\u00B0 and 126\u00B0 corners",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 12,
-      "MaxGap": 2.9,
+      "GapMeters": 19.9,
+      "MaxGap": 2.2,
       "GapsBetweenBuildings": 12,
       "EmptyCells": 0
     },
@@ -1786,8 +1786,8 @@
       "Scenario": "angled block (13648, -8269), 110\u00B0 and 126\u00B0 corners",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 36.8,
-      "MaxGap": 3.8,
+      "GapMeters": 5.4,
+      "MaxGap": 1.8,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 3
     },
@@ -1795,16 +1795,16 @@
       "Scenario": "angled block (13718, -8105), 119\u00B0, 106\u00B0, 142\u00B0 and 70\u00B0 corners",
       "Overlap": 0.05,
       "MissedCorners": 48,
-      "GapMeters": 6154.2,
+      "GapMeters": 6029,
       "MaxGap": 122.2,
-      "GapsBetweenBuildings": 113,
-      "EmptyCells": 146
+      "GapsBetweenBuildings": 114,
+      "EmptyCells": 152
     },
     {
       "Scenario": "angled block (13718, -8105), 119\u00B0, 106\u00B0, 142\u00B0 and 70\u00B0 corners",
       "Overlap": 0.5,
       "MissedCorners": 48,
-      "GapMeters": 5564.4,
+      "GapMeters": 5563.6,
       "MaxGap": 122.2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 50
@@ -1813,16 +1813,16 @@
       "Scenario": "angled block (13718, -8105), 119\u00B0, 106\u00B0, 142\u00B0 and 70\u00B0 corners",
       "Overlap": 1,
       "MissedCorners": 48,
-      "GapMeters": 5413.3,
+      "GapMeters": 5422,
       "MaxGap": 122.2,
-      "GapsBetweenBuildings": 10,
+      "GapsBetweenBuildings": 12,
       "EmptyCells": 65
     },
     {
       "Scenario": "angled block (13718, -8105), 119\u00B0, 106\u00B0, 142\u00B0 and 70\u00B0 corners",
       "Overlap": 2,
       "MissedCorners": 48,
-      "GapMeters": 5239.9,
+      "GapMeters": 5248.4,
       "MaxGap": 122.2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 65
@@ -1831,70 +1831,70 @@
       "Scenario": "angled block (13928, -8183), 61\u00B0 and 54\u00B0 corners",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 798.6,
+      "GapMeters": 791.4,
       "MaxGap": 12.2,
-      "GapsBetweenBuildings": 136,
-      "EmptyCells": 160
+      "GapsBetweenBuildings": 107,
+      "EmptyCells": 120
     },
     {
       "Scenario": "angled block (13928, -8183), 61\u00B0 and 54\u00B0 corners",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 287.9,
-      "MaxGap": 8,
+      "GapMeters": 254.6,
+      "MaxGap": 8.7,
       "GapsBetweenBuildings": 2,
-      "EmptyCells": 37
+      "EmptyCells": 22
     },
     {
       "Scenario": "angled block (13928, -8183), 61\u00B0 and 54\u00B0 corners",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 88.3,
-      "MaxGap": 7.1,
-      "GapsBetweenBuildings": 13,
+      "GapMeters": 84.6,
+      "MaxGap": 7,
+      "GapsBetweenBuildings": 11,
       "EmptyCells": 0
     },
     {
       "Scenario": "angled block (13928, -8183), 61\u00B0 and 54\u00B0 corners",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 128.5,
-      "MaxGap": 7.1,
-      "GapsBetweenBuildings": 20,
-      "EmptyCells": 1
+      "GapMeters": 113.8,
+      "MaxGap": 7.8,
+      "GapsBetweenBuildings": 10,
+      "EmptyCells": 0
     },
     {
       "Scenario": "angled block (14009, -8322), 113\u00B0, 111\u00B0 and 134\u00B0 corners, 80 existing",
       "Overlap": 0.05,
       "MissedCorners": 48,
-      "GapMeters": 7342.1,
-      "MaxGap": 112.4,
-      "GapsBetweenBuildings": 58,
-      "EmptyCells": 421
+      "GapMeters": 7344.3,
+      "MaxGap": 112.6,
+      "GapsBetweenBuildings": 59,
+      "EmptyCells": 413
     },
     {
       "Scenario": "angled block (14009, -8322), 113\u00B0, 111\u00B0 and 134\u00B0 corners, 80 existing",
       "Overlap": 0.5,
       "MissedCorners": 48,
-      "GapMeters": 6101.7,
+      "GapMeters": 6102.3,
       "MaxGap": 111.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 234
+      "EmptyCells": 240
     },
     {
       "Scenario": "angled block (14009, -8322), 113\u00B0, 111\u00B0 and 134\u00B0 corners, 80 existing",
       "Overlap": 1,
       "MissedCorners": 48,
-      "GapMeters": 6121,
+      "GapMeters": 6107.5,
       "MaxGap": 111.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 195
+      "EmptyCells": 193
     },
     {
       "Scenario": "angled block (14009, -8322), 113\u00B0, 111\u00B0 and 134\u00B0 corners, 80 existing",
       "Overlap": 2,
       "MissedCorners": 48,
-      "GapMeters": 6097.9,
+      "GapMeters": 6108.1,
       "MaxGap": 111.2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 195
@@ -1903,10 +1903,10 @@
       "Scenario": "angled block (14164, -8507), 108\u00B0, 102\u00B0 and 159\u00B0 corners, 29 existing",
       "Overlap": 0.05,
       "MissedCorners": 48,
-      "GapMeters": 6556.5,
+      "GapMeters": 6662.2,
       "MaxGap": 101.3,
       "GapsBetweenBuildings": 24,
-      "EmptyCells": 48
+      "EmptyCells": 72
     },
     {
       "Scenario": "angled block (14164, -8507), 108\u00B0, 102\u00B0 and 159\u00B0 corners, 29 existing",
@@ -1930,7 +1930,7 @@
       "Scenario": "angled block (14164, -8507), 108\u00B0, 102\u00B0 and 159\u00B0 corners, 29 existing",
       "Overlap": 2,
       "MissedCorners": 48,
-      "GapMeters": 5986.5,
+      "GapMeters": 5991.7,
       "MaxGap": 101.3,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -1939,25 +1939,25 @@
       "Scenario": "angled block (14381, -7720), 112\u00B0 and 68\u00B0 corners, 14 existing",
       "Overlap": 0.05,
       "MissedCorners": 72,
-      "GapMeters": 12644,
-      "MaxGap": 193.8,
-      "GapsBetweenBuildings": 13,
-      "EmptyCells": 90
+      "GapMeters": 12698.5,
+      "MaxGap": 197.9,
+      "GapsBetweenBuildings": 28,
+      "EmptyCells": 111
     },
     {
       "Scenario": "angled block (14381, -7720), 112\u00B0 and 68\u00B0 corners, 14 existing",
       "Overlap": 0.5,
       "MissedCorners": 72,
-      "GapMeters": 12450.3,
+      "GapMeters": 12467,
       "MaxGap": 193.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 48
+      "EmptyCells": 51
     },
     {
       "Scenario": "angled block (14381, -7720), 112\u00B0 and 68\u00B0 corners, 14 existing",
       "Overlap": 1,
       "MissedCorners": 72,
-      "GapMeters": 12447.1,
+      "GapMeters": 12420.8,
       "MaxGap": 193.8,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 48
@@ -2011,25 +2011,25 @@
       "Scenario": "angled block (14642, -8647), 76\u00B0 and 112\u00B0 corners, 8 existing",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 555.2,
+      "GapMeters": 627.1,
       "MaxGap": 9,
       "GapsBetweenBuildings": 27,
-      "EmptyCells": 30
+      "EmptyCells": 21
     },
     {
       "Scenario": "angled block (14642, -8647), 76\u00B0 and 112\u00B0 corners, 8 existing",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 299.3,
+      "GapMeters": 290.3,
       "MaxGap": 7.2,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 18
     },
     {
       "Scenario": "angled block (14642, -8647), 76\u00B0 and 112\u00B0 corners, 8 existing",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 212.3,
+      "GapMeters": 281.9,
       "MaxGap": 8,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -2137,7 +2137,7 @@
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 607,
+      "GapMeters": 624,
       "MaxGap": 6.8,
       "GapsBetweenBuildings": 24,
       "EmptyCells": 72
@@ -2146,7 +2146,7 @@
       "Scenario": "narrow triangle (17334, -10268), 8 existing in the game",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 424.8,
+      "GapMeters": 421.3,
       "MaxGap": 6.8,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 24
@@ -2443,28 +2443,28 @@
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 438.2,
-      "MaxGap": 8,
-      "GapsBetweenBuildings": 9,
-      "EmptyCells": 66
+      "GapMeters": 244.4,
+      "MaxGap": 14.2,
+      "GapsBetweenBuildings": 7,
+      "EmptyCells": 35
     },
     {
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 194.7,
+      "GapMeters": 99.7,
       "MaxGap": 8,
-      "GapsBetweenBuildings": 8,
-      "EmptyCells": 24
+      "GapsBetweenBuildings": 4,
+      "EmptyCells": 8
     },
     {
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 155.8,
+      "GapMeters": 76.4,
       "MaxGap": 8,
-      "GapsBetweenBuildings": 5,
-      "EmptyCells": 23
+      "GapsBetweenBuildings": 4,
+      "EmptyCells": 6
     },
     {
       "Scenario": "triangle (18235, -10153), 8 existing in the game",
@@ -2479,28 +2479,28 @@
       "Scenario": "long block (18633, -11042), 34 existing in the game",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 989.5,
+      "GapMeters": 1015.2,
       "MaxGap": 8.1,
       "GapsBetweenBuildings": 16,
-      "EmptyCells": 160
+      "EmptyCells": 168
     },
     {
       "Scenario": "long block (18633, -11042), 34 existing in the game",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 146.6,
+      "GapMeters": 134.8,
       "MaxGap": 4.4,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 23
+      "EmptyCells": 12
     },
     {
       "Scenario": "long block (18633, -11042), 34 existing in the game",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 232.5,
-      "MaxGap": 11.1,
+      "GapMeters": 151.8,
+      "MaxGap": 5.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 23
+      "EmptyCells": 27
     },
     {
       "Scenario": "long block (18633, -11042), 34 existing in the game",
@@ -2509,23 +2509,23 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 4
+      "EmptyCells": 9
     },
     {
       "Scenario": "block_18681_-11093",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 730.8,
+      "GapMeters": 699.4,
       "MaxGap": 21.3,
-      "GapsBetweenBuildings": 27,
-      "EmptyCells": 96
+      "GapsBetweenBuildings": 20,
+      "EmptyCells": 89
     },
     {
       "Scenario": "block_18681_-11093",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 43.2,
-      "MaxGap": 1.8,
+      "GapMeters": 44,
+      "MaxGap": 2.2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 24
     },
@@ -2533,8 +2533,8 @@
       "Scenario": "block_18681_-11093",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 34.2,
-      "MaxGap": 1.8,
+      "GapMeters": 44,
+      "MaxGap": 2.2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 24
     },
@@ -2542,8 +2542,8 @@
       "Scenario": "block_18681_-11093",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 96.1,
-      "MaxGap": 5.1,
+      "GapMeters": 91.7,
+      "MaxGap": 5.4,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 25
     },
@@ -2551,28 +2551,28 @@
       "Scenario": "block_18707_-11058",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 695.4,
+      "GapMeters": 735.6,
       "MaxGap": 15.6,
       "GapsBetweenBuildings": 3,
-      "EmptyCells": 93
+      "EmptyCells": 108
     },
     {
       "Scenario": "block_18707_-11058",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 225.6,
-      "MaxGap": 4.8,
+      "GapMeters": 273.6,
+      "MaxGap": 6.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 48
     },
     {
       "Scenario": "block_18707_-11058",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 180,
-      "MaxGap": 4.8,
+      "GapMeters": 247.2,
+      "MaxGap": 6.6,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 12
+      "EmptyCells": 36
     },
     {
       "Scenario": "block_18707_-11058",
@@ -2587,9 +2587,9 @@
       "Scenario": "block_18789_-11116",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 261.5,
-      "MaxGap": 4.4,
-      "GapsBetweenBuildings": 48,
+      "GapMeters": 325.7,
+      "MaxGap": 7,
+      "GapsBetweenBuildings": 72,
       "EmptyCells": 72
     },
     {
@@ -2605,8 +2605,8 @@
       "Scenario": "block_18789_-11116",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 101.4,
-      "MaxGap": 4.1,
+      "GapMeters": 3,
+      "MaxGap": 1.5,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -2614,19 +2614,19 @@
       "Scenario": "block_18789_-11116",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 108.9,
-      "MaxGap": 4.1,
+      "GapMeters": 23,
+      "MaxGap": 2.1,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 5
+      "EmptyCells": 11
     },
     {
       "Scenario": "block_18838_-11127",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 926.1,
-      "MaxGap": 26.5,
-      "GapsBetweenBuildings": 7,
-      "EmptyCells": 98
+      "GapMeters": 428.2,
+      "MaxGap": 22.5,
+      "GapsBetweenBuildings": 3,
+      "EmptyCells": 58
     },
     {
       "Scenario": "block_18838_-11127",
@@ -2695,10 +2695,10 @@
       "Scenario": "block_18857_-11060",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 315.8,
-      "MaxGap": 7.7,
-      "GapsBetweenBuildings": 7,
-      "EmptyCells": 43
+      "GapMeters": 341.4,
+      "MaxGap": 14.1,
+      "GapsBetweenBuildings": 2,
+      "EmptyCells": 31
     },
     {
       "Scenario": "block_18857_-11060",
@@ -2731,10 +2731,10 @@
       "Scenario": "block_18912_-11131",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 513.4,
+      "GapMeters": 446,
       "MaxGap": 12,
-      "GapsBetweenBuildings": 21,
-      "EmptyCells": 59
+      "GapsBetweenBuildings": 24,
+      "EmptyCells": 61
     },
     {
       "Scenario": "block_18912_-11131",
@@ -2758,7 +2758,7 @@
       "Scenario": "block_18912_-11131",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 45.1,
+      "GapMeters": 55.9,
       "MaxGap": 4.3,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -2776,10 +2776,10 @@
       "Scenario": "block_18930_-11180",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 87.7,
-      "MaxGap": 3.7,
+      "GapMeters": 117.6,
+      "MaxGap": 4.9,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 0
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18930_-11180",
@@ -2875,25 +2875,25 @@
       "Scenario": "block_18972_-11204",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 487.5,
-      "MaxGap": 9.3,
-      "GapsBetweenBuildings": 24,
-      "EmptyCells": 31
+      "GapMeters": 442.4,
+      "MaxGap": 15.2,
+      "GapsBetweenBuildings": 12,
+      "EmptyCells": 24
     },
     {
       "Scenario": "block_18972_-11204",
       "Overlap": 0.5,
       "MissedCorners": 0,
-      "GapMeters": 321.7,
-      "MaxGap": 8,
-      "GapsBetweenBuildings": 12,
-      "EmptyCells": 12
+      "GapMeters": 295.9,
+      "MaxGap": 14.2,
+      "GapsBetweenBuildings": 4,
+      "EmptyCells": 9
     },
     {
       "Scenario": "block_18972_-11204",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 235.3,
+      "GapMeters": 228.9,
       "MaxGap": 7.4,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -2902,7 +2902,7 @@
       "Scenario": "block_18972_-11204",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 232.3,
+      "GapMeters": 156.4,
       "MaxGap": 7.4,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -3055,25 +3055,25 @@
       "Scenario": "block (19034, -11154), 11 existing in the game",
       "Overlap": 0.05,
       "MissedCorners": 48,
-      "GapMeters": 4162.9,
-      "MaxGap": 40.4,
+      "GapMeters": 4181.8,
+      "MaxGap": 40,
       "GapsBetweenBuildings": 35,
-      "EmptyCells": 172
+      "EmptyCells": 184
     },
     {
       "Scenario": "block (19034, -11154), 11 existing in the game",
       "Overlap": 0.5,
       "MissedCorners": 48,
-      "GapMeters": 3684.7,
+      "GapMeters": 3736.2,
       "MaxGap": 40,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 72
+      "EmptyCells": 96
     },
     {
       "Scenario": "block (19034, -11154), 11 existing in the game",
       "Overlap": 1,
       "MissedCorners": 48,
-      "GapMeters": 3883.8,
+      "GapMeters": 3872.5,
       "MaxGap": 40,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 96
@@ -3082,18 +3082,18 @@
       "Scenario": "block (19034, -11154), 11 existing in the game",
       "Overlap": 2,
       "MissedCorners": 48,
-      "GapMeters": 3550.3,
+      "GapMeters": 3524,
       "MaxGap": 40,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 59
+      "EmptyCells": 61
     },
     {
       "Scenario": "block_19060_-11269",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 367.9,
-      "MaxGap": 18.9,
-      "GapsBetweenBuildings": 12,
+      "GapMeters": 369.4,
+      "MaxGap": 19.4,
+      "GapsBetweenBuildings": 9,
       "EmptyCells": 32
     },
     {
@@ -3109,7 +3109,7 @@
       "Scenario": "block_19060_-11269",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 24,
+      "GapMeters": 65.8,
       "MaxGap": 2.9,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -3118,8 +3118,8 @@
       "Scenario": "block_19060_-11269",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 160.8,
-      "MaxGap": 4.8,
+      "GapMeters": 120.9,
+      "MaxGap": 3.1,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -3361,10 +3361,10 @@
       "Scenario": "block_19176_-11299",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 361,
+      "GapMeters": 354.8,
       "MaxGap": 14.8,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 5
+      "EmptyCells": 0
     },
     {
       "Scenario": "block_19176_-11299",
@@ -3379,9 +3379,9 @@
       "Scenario": "block_19219_-11235",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 255.5,
-      "MaxGap": 9.3,
-      "GapsBetweenBuildings": 31,
+      "GapMeters": 365.3,
+      "MaxGap": 12.2,
+      "GapsBetweenBuildings": 46,
       "EmptyCells": 36
     },
     {
@@ -3397,7 +3397,7 @@
       "Scenario": "block_19219_-11235",
       "Overlap": 1,
       "MissedCorners": 0,
-      "GapMeters": 127.2,
+      "GapMeters": 131.8,
       "MaxGap": 5.2,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 24
@@ -3406,7 +3406,7 @@
       "Scenario": "block_19219_-11235",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 10.8,
+      "GapMeters": 47.6,
       "MaxGap": 2.7,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -3487,10 +3487,10 @@
       "Scenario": "Cobblestone, long curve and short street",
       "Overlap": 0.05,
       "MissedCorners": 24,
-      "GapMeters": 1620.1,
+      "GapMeters": 1456.9,
       "MaxGap": 13.6,
       "GapsBetweenBuildings": 9,
-      "EmptyCells": 228
+      "EmptyCells": 204
     },
     {
       "Scenario": "Cobblestone, long curve and short street",
@@ -3517,16 +3517,16 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 2
+      "EmptyCells": 0
     },
     {
       "Scenario": "Prospect, tight curve",
       "Overlap": 0.05,
       "MissedCorners": 0,
-      "GapMeters": 2720.8,
+      "GapMeters": 2727.6,
       "MaxGap": 8.1,
       "GapsBetweenBuildings": 47,
-      "EmptyCells": 335
+      "EmptyCells": 339
     },
     {
       "Scenario": "Prospect, tight curve",

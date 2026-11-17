@@ -10,7 +10,9 @@ namespace BuildingCollections.Core
     {
         public const double AngleTolerance = 4;
         public const double MaxMismatch = 10;
-        public const double Overhang = 2.0;
+        public const double Overhang = 0;
+        public const double SetbackSpread = 4;
+        public const double SpreadStep = 1;
         const double LotSlack = 0.3;
         const double CellSlack = 0.5;
         const double DirectionReach = 16;
@@ -19,6 +21,7 @@ namespace BuildingCollections.Core
         const double SetbackStep = 0.5;
         const double CloseEnough = 4;
         const double WingReach = 24;
+        const double CurveReach = 48;
 
         readonly IReadOnlyList<List<Pt>> sides;
         readonly IReadOnlyList<bool> frontage;
@@ -28,6 +31,8 @@ namespace BuildingCollections.Core
         readonly Random rng;
 
         public List<PlannedLot> Placed { get; } = new List<PlannedLot>();
+
+        public List<IReadOnlyList<PlannedLot>> Choices { get; } = new List<IReadOnlyList<PlannedLot>>();
 
         public List<string> Log { get; } = new List<string>();
 
@@ -76,6 +81,12 @@ namespace BuildingCollections.Core
                     continue;
                 }
 
+                if (Curved(Reversed(arriving)) || Curved(leaving))
+                {
+                    Log.Add(string.Format(CultureInfo.InvariantCulture, "  angled corner at ({0:F1},{1:F1}), {2:F0}°: one of its sides is curved; left to the regular corner buildings.", corner.X, corner.Y, interior));
+                    continue;
+                }
+
                 var near = angled.Where(b => Mismatch(b, interior) <= MaxMismatch).ToList();
                 if (near.Count == 0)
                 {
@@ -99,10 +110,12 @@ namespace BuildingCollections.Core
                 double best = closer.Min(o => o.fit.setback);
                 var close = closer.Where(o => o.fit.setback <= best + CloseEnough).ToList();
                 var pick = close[rng.Next(close.Count)];
+                var choice = Alternatives(pick.fit.lot.Building, corner, arriving, leaving, pick.fit.setback, pick.fit.lot);
                 Placed.Add(pick.fit.lot);
-                taken.AddRange(pick.fit.lot.Shapes());
-                Log.Add(string.Format(CultureInfo.InvariantCulture, "  angled corner at ({0:F1},{1:F1}), {2:F0}°: {3} ({4}°, {5:F0}° off), set back {6:F1} m from the corner; {7} of {8} angled buildings fit.",
-                    corner.X, corner.Y, interior, pick.fit.lot.Building.PrefabName, pick.fit.lot.Building.CornerAngle, pick.mismatch, pick.fit.setback, options.Count, angled.Count));
+                Choices.Add(choice);
+                taken.AddRange(choice.SelectMany(l => l.Shapes()));
+                Log.Add(string.Format(CultureInfo.InvariantCulture, "  angled corner at ({0:F1},{1:F1}), {2:F0}°: {3} ({4}°, {5:F0}° off), set back {6:F1} m from the corner, {9:F1} m over the sidewalk; {7} of {8} angled buildings fit.",
+                    corner.X, corner.Y, interior, pick.fit.lot.Building.PrefabName, pick.fit.lot.Building.CornerAngle, pick.mismatch, pick.fit.setback, options.Count, angled.Count, OverSidewalk(pick.fit.lot)));
             }
         }
 
@@ -112,44 +125,102 @@ namespace BuildingCollections.Core
 
         (PlannedLot lot, double setback) Fit(BuildingInfo building, Pt corner, List<Pt> arriving, List<Pt> leaving)
         {
-            double half = building.LotWidth * CellFrame.Size / 2;
-            double beyondPlus = building.Footprint.Max(r => r.MaxX) - half, beyondMinus = -half - building.Footprint.Min(r => r.MinX);
-            bool wingAtPlusX = beyondPlus >= beyondMinus;
-            double maxSetback = Math.Max(beyondPlus, beyondMinus) + SetbackSlack;
-            var front = wingAtPlusX ? leaving : Reversed(arriving);
-            var other = wingAtPlusX ? Reversed(arriving) : leaving;
-            double wingReach = Math.Min(WingReach, Length(other));
-            if (!Straight(other, corner, Unit(PointAlong(other, wingReach) - corner), wingReach))
+            var placing = Placing(building, corner, arriving, leaving);
+            if (placing == null)
             {
                 return (null, 0);
             }
 
-            double width = building.LotWidth * CellFrame.Size;
-            for (double s = 0; s <= maxSetback + 1e-6; s += SetbackStep)
+            for (double s = 0; s <= placing.MaxSetback + 1e-6; s += SetbackStep)
             {
-                double reach = s + width;
-                if (reach > Length(front) + 1e-6)
+                var lot = placing.At(s);
+                if (lot == null && placing.Beyond(s))
                 {
                     break;
                 }
 
-                var along = Unit(PointAlong(front, reach) - corner);
-                if (!Straight(front, corner, along, reach))
-                {
-                    continue;
-                }
-
-                var inward = wingAtPlusX ? new Pt(-along.Y, along.X) : new Pt(along.Y, -along.X);
-                var axisX = wingAtPlusX ? along * -1 : along;
-                var center = corner + along * (s + width / 2) + inward * (building.LotDepth * CellFrame.Size / 2);
-                var lot = Lot(building, center, axisX, inward);
-                if (Fits(lot))
+                if (lot != null && Fits(lot))
                 {
                     return (lot, s);
                 }
             }
 
             return (null, 0);
+        }
+
+        List<PlannedLot> Alternatives(BuildingInfo building, Pt corner, List<Pt> arriving, List<Pt> leaving, double first, PlannedLot firstLot)
+        {
+            var found = new List<PlannedLot> { firstLot };
+            var placing = Placing(building, corner, arriving, leaving);
+            for (double s = first + SpreadStep; s <= first + SetbackSpread + 1e-6 && !placing.Beyond(s); s += SpreadStep)
+            {
+                var lot = placing.At(s);
+                if (lot != null && Fits(lot))
+                {
+                    found.Add(lot);
+                }
+            }
+
+            return found;
+        }
+
+        Placement Placing(BuildingInfo building, Pt corner, List<Pt> arriving, List<Pt> leaving)
+        {
+            double half = building.LotWidth * CellFrame.Size / 2;
+            double beyondPlus = building.Footprint.Max(r => r.MaxX) - half, beyondMinus = -half - building.Footprint.Min(r => r.MinX);
+            bool wingAtPlusX = beyondPlus >= beyondMinus;
+            var front = wingAtPlusX ? leaving : Reversed(arriving);
+            var other = wingAtPlusX ? Reversed(arriving) : leaving;
+            double wingReach = Math.Min(WingReach, Length(other));
+            if (!Straight(other, corner, Unit(PointAlong(other, wingReach) - corner), wingReach))
+            {
+                return null;
+            }
+
+            return new Placement(building, corner, front, wingAtPlusX, Math.Max(beyondPlus, beyondMinus) + SetbackSlack);
+        }
+
+        sealed class Placement
+        {
+            readonly BuildingInfo building;
+            readonly Pt corner;
+            readonly List<Pt> front;
+            readonly bool wingAtPlusX;
+            readonly double width;
+
+            public double MaxSetback { get; }
+
+            public Placement(BuildingInfo building, Pt corner, List<Pt> front, bool wingAtPlusX, double maxSetback)
+            {
+                this.building = building;
+                this.corner = corner;
+                this.front = front;
+                this.wingAtPlusX = wingAtPlusX;
+                width = building.LotWidth * CellFrame.Size;
+                MaxSetback = maxSetback;
+            }
+
+            public bool Beyond(double setback) => setback + width > Length(front) + 1e-6;
+
+            public PlannedLot At(double setback)
+            {
+                double reach = setback + width;
+                if (Beyond(setback))
+                {
+                    return null;
+                }
+
+                var along = Unit(PointAlong(front, reach) - corner);
+                if (!Straight(front, corner, along, reach))
+                {
+                    return null;
+                }
+
+                var inward = wingAtPlusX ? new Pt(-along.Y, along.X) : new Pt(along.Y, -along.X);
+                var axisX = wingAtPlusX ? along * -1 : along;
+                var center = corner + along * (setback + width / 2) + inward * (building.LotDepth * CellFrame.Size / 2);
+                return Lot(building, center, axisX, inward);
+            }
         }
 
         static PlannedLot Lot(BuildingInfo building, Pt center, Pt axisX, Pt inward)
@@ -184,6 +255,8 @@ namespace BuildingCollections.Core
             var shapes = cells.Append(lotQuad).ToList();
             return !taken.Any(t => shapes.Any(s => Quad.Distance(s, t) <= 0));
         }
+
+        double OverSidewalk(PlannedLot lot) => lot.Wings(CellSlack).SelectMany(c => c.P).Select(Outside).DefaultIfEmpty(0).Max();
 
         double Outside(Pt p)
         {
@@ -229,6 +302,13 @@ namespace BuildingCollections.Core
             }
 
             return true;
+        }
+
+        static bool Curved(List<Pt> fromCorner)
+        {
+            double reach = Math.Min(CurveReach, Length(fromCorner));
+            var corner = fromCorner[0];
+            return !Straight(fromCorner, corner, Unit(PointAlong(fromCorner, reach) - corner), reach);
         }
 
         static List<Pt> Reversed(List<Pt> side)

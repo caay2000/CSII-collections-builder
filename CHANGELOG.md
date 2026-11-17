@@ -4,6 +4,20 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.15
+- Los esquineros en ángulo ya no salen sobre la acera: `AngledCornerPlacer.Overhang` pasa de 2 m a 0. Antes el retiro
+  se buscaba de 0,5 en 0,5 m y se quedaba el primero que cabía, que siempre era el que rozaba el límite: los de 45° y
+  63° volaban 1,6–2 m incluso con el ángulo exacto.
+- Sin vuelo, el esquinero queda unos metros más lejos de la esquina y los edificios de la cuadrícula ya no llegan a
+  tocarlo. Para compensarlo, cada esquina ofrece hasta 5 retiros (el primero que cabe y de metro en metro hasta 4 m
+  más) y `AngledProbe` los prueba todos y se queda con el que deja menos hueco entre edificios. En el simulador
+  (8 semillas) se conservan 1124 esquineros frente a 1007 con vuelo 2 m y 793 con vuelo 0 sin alternativas.
+- Las esquinas en las que uno de los lados es curvo en los primeros 48 m ya no reciben esquinero en ángulo; se quedan
+  con el esquinero normal. El log lo indica con `one of its sides is curved`.
+- Simulador: la referencia de `regress` con esquineros en ángulo se actualiza. Algunas manzanas cubren menos acera que
+  con el vuelo de 2 m (diagonal de 40°, paralelogramo 70/110, 18707, 18930, 19060, 19219) y en 18235, 18857 y 18972
+  el hueco más largo pasa de 8 a 14 m; las curvas quedan como sin esquineros en ángulo.
+
 ## 0.3.14
 - Los esquineros en ángulo se usan también cuando la esquina no coincide exactamente con su ángulo: si ninguno está a
   ±4°, `AngledCornerPlacer` prueba los de ángulo más cercano hasta 10° de diferencia (por ejemplo 45° en una esquina de
