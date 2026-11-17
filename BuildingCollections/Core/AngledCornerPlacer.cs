@@ -152,7 +152,7 @@ namespace BuildingCollections.Core
         {
             var found = new List<PlannedLot> { firstLot };
             var placing = Placing(building, corner, arriving, leaving);
-            for (double s = first + SpreadStep; s <= first + SetbackSpread + 1e-6 && !placing.Beyond(s); s += SpreadStep)
+            for (double s = first + SpreadStep; s <= Math.Min(first + SetbackSpread, placing.MaxSetback) + 1e-6 && !placing.Beyond(s); s += SpreadStep)
             {
                 var lot = placing.At(s);
                 if (lot != null && Fits(lot))
