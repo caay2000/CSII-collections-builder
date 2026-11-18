@@ -61,19 +61,26 @@ namespace BuildingCollections.Core
             var outward = Owner.Frame.AxisY * -1;
             foreach (var r in Building.Footprint)
             {
-                double x0 = r.MinX + inset, x1 = r.MaxX - inset, z0 = r.MinZ + inset, z1 = r.MaxZ - inset;
-                if (x1 <= x0 || z1 <= z0)
-                {
-                    x0 = x1 = (r.MinX + r.MaxX) / 2;
-                    z0 = z1 = (r.MinZ + r.MaxZ) / 2;
-                }
+                var (x0, x1) = Shrink(r.MinX, r.MaxX, inset);
+                var (z0, z1) = Shrink(r.MinZ, r.MaxZ, inset);
 
                 Pt At(double lx, double lz) => center + x * lx + outward * lz;
                 yield return new Quad(At(x0, z0), At(x1, z0), At(x1, z1), At(x0, z1));
             }
         }
 
-        public IEnumerable<Quad> Shapes() => new[] { Footprint(0) }.Concat(Wings());
+        static (double low, double high) Shrink(double low, double high, double inset)
+        {
+            if (high - low > 2 * inset)
+            {
+                return (low + inset, high - inset);
+            }
+
+            double middle = (low + high) / 2;
+            return (middle, middle);
+        }
+
+        public IEnumerable<Quad> Shapes() =>new[] { Footprint(0) }.Concat(Wings());
     }
 
     public readonly struct LotBox

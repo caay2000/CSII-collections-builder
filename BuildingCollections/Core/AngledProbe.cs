@@ -41,14 +41,21 @@ namespace BuildingCollections.Core
             var kept = new List<PlannedLot>();
             foreach (var options in choices)
             {
-                var trials = options.Select((lot, i) =>
+                var trials = new List<(List<PlannedLot> lots, PreviewResult result, Score score, int option)>();
+                foreach (var lot in options)
                 {
                     var lots = kept.Append(lot).ToList();
                     var result = plan(lots);
-                    return (lots, result, score: Score.Of(result, request, strips), option: i + 1);
-                }).ToList();
+                    var score = Score.Of(result, request, strips);
+                    trials.Add((lots, result, score, trials.Count + 1));
+                    if (score.Perfect && Acceptable(score, bestScore, baseline))
+                    {
+                        break;
+                    }
+                }
+
                 var pick = trials
-                    .Where(t => t.score.NoWorseThan(bestScore) && t.score.NoWorseThan(baseline))
+                    .Where(t => Acceptable(t.score, bestScore, baseline))
                     .OrderBy(t => t.score.GapMeters).ThenBy(t => t.score.Gaps).ThenBy(t => t.score.EmptyCells).ThenBy(t => t.option)
                     .FirstOrDefault();
                 if (pick.lots == null)
@@ -66,6 +73,8 @@ namespace BuildingCollections.Core
             return best;
         }
 
+        static bool Acceptable(Score score, Score best, Score baseline) => score.NoWorseThan(best) && score.NoWorseThan(baseline);
+
         readonly struct Score
         {
             readonly double gapMeters;
@@ -77,6 +86,8 @@ namespace BuildingCollections.Core
             public int Gaps => gaps;
 
             public int EmptyCells => emptyCells;
+
+            public bool Perfect => gapMeters <= 0 && gaps == 0 && emptyCells == 0;
 
             Score(double gapMeters, int gaps, int emptyCells)
             {

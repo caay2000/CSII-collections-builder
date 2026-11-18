@@ -38,6 +38,7 @@ namespace BuildingCollections.Simulator
             ["block_13718_-8105"] = "angled block (13718, -8105), 119°, 106°, 142° and 70° corners",
             ["block_13648_-8269"] = "angled block (13648, -8269), 110° and 126° corners",
             ["block_14009_-8322"] = "angled block (14009, -8322), 113°, 111° and 134° corners, 80 existing",
+            ["block_13109_-8496"] = "Belmont and Oak Lane (13109, -8496), 53° and 127° corners, 135° building over the sidewalk in the game",
             ["block_13928_-8183"] = "angled block (13928, -8183), 61° and 54° corners",
             ["block_14164_-8507"] = "angled block (14164, -8507), 108°, 102° and 159° corners, 29 existing",
             ["block_14381_-7720"] = "angled block (14381, -7720), 112° and 68° corners, 14 existing",

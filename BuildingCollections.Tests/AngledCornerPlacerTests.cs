@@ -58,6 +58,22 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void An_obtuse_corner_a_few_degrees_off_keeps_the_ends_of_every_wing_row_off_the_sidewalk()
+        {
+            var sides = Parallelogram(53);
+            var outline = VirtualLots.Outline(sides);
+
+            var placer = Place(sides, Simulation.AngledCorners);
+
+            var obtuse = placer.Placed.Where(l => l.Building.CornerAngle > 90).ToList();
+            Assert.NotEmpty(obtuse);
+            foreach (var lot in obtuse)
+            {
+                Assert.All(lot.Wings().SelectMany(q => q.P), p => Assert.True(Inside(outline, p, 0.75)));
+            }
+        }
+
+        [Fact]
         public void A_corner_far_from_every_building_angle_gets_none()
         {
             var placer = Place(Parallelogram(75), Simulation.AngledCorners);

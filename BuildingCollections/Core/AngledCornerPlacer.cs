@@ -95,8 +95,9 @@ namespace BuildingCollections.Core
                     continue;
                 }
 
+                var setbacks = new Dictionary<string, double?>();
                 var options = near
-                    .Select(b => (fit: Fit(b, corner, arriving, leaving), mismatch: Mismatch(b, interior)))
+                    .Select(b => (fit: SameShapeFit(setbacks, b, corner, arriving, leaving), mismatch: Mismatch(b, interior)))
                     .Where(o => o.fit.lot != null)
                     .ToList();
                 if (options.Count == 0)
@@ -122,6 +123,22 @@ namespace BuildingCollections.Core
         static double Mismatch(BuildingInfo building, double interior) => Math.Abs(building.CornerAngle - interior);
 
         bool IsStreet(int side) => frontage == null || side >= frontage.Count || frontage[side];
+
+        (PlannedLot lot, double setback) SameShapeFit(Dictionary<string, double?> setbacks, BuildingInfo building, Pt corner, List<Pt> arriving, List<Pt> leaving)
+        {
+            string shape = ShapeKey(building);
+            if (setbacks.TryGetValue(shape, out var known))
+            {
+                return known.HasValue ? (Placing(building, corner, arriving, leaving).At(known.Value), known.Value) : (null, 0);
+            }
+
+            var fit = Fit(building, corner, arriving, leaving);
+            setbacks[shape] = fit.lot != null ? fit.setback : (double?)null;
+            return fit;
+        }
+
+        static string ShapeKey(BuildingInfo building) => string.Format(CultureInfo.InvariantCulture, "{0}x{1}:{2}", building.LotWidth, building.LotDepth,
+            string.Join(";", building.Footprint.Select(r => string.Format(CultureInfo.InvariantCulture, "{0},{1},{2},{3}", r.MinX, r.MinZ, r.MaxX, r.MaxZ))));
 
         (PlannedLot lot, double setback) Fit(BuildingInfo building, Pt corner, List<Pt> arriving, List<Pt> leaving)
         {
@@ -253,7 +270,8 @@ namespace BuildingCollections.Core
             }
 
             var shapes = cells.Append(lotQuad).ToList();
-            return !taken.Any(t => shapes.Any(s => Quad.Distance(s, t) <= 0));
+            var box = Bounds.Of(shapes.SelectMany(s => s.P));
+            return !taken.Where(box.Overlaps).Any(t => shapes.Any(s => Quad.Distance(s, t) <= 0));
         }
 
         double OverSidewalk(PlannedLot lot) => lot.Wings(CellSlack).SelectMany(c => c.P).Select(Outside).DefaultIfEmpty(0).Max();

@@ -4,6 +4,20 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.16
+- Los esquineros en ángulo de 0.3.15 seguían saliendo sobre la acera en el juego (un 135° en una esquina de 127° de
+  Belmont Lane sobresalía unos 6 m) aunque el log decía `0.0 m over the sidewalk`. La huella de la malla se guarda en
+  filas de 1 m y, al encogerlas 0,5 m por cada lado para dar margen, cada fila se quedaba en su punto central: nunca se
+  miraban los extremos. Ahora `PlannedLot.Wings` encoge cada eje por separado y solo si cabe, así que los extremos de
+  cada fila cuentan.
+- Reshuffle más rápido con esquineros en ángulo: el encaje se calcula una vez por forma (los 38 esquineros tienen 20
+  formas distintas), las colisiones descartan antes los edificios lejanos y `AngledProbe` deja de probar retiros en
+  cuanto uno no deja ningún hueco. El resultado es idéntico (misma regresión); en el simulador la búsqueda de una
+  manzana con dos esquinas pasa de 75–110 ms a 35–47 ms.
+- Simulador: nueva manzana `block_13109_-8496` (Belmont y Oak Lane). La referencia de `regress` con esquineros en
+  ángulo se actualiza: los casos que empeoran (diagonal de 40°, curva R 60 m, 18235, 19060, 19176) se quedan entre lo
+  que daban con esquineros y lo que dan sin ellos, porque se descartan esquineros que antes sobresalían sin verse.
+
 ## 0.3.15
 - Los esquineros en ángulo ya no salen sobre la acera: `AngledCornerPlacer.Overhang` pasa de 2 m a 0. Antes el retiro
   se buscaba de 0,5 en 0,5 m y se quedaba el primero que cabía, que siempre era el que rozaba el límite: los de 45° y
