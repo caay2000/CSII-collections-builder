@@ -80,7 +80,7 @@ namespace BuildingCollections.Core
             return (middle, middle);
         }
 
-        public IEnumerable<Quad> Shapes() =>new[] { Footprint(0) }.Concat(Wings());
+        public IEnumerable<Quad> Shapes() => new[] { Footprint(0) }.Concat(Wings());
     }
 
     public readonly struct LotBox
