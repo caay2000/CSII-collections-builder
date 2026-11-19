@@ -4,6 +4,20 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.16
+- El constructor deja de colocar esquineros en ángulo (se quita lo de 0.3.13–0.3.15): en el juego las esquinas casi
+  nunca coinciden con 45°/63°/117°/135°, así que salían torcidos o muy retirados, y la vista previa pasaba de ~20 ms a
+  ~420 ms de mediana (hasta 1,9 s) porque cada esquina planificaba la manzana entera hasta 6 veces para quedarse, al
+  final, con 1 de cada 3. Además, en 0.3.15 la comprobación de la acera solo miraba el centro de cada fila de la huella
+  y un 135° en una esquina de 127° sobresalía ~6 m.
+- Se quitan `AngledCornerPlacer`, `AngledProbe`, las alas de `PlannedLot` (`Wings`, `Shapes`), `BuildingInfo.Footprint`
+  y los lados de la manzana en `PreviewRequest`. Los esquineros en ángulo vuelven a quedar fuera de la vista previa
+  (el log lo dice: `left out (the builder does not place them; place them by hand)`), como en 0.3.10.
+- Se mantiene lo de 0.3.10 y 0.3.12: los esquineros en ángulo ya colocados a mano ocupan su solar y la huella real de
+  su malla, y la vista previa no pone edificios encima.
+- Simulador: fuera el catálogo `angled-corners.txt`, `SIM_ANGLED` y la segunda pasada de `regress` con su referencia.
+  Nueva manzana del juego `block_13109_-8496` (Belmont y Oak Lane). La referencia sin esquineros no cambia.
+
 ## 0.3.15
 - Los esquineros en ángulo ya no salen sobre la acera: `AngledCornerPlacer.Overhang` pasa de 2 m a 0. Antes el retiro
   se buscaba de 0,5 en 0,5 m y se quedaba el primero que cabía, que siempre era el que rozaba el límite: los de 45° y

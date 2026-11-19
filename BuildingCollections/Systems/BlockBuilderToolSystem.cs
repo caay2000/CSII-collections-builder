@@ -46,7 +46,6 @@ namespace BuildingCollections.Systems
             public int2 Max => new int2(Lot.MaxX, Lot.MaxY);
             public float Shift => Lot.Shift;
             public bool IsDecor;
-            public bool IsAngled;
             public byte Age = (byte)Game.Tools.AgeMask.Mature;
             public float3 Pos;
             public quaternion Rot;
@@ -80,8 +79,6 @@ namespace BuildingCollections.Systems
         const double HugTolerance = 1.5;
 
         List<Pt> areaOutline;
-        List<List<Pt>> areaSides;
-        List<bool> areaFrontage;
 
         List<List<Pt>> decorAreas = new List<List<Pt>>();
         List<Pt> decorClip;

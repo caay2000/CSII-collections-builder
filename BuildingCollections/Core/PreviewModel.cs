@@ -49,31 +49,6 @@ namespace BuildingCollections.Core
             }
         }
 
-        public IEnumerable<Quad> Wings(double inset = 0)
-        {
-            if (Building?.Footprint == null)
-            {
-                yield break;
-            }
-
-            var center = Center;
-            var x = Owner.Frame.AxisX;
-            var outward = Owner.Frame.AxisY * -1;
-            foreach (var r in Building.Footprint)
-            {
-                double x0 = r.MinX + inset, x1 = r.MaxX - inset, z0 = r.MinZ + inset, z1 = r.MaxZ - inset;
-                if (x1 <= x0 || z1 <= z0)
-                {
-                    x0 = x1 = (r.MinX + r.MaxX) / 2;
-                    z0 = z1 = (r.MinZ + r.MaxZ) / 2;
-                }
-
-                Pt At(double lx, double lz) => center + x * lx + outward * lz;
-                yield return new Quad(At(x0, z0), At(x1, z0), At(x1, z1), At(x0, z1));
-            }
-        }
-
-        public IEnumerable<Quad> Shapes() => new[] { Footprint(0) }.Concat(Wings());
     }
 
     public readonly struct LotBox
@@ -99,8 +74,6 @@ namespace BuildingCollections.Core
         public IReadOnlyList<PlanBlock> Blocks = new List<PlanBlock>();
         public IReadOnlyList<Quad> Existing = new List<Quad>();
         public IReadOnlyList<Pt> Outline;
-        public IReadOnlyList<List<Pt>> Sides;
-        public IReadOnlyList<bool> Frontage;
         public IReadOnlyList<BuildingInfo> Plain = new List<BuildingInfo>();
         public IReadOnlyList<BuildingInfo> Corners = new List<BuildingInfo>();
         public float Overlap;
