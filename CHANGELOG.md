@@ -16,7 +16,7 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
 - Se mantiene lo de 0.3.10 y 0.3.12: los esquineros en ángulo ya colocados a mano ocupan su solar y la huella real de
   su malla, y la vista previa no pone edificios encima.
 - Simulador: fuera el catálogo `angled-corners.txt`, `SIM_ANGLED` y la segunda pasada de `regress` con su referencia.
-  Nueva manzana del juego `block_13109_-8496` (Belmont y Oak Lane). La referencia sin esquineros no cambia.
+  Nueva manzana del juego `block_13109_-8496` (Belmont y Oak Lane). Las entradas existentes de la referencia no cambian; solo se añade la nueva manzana.
 
 ## 0.3.15
 - Los esquineros en ángulo ya no salen sobre la acera: `AngledCornerPlacer.Overhang` pasa de 2 m a 0. Antes el retiro
