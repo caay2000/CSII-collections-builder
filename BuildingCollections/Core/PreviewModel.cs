@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace BuildingCollections.Core
 {
@@ -48,7 +47,6 @@ namespace BuildingCollections.Core
                 return (q.P[0] + q.P[1] + q.P[2] + q.P[3]) * 0.25;
             }
         }
-
     }
 
     public readonly struct LotBox
