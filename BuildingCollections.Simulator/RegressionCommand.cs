@@ -18,20 +18,8 @@ namespace BuildingCollections.Simulator
 
             Simulation.Plain = Simulation.Catalogs[Simulation.DefaultCatalog];
             var seeds = Regression.Seeds(firstSeed);
-            int worst = 0;
-            foreach (bool angled in new[] { false, true })
-            {
-                Simulation.WithAngled = angled;
-                Console.WriteLine(angled ? "== With angled corner buildings" : "== Without angled corner buildings");
-                worst = Math.Max(worst, RunPass(args, Simulation.RegressionCatalog, seeds, firstSeed, BaselineStore.PathFor(angled)));
-            }
-
-            return worst;
-        }
-
-        static int RunPass(string[] args, string catalog, int[] seeds, int firstSeed, string path)
-        {
-            var actual = Regression.Measure(Scenarios.All(), catalog, seeds);
+            var actual = Regression.Measure(Scenarios.All(), Simulation.DefaultCatalog, seeds);
+            string path = BaselineStore.DefaultPath;
             if (args.Contains("--update"))
             {
                 BaselineStore.Save(actual, path);
@@ -46,7 +34,7 @@ namespace BuildingCollections.Simulator
             }
 
             var expected = BaselineStore.Load(path);
-            var mismatch = firstSeed == 1 ? BaselineStore.Mismatch(expected, catalog, seeds) : null;
+            var mismatch = firstSeed == 1 ? BaselineStore.Mismatch(expected, Simulation.DefaultCatalog, seeds) : null;
             if (mismatch != null)
             {
                 Console.Error.WriteLine($"Cannot compare: {mismatch}. Run 'regress --update'.");

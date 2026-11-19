@@ -172,7 +172,6 @@ namespace BuildingCollections.Simulator
             ["cell off"] = "fill:none;stroke:#ddd;stroke-width:0.35",
             ["lot"] = "fill:#6a9fd8;fill-opacity:0.6;stroke:#36c;stroke-width:0.4",
             ["lot corner"] = "fill:#e8a33a;fill-opacity:0.7;stroke:#b70;stroke-width:0.4",
-            ["lot corner wing"] = "fill:#e8a33a;fill-opacity:0.45;stroke:none",
             ["face"] = "fill:none;stroke:#222;stroke-width:1.3",
             ["face corner"] = "fill:none;stroke:#222;stroke-width:1.8",
             ["gap"] = "stroke:#d22;stroke-width:2.2",
@@ -212,11 +211,6 @@ namespace BuildingCollections.Simulator
             foreach (var lot in r.Result.Lots)
             {
                 var q = lot.Footprint(0);
-                foreach (var wing in lot.Wings())
-                {
-                    sb.Append($"<polygon class=\"lot corner wing\" points=\"{Points(wing.P)}\"/>");
-                }
-
                 sb.Append($"<polygon class=\"{(lot.Corner ? "lot corner" : "lot")}\" points=\"{Points(q.P)}\"><title>{Enc(lot.Building.PrefabName)}{(lot.Shift != 0 ? $" · corrido {lot.Shift:0.00} m" : string.Empty)}</title></polygon>");
                 sb.Append($"<polyline class=\"{(lot.Corner ? "face corner" : "face")}\" points=\"{Points(Facade(lot, q))}\"/>");
             }
@@ -341,7 +335,6 @@ svg { width: 100%; height: auto; max-height: 420px; display: block; }
 .cell.off { stroke-dasharray: 1 1; opacity: 0.6; }
 .lot { fill: var(--lot); fill-opacity: 0.6; stroke: var(--lot); stroke-width: 0.4; }
 .lot.corner { fill: var(--corner); stroke: var(--corner); }
-.lot.wing { fill-opacity: 0.45; stroke: none; }
 .gap { stroke: var(--gap); stroke-width: 2.2; stroke-linecap: round; }
 .gap.sliver { stroke: var(--warn); stroke-width: 1.2; }
 .sw.sliversw { height: 2px; background: var(--warn); }

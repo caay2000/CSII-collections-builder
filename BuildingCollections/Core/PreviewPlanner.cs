@@ -20,17 +20,15 @@ namespace BuildingCollections.Core
         readonly IReadOnlyList<BuildingInfo> firstCorners;
         readonly IReadOnlyList<BuildingInfo> corners;
         readonly IReadOnlyList<Quad> existing;
-        readonly List<PlannedLot> angled;
 
-        PreviewPlanner(PreviewRequest request, IReadOnlyList<PlannedLot> angledLots)
+        PreviewPlanner(PreviewRequest request)
         {
             this.request = request;
             corners = request.Corners.Where(c => !c.IsAngledCorner).ToList();
             mix = MixSplit.Of(request.Plain.Concat(corners));
             firstPlain = Own(request.Plain);
             firstCorners = mix == null ? corners : MixSplit.InGroup(corners, mix.First);
-            angled = angledLots.ToList();
-            existing = request.Existing.Concat(angled.SelectMany(l => l.Shapes())).ToList();
+            existing = request.Existing.ToList();
         }
 
         IReadOnlyList<BuildingInfo> Own(IReadOnlyList<BuildingInfo> plain)
@@ -39,7 +37,7 @@ namespace BuildingCollections.Core
             return own.Count > 0 ? own : plain;
         }
 
-        public static PreviewResult Plan(PreviewRequest request) => AngledProbe.Plan(request, lots => new PreviewPlanner(request, lots).Run());
+        public static PreviewResult Plan(PreviewRequest request) => new PreviewPlanner(request).Run();
 
         PreviewResult Run()
         {
@@ -66,7 +64,6 @@ namespace BuildingCollections.Core
             Lap("frontage");
             Diagnose();
             Lap("diagnostics");
-            result.Lots.AddRange(angled);
             return result;
         }
 

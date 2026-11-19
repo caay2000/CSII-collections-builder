@@ -25,14 +25,6 @@ namespace BuildingCollections.Core
             return allowed > 0 && length <= allowed;
         }
 
-        public static double GapsBetweenBuildings(IReadOnlyList<LotStrip> strips, IReadOnlyList<PlannedLot> lots, IReadOnlyList<List<Pt>> sides)
-        {
-            var corners = sides != null && sides.Count >= 3 ? CornerCheck.Evaluate(sides, lots) : new List<CornerResult>();
-            return SidewalkGaps.Find(strips, lots)
-                .Where(g => g.Length > EndGapCloser.MaxSpreadSliver && !IsWedge(g.From, g.To, g.Length, corners))
-                .Sum(g => g.Length);
-        }
-
         static double Dist(Pt a, Pt b) => Math.Sqrt(Pt.Dot(a - b, a - b));
     }
 }
