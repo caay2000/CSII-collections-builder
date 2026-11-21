@@ -17,6 +17,8 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   su malla, y la vista previa no pone edificios encima.
 - Simulador: fuera el catálogo `angled-corners.txt`, `SIM_ANGLED` y la segunda pasada de `regress` con su referencia.
   Nueva manzana del juego `block_13109_-8496` (Belmont y Oak Lane). Las entradas existentes de la referencia no cambian; solo se añade la nueva manzana.
+- Se quita el diagnóstico `[data] angled placed` (`AngledPlaced`) y `NearbyBuildings` se integra en
+  `BuildingFootprints`: al seleccionar una manzana los edificios de la ciudad se recorren una vez en lugar de dos.
 
 ## 0.3.15
 - Los esquineros en ángulo ya no salen sobre la acera: `AngledCornerPlacer.Overhang` pasa de 2 m a 0. Antes el retiro
