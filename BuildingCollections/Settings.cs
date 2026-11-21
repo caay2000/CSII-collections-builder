@@ -186,6 +186,10 @@ namespace BuildingCollections
 
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
+        public bool UpdateParcelLimits { get; set; }
+
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
         public bool Trees { get; set; }
 
         [SettingsUIHidden]
@@ -258,6 +262,7 @@ namespace BuildingCollections
             Mode = "block";
             MaxBlockHectares = 5;
             OverlapMeters = 0.5f;
+            UpdateParcelLimits = false;
         }
     }
 }

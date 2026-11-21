@@ -383,6 +383,7 @@ namespace BuildingCollections.Systems
                 points.Dispose(handle);
             }
 
+            CreateFenceDefinitions(ref heights);
             m_TerrainSystem.AddCPUHeightReader(handle);
             return handle;
         }

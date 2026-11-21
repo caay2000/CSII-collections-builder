@@ -52,6 +52,11 @@ namespace BuildingCollections.Systems
             }
 
             guard.Track(temps, cfg.ReportAfterFrames);
+            if (ParcelLimitsActive)
+            {
+                parcelFences.Track(temps);
+            }
+
             Mod.Log.Info($"[build] Applying: {preview.Count} planned, {temps.Count} temporary buildings.");
             int filled = CountFront(), total = FrontTotal;
             ClearSelection();
