@@ -150,6 +150,8 @@ namespace BuildingCollections.Systems
             overlay = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
             city = World.GetOrCreateSystemManaged<CityConfigurationSystem>();
             guard = World.GetOrCreateSystemManaged<BuiltGuardSystem>();
+            parcelFences = World.GetOrCreateSystemManaged<ParcelFenceSystem>();
+            containerQuery = GetContainerQuery();
             mode = Mod.Settings?.Mode == "polygon" ? "polygon" : "block";
             Mod.Log.Info("BlockBuilderToolSystem created.");
         }

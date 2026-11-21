@@ -141,6 +141,10 @@ export const BuilderTab = () => {
 
             <div className={styles.builderFilters}>
                 <div className={styles.filterBox}>
+                    {plan.betterBulldozer && (
+                        <CheckRow label="Update parcel limits" checked={b.parcelLimits} onChange={(v) => set({ parcelLimits: v })}
+                            title="Removes the fences and hedges of the new buildings with Better Bulldozer and draws new fences along the real limits of each parcel. The street side stays open." />
+                    )}
                     <CheckRow label="Trees in leftover space" checked={b.trees} onChange={(v) => set({ trees: v })}
                         title="Base-game trees fill the leftover space (courtyards, gaps), away from sidewalks and buildings." />
                     {b.trees && plan.treeSets.length > 0 && (

@@ -37,6 +37,13 @@ namespace BuildingCollections.Systems
             if (cfg.RequireNoErrors && !GetAllowApply())
             {
                 int removed = RemoveErrored();
+                if (removed == 0 && RejectParcelFences())
+                {
+                    Say("The new fences collide with something: they were left out. Press Build again.", error: true);
+                    applyMode = ApplyMode.None;
+                    return inputDeps;
+                }
+
                 FrontFilled = CountFront();
                 Mod.Log.Info($"[build] Cancelled: there are entities with errors ({m_ErrorQuery.CalculateEntityCount()}); removed {removed} from the preview.");
                 Say(removed > 0 ? $"Removed {removed} items that collide with something (red). Press Build again." : "Some items in the preview have errors (red). Try Reshuffle.", error: true);
@@ -52,6 +59,11 @@ namespace BuildingCollections.Systems
             }
 
             guard.Track(temps, cfg.ReportAfterFrames);
+            if (ParcelLimitsActive && parcelFencesDrawn)
+            {
+                parcelFences.Track(temps);
+            }
+
             Mod.Log.Info($"[build] Applying: {preview.Count} planned, {temps.Count} temporary buildings.");
             int filled = CountFront(), total = FrontTotal;
             ClearSelection();

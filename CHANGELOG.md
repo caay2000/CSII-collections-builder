@@ -4,6 +4,14 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.17
+- Nueva casilla **Update parcel limits** en el constructor, desactivada por defecto y visible solo con Better Bulldozer
+  instalado. Al construir, las vallas y setos originales de los edificios nuevos se quitan con la eliminación permanente
+  de Better Bulldozer, y se dibujan vallas nuevas por los lados y la parte trasera de cada parcela, sin cerrar la calle.
+  Se usa la valla más común entre los edificios de la vista previa. Es una primera versión de prueba para el issue #19.
+- `ParcelFences` calcula las líneas (una sola entre vecinos, también con solape) y `BetterBulldozerBridge` accede por
+  reflexión a los datos de Better Bulldozer y desactiva la función si no son compatibles.
+
 ## 0.3.16
 - El constructor deja de colocar esquineros en ángulo (se quita lo de 0.3.13–0.3.15): en el juego las esquinas casi
   nunca coinciden con 45°/63°/117°/135°, así que salían torcidos o muy retirados, y la vista previa pasaba de ~20 ms a

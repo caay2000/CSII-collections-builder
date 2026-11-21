@@ -166,6 +166,7 @@ namespace BuildingCollections.Simulator
 
         static readonly Dictionary<string, string> InlineStyles = new Dictionary<string, string>
         {
+            ["fence"] = "stroke:#16a34a;stroke-width:0.9;stroke-linecap:round",
             ["road"] = "fill:none;stroke:#999;stroke-width:7",
             ["ground"] = "fill:#eee",
             ["cell"] = "fill:none;stroke:#bbb;stroke-width:0.35",
@@ -213,6 +214,11 @@ namespace BuildingCollections.Simulator
                 var q = lot.Footprint(0);
                 sb.Append($"<polygon class=\"{(lot.Corner ? "lot corner" : "lot")}\" points=\"{Points(q.P)}\"><title>{Enc(lot.Building.PrefabName)}{(lot.Shift != 0 ? $" · corrido {lot.Shift:0.00} m" : string.Empty)}</title></polygon>");
                 sb.Append($"<polyline class=\"{(lot.Corner ? "face corner" : "face")}\" points=\"{Points(Facade(lot, q))}\"/>");
+            }
+
+            foreach (var f in ParcelFences.Plan(r.Result.Lots, r.Outline.ToList()))
+            {
+                sb.Append($"<line class=\"fence\" x1=\"{F(f.A.X)}\" y1=\"{F(-f.A.Y)}\" x2=\"{F(f.B.X)}\" y2=\"{F(-f.B.Y)}\"/>");
             }
 
             foreach (var c in r.Corners)
@@ -335,6 +341,7 @@ svg { width: 100%; height: auto; max-height: 420px; display: block; }
 .cell.off { stroke-dasharray: 1 1; opacity: 0.6; }
 .lot { fill: var(--lot); fill-opacity: 0.6; stroke: var(--lot); stroke-width: 0.4; }
 .lot.corner { fill: var(--corner); stroke: var(--corner); }
+.fence { stroke: #16a34a; stroke-width: 0.9; stroke-linecap: round; }
 .gap { stroke: var(--gap); stroke-width: 2.2; stroke-linecap: round; }
 .gap.sliver { stroke: var(--warn); stroke-width: 1.2; }
 .sw.sliversw { height: 2px; background: var(--warn); }

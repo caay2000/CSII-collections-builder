@@ -38,6 +38,7 @@ namespace BuildingCollections.Systems
                 }
 
                 preview.Clear();
+                parcelFencesRejected = false;
                 FrontFilled = FrontTotal = 0;
                 frontCells = new List<Pt>();
                 autoCleanPasses = 0;
@@ -383,6 +384,7 @@ namespace BuildingCollections.Systems
                 points.Dispose(handle);
             }
 
+            CreateFenceDefinitions(ref heights);
             m_TerrainSystem.AddCPUHeightReader(handle);
             return handle;
         }

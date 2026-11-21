@@ -61,6 +61,8 @@ namespace BuildingCollections.Systems
 
             public float overlapMeters = 0.5f;
 
+            public bool parcelLimits;
+
             public string treeSet = string.Empty;
             public int treeAges = 4;
 
@@ -222,7 +224,7 @@ namespace BuildingCollections.Systems
                 toolActive.Update(toolSystem.activeTool == builder);
                 UpdatePlopping();
 
-                plan.Update($"{{\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)},\"anarchyAvailable\":{Js(AnarchyBridge.Available)},\"ptgAvailable\":{Js(PtgBridge.Available)},\"anarchyInstalled\":{Js(AnarchyBridge.Installed)},\"filled\":{builder.FrontFilled},\"front\":{builder.FrontTotal},\"treeSets\":{treeSetsJson}}}");
+                plan.Update($"{{\"betterBulldozer\":{Js(BetterBulldozerBridge.Available)},\"areaSelected\":{Js(builder.AreaSelected)},\"previewing\":{Js(builder.Previewing)},\"lots\":{builder.Lots},\"blocks\":{builder.Blocks},\"anarchy\":{Js(AnarchyBridge.Enabled)},\"anarchyAvailable\":{Js(AnarchyBridge.Available)},\"ptgAvailable\":{Js(PtgBridge.Available)},\"anarchyInstalled\":{Js(AnarchyBridge.Installed)},\"filled\":{builder.FrontFilled},\"front\":{builder.FrontTotal},\"treeSets\":{treeSetsJson}}}");
 
                 if (builder.MessageSerial != messageSerial)
                 {
@@ -520,6 +522,7 @@ namespace BuildingCollections.Systems
                 trees = s.Trees,
                 decorDensity = s.DecorDensity,
                 overlapMeters = s.OverlapMeters,
+                parcelLimits = s.UpdateParcelLimits,
                 treeSet = s.TreeSet ?? string.Empty,
                 treeAges = s.TreeAges,
                 mix = s.MixCollection ?? string.Empty,
@@ -544,6 +547,8 @@ namespace BuildingCollections.Systems
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.OverlapMeters = Math.Min(2f, Math.Max(0f, (float)Math.Round(f.overlapMeters * 2, MidpointRounding.AwayFromZero) / 2));
+            bool parcelLimitsChanged = s.UpdateParcelLimits != f.parcelLimits;
+            s.UpdateParcelLimits = f.parcelLimits;
             s.TreeSet = TreeControllerBridge.SetIds.Contains(f.treeSet) ? f.treeSet : string.Empty;
             s.TreeAges = (f.treeAges & 15) == 0 ? 4 : f.treeAges & 15;
             s.MixCollection = CollectionStore.Find(f.mix ?? string.Empty)?.Name ?? string.Empty;
@@ -552,6 +557,11 @@ namespace BuildingCollections.Systems
             builderMessageError.Update(0);
             builderMessage.Update(string.Empty);
             builder.SetMode(s.Mode);
+            if (parcelLimitsChanged)
+            {
+                builder.RefreshParcelLimits();
+            }
+
             saveCountdown = 60;
             PushBuilder();
         }
