@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using BuildingCollections.Core;
@@ -411,13 +410,24 @@ namespace BuildingCollections.Systems
 
             double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
             double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
-            foreach (var (prefab, tr) in NearbyBuildings(outline))
+            const double Reach = 300;
+            using (var transforms = buildingQuery.ToComponentDataArray<Transform>(Allocator.Temp))
+            using (var prefabRefs = buildingQuery.ToComponentDataArray<PrefabRef>(Allocator.Temp))
             {
-                foreach (var q in BuildingQuads(prefab, tr))
+                for (int i = 0; i < transforms.Length; i++)
                 {
-                    if (q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
+                    var tr = transforms[i];
+                    if (tr.m_Position.x < minX - Reach || tr.m_Position.x > maxX + Reach || tr.m_Position.z < minZ - Reach || tr.m_Position.z > maxZ + Reach)
                     {
-                        result.Add(q);
+                        continue;
+                    }
+
+                    foreach (var q in BuildingQuads(prefabRefs[i].m_Prefab, tr))
+                    {
+                        if (q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
+                        {
+                            result.Add(q);
+                        }
                     }
                 }
             }
@@ -447,28 +457,6 @@ namespace BuildingCollections.Systems
                 yield return q;
             }
         }
-
-        IEnumerable<string> AngledPlaced(List<Pt> outline)
-        {
-            foreach (var (prefab, tr) in NearbyBuildings(outline))
-            {
-                if (!IsAngledCorner(prefab, out PrefabBase p))
-                {
-                    continue;
-                }
-
-                var lot = EntityManager.GetComponentData<BuildingData>(prefab).m_LotSize;
-                float hw = lot.x * 4f, hd = lot.y * 4f;
-                string mesh = PrefabCatalog.TryMeshBounds(EntityManager, prefab, out var min, out var max) ? PointList(Corners(tr, min.x, min.y, max.x, max.y)) : "-";
-                float3 forward = math.rotate(tr.m_Rotation, new float3(0, 0, 1));
-                double yaw = math.degrees(math.atan2(forward.x, forward.z));
-                yield return string.Format(CultureInfo.InvariantCulture, "  [data] angled placed {0} angle {1} lot {2}x{3}: pos {4:F2},{5:F2} yaw {6:F1} lot {7} mesh {8}",
-                    p.name.Replace(":", "_"), AngledCorner.Angle(p.name), lot.x, lot.y, tr.m_Position.x, tr.m_Position.z, yaw,
-                    PointList(Corners(tr, -hw, -hd, hw, hd)), mesh);
-            }
-        }
-
-        static string PointList(Quad q) => string.Join(";", q.P.Select(pt => string.Format(CultureInfo.InvariantCulture, "{0:F2},{1:F2}", pt.X, pt.Y)));
 
         static Quad Corners(Transform tr, float minX, float minZ, float maxX, float maxZ)
         {
@@ -511,36 +499,6 @@ namespace BuildingCollections.Systems
             }
 
             return p != null;
-        }
-
-        IEnumerable<(Entity Prefab, Transform Transform)> NearbyBuildings(List<Pt> outline)
-        {
-            if (outline == null || outline.Count == 0)
-            {
-                yield break;
-            }
-
-            double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
-            double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
-            const double Reach = 300;
-            var found = new List<(Entity, Transform)>();
-            using (var transforms = buildingQuery.ToComponentDataArray<Transform>(Allocator.Temp))
-            using (var prefabRefs = buildingQuery.ToComponentDataArray<PrefabRef>(Allocator.Temp))
-            {
-                for (int i = 0; i < transforms.Length; i++)
-                {
-                    var tr = transforms[i];
-                    if (tr.m_Position.x >= minX - Reach && tr.m_Position.x <= maxX + Reach && tr.m_Position.z >= minZ - Reach && tr.m_Position.z <= maxZ + Reach)
-                    {
-                        found.Add((prefabRefs[i].m_Prefab, tr));
-                    }
-                }
-            }
-
-            foreach (var item in found)
-            {
-                yield return item;
-            }
         }
 
         List<Pt> TreePoints(List<Pt> outline)
