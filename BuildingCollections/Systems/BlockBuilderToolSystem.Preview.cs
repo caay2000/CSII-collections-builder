@@ -38,6 +38,7 @@ namespace BuildingCollections.Systems
                 }
 
                 preview.Clear();
+                parcelFencesRejected = false;
                 FrontFilled = FrontTotal = 0;
                 frontCells = new List<Pt>();
                 autoCleanPasses = 0;

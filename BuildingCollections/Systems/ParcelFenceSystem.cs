@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Colossal.Serialization.Entities;
 using Game;
 using Game.Buildings;
 using Game.Common;
@@ -53,6 +54,7 @@ namespace BuildingCollections.Systems
             public float2 Position;
             public Entity Building;
             public int Frames;
+            public int LanesRemoved;
         }
 
         readonly List<Target> pending = new List<Target>();
@@ -87,6 +89,12 @@ namespace BuildingCollections.Systems
                 ComponentType.ReadOnly<PrefabRef>(),
                 ComponentType.Exclude<Deleted>(),
                 ComponentType.Exclude<Temp>());
+        }
+
+        protected override void OnGamePreload(Purpose purpose, GameMode mode)
+        {
+            base.OnGamePreload(purpose, mode);
+            pending.Clear();
         }
 
         protected override void OnUpdate()
@@ -126,14 +134,33 @@ namespace BuildingCollections.Systems
             using (var prefabs = placedQuery.ToComponentDataArray<PrefabRef>(Allocator.Temp))
             {
                 var taken = new HashSet<Entity>();
+                pending.ForEach(t => taken.Add(t.Building));
+                var byPrefab = new Dictionary<Entity, List<Target>>();
+                foreach (var target in open)
+                {
+                    if (!byPrefab.TryGetValue(target.Prefab, out var group))
+                    {
+                        byPrefab[target.Prefab] = group = new List<Target>();
+                    }
+
+                    group.Add(target);
+                }
+
                 for (int i = 0; i < entities.Length; i++)
                 {
-                    var target = open.Find(t => t.Building == Entity.Null && t.Prefab == prefabs[i].m_Prefab
-                        && math.distance(t.Position, transforms[i].m_Position.xz) <= SamePlace);
-                    if (target != null && taken.Add(entities[i]))
+                    if (!byPrefab.TryGetValue(prefabs[i].m_Prefab, out var group) || taken.Contains(entities[i]))
                     {
-                        target.Building = entities[i];
-                        target.Frames = 0;
+                        continue;
+                    }
+
+                    var position = transforms[i].m_Position.xz;
+                    int match = group.FindIndex(t => math.distance(t.Position, position) <= SamePlace);
+                    if (match >= 0)
+                    {
+                        group[match].Building = entities[i];
+                        group[match].Frames = 0;
+                        group.RemoveAt(match);
+                        taken.Add(entities[i]);
                     }
                 }
             }
@@ -164,7 +191,12 @@ namespace BuildingCollections.Systems
                     var found = CurrentFences(target.Building);
                     if (found.Count > 0 || target.Frames >= LaneWaitFrames)
                     {
-                        lanes += Remove(target.Building, found);
+                        target.LanesRemoved += Remove(target.Building, found);
+                    }
+
+                    if (target.Frames >= LaneWaitFrames)
+                    {
+                        lanes += target.LanesRemoved;
                         houses++;
                         pending.RemoveAt(i);
                     }
@@ -189,7 +221,7 @@ namespace BuildingCollections.Systems
             for (int i = 0; i < lanes.Length; i++)
             {
                 var lane = lanes[i].m_SubLane;
-                if (EntityManager.HasComponent<PrefabRef>(lane))
+                if (EntityManager.HasComponent<PrefabRef>(lane) && !EntityManager.HasComponent<Deleted>(lane))
                 {
                     var prefab = EntityManager.GetComponentData<PrefabRef>(lane).m_Prefab;
                     if (FenceLanes.IsFence(EntityManager, prefab))

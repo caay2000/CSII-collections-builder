@@ -17,20 +17,37 @@ namespace BuildingCollections.Systems
 
         EntityQuery containerQuery;
         ParcelFenceSystem parcelFences;
+        bool parcelFencesDrawn;
+        bool parcelFencesRejected;
 
         bool ParcelLimitsActive => Mod.Settings?.UpdateParcelLimits == true && BetterBulldozerBridge.Available;
 
         public void RefreshParcelLimits()
         {
+            parcelFencesRejected = false;
             if (preview.Count > 0)
             {
                 definitionsDirty = true;
             }
         }
 
+        bool RejectParcelFences()
+        {
+            if (!parcelFencesDrawn)
+            {
+                return false;
+            }
+
+            parcelFencesRejected = true;
+            definitionsDirty = true;
+            Mod.Log.Warn("[fences] The parcel fences have errors: building this preview without them, the houses keep their own fences.");
+            return true;
+        }
+
         void CreateFenceDefinitions(ref TerrainHeightData heights)
         {
-            if (!ParcelLimitsActive)
+            parcelFencesDrawn = false;
+            if (!ParcelLimitsActive || parcelFencesRejected)
             {
                 return;
             }
@@ -50,6 +67,7 @@ namespace BuildingCollections.Systems
             }
 
             var segments = ParcelFences.Plan(buildings.Select(p => p.Lot).ToList(), areaOutline);
+            parcelFencesDrawn = segments.Count > 0;
             var commands = m_ToolOutputBarrier.CreateCommandBuffer();
             foreach (var segment in segments)
             {
@@ -83,7 +101,7 @@ namespace BuildingCollections.Systems
                 {
                     m_Prefab = container,
                     m_SubPrefab = fence,
-                    m_RandomSeed = RandomSeed.Next().GetRandom(i).NextInt(),
+                    m_RandomSeed = (int)math.hash(new float3(previous.xz, i)),
                     m_Flags = CreationFlags.SubElevation,
                 });
                 commands.AddComponent(entity, default(Updated));
