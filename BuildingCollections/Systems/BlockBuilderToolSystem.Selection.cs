@@ -194,7 +194,6 @@ namespace BuildingCollections.Systems
                 areaFill.Clear();
                 areaEdge.Clear();
                 areaOutline = null;
-                areaSides = null;
             decorAreas = new List<List<Pt>>();
             decorClip = null;
                 definitionsDirty = true;
@@ -532,7 +531,7 @@ namespace BuildingCollections.Systems
             var notes = new List<string>();
             var strips = VirtualLots.Build(sides, obstacles, frontage: frontage, notes: notes, curveOverlap: stripsOverlap);
             Mod.Log.Info($"[selection] outline: {sides.Count} sidewalks, {outline.Count} points, {obstacles.Count} existing buildings.\n  " + string.Join("\n  ", notes)
-                + "\n" + string.Join("\n", DataLog.Sides(sides, frontage).Concat(DataLog.Existing(obstacles)).Concat(AngledPlaced(outline))));
+                + "\n" + string.Join("\n", DataLog.Sides(sides, frontage).Concat(DataLog.Existing(obstacles))));
             lastSidesFull = strips.Count > 0 && strips.All(st => st.Grid.FreeCount() == 0);
             if (!SelectStrips(strips, outline, $"{description}: {sides.Count} sidewalks, {obstacles.Count} existing buildings"))
             {
@@ -541,8 +540,6 @@ namespace BuildingCollections.Systems
 
             decorAreas = new List<List<Pt>> { outline };
             decorClip = null;
-            areaSides = sides;
-            areaFrontage = frontage;
             return true;
         }
 
@@ -745,8 +742,6 @@ namespace BuildingCollections.Systems
             areaFill.Clear();
             areaEdge.Clear();
             areaOutline = outline != null && outline.Count >= 3 ? outline : null;
-            areaSides = null;
-            areaFrontage = null;
             if (outline == null || outline.Count < 3)
             {
                 return;
@@ -799,7 +794,6 @@ namespace BuildingCollections.Systems
             areaFill.Clear();
             areaEdge.Clear();
             areaOutline = null;
-            areaSides = null;
             decorAreas = new List<List<Pt>>();
             decorClip = null;
             definitionsDirty = true;

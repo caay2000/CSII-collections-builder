@@ -65,7 +65,7 @@ namespace BuildingCollections.Core
         static CornerResult Judge(Pt at, double angle, IReadOnlyList<PlannedLot> lots, double radius = 0)
         {
             double reach = Reach(angle) + radius;
-            var near = lots.Select(l => (lot: l, dist: l.Shapes().Min(q => Distance(at, q)))).Where(x => x.dist <= reach).ToList();
+            var near = lots.Select(l => (lot: l, dist: Distance(at, l.Footprint(0)))).Where(x => x.dist <= reach).ToList();
             var corner = near.Where(x => x.lot.Corner).OrderBy(x => x.dist).FirstOrDefault();
             var closest = near.OrderBy(x => x.dist).FirstOrDefault();
             return new CornerResult

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using BuildingCollections.Core;
@@ -45,17 +44,16 @@ namespace BuildingCollections.Systems
                 definitionsDirty = true;
                 var cfg = DevConfig.Load();
                 var placeable = candidates.Where(c => c.Info.Corner != CornerKind.None && c.Info.LotWidth > 0 && c.Info.LotDepth > 0).ToList();
+                var angled = placeable.Where(c => c.Info.IsAngledCorner).Select(c => c.Info.PrefabName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                 var usable = placeable.Where(c => !c.Info.IsAngledCorner).ToList();
                 var plain = usable.Where(c => AccessMapping.FitsFront(c.Info.Corner)).Select(c => c.Info).ToList();
                 var corners = usable.Where(c => AccessMapping.FitsCorner(c.Info.Corner)).Select(c => c.Info).ToList();
-                var angledEntries = placeable.Where(c => c.Info.IsAngledCorner).ToList();
-                var angled = WithFootprints(angledEntries, out var noShape);
-                var prefabs = usable.Concat(angledEntries).GroupBy(c => c.Info.PrefabName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Prefab, StringComparer.OrdinalIgnoreCase);
+                var prefabs = usable.GroupBy(c => c.Info.PrefabName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Prefab, StringComparer.OrdinalIgnoreCase);
 
-                var log = new StringBuilder($"[preview] seed {seed}, density {density}%, {plain.Count} regular, {corners.Count} corner, {angled.Count} angled corner buildings.\n");
-                if (noShape.Count > 0)
+                var log = new StringBuilder($"[preview] seed {seed}, density {density}%, {plain.Count} regular, {corners.Count} corner buildings.\n");
+                if (angled.Count > 0)
                 {
-                    log.Append($"  {noShape.Count} angled corner buildings left out (their shape could not be read): {string.Join(", ", noShape)}.\n");
+                    log.Append($"  {angled.Count} angled corner buildings left out (the builder does not place them; place them by hand): {string.Join(", ", angled)}.\n");
                 }
 
                 bool anarchy = AnarchyBridge.Enabled;
@@ -75,10 +73,8 @@ namespace BuildingCollections.Systems
                     Blocks = PlanBlocks(),
                     Existing = existing,
                     Outline = areaOutline,
-                    Sides = areaSides,
-                    Frontage = areaFrontage,
                     Plain = plain,
-                    Corners = corners.Concat(angled).ToList(),
+                    Corners = corners,
                     Overlap = overlap,
                     Density = density,
                     Seed = seed,
@@ -89,9 +85,8 @@ namespace BuildingCollections.Systems
                 frontCells = planned.FrontCells;
                 foreach (var lot in planned.Lots)
                 {
-                    preview.Add(lot.Owner.Tag is SelectedBlock owner
-                        ? new Planned { Lot = lot, Prefab = prefabs[lot.Building.PrefabName], Block = owner.Block }
-                        : Angled(lot, prefabs[lot.Building.PrefabName]));
+                    var owner = (SelectedBlock)lot.Owner.Tag;
+                    preview.Add(new Planned { Lot = lot, Prefab = prefabs[lot.Building.PrefabName], Block = owner.Block });
                 }
 
                 FrontTotal = frontCells.Count;
@@ -99,7 +94,7 @@ namespace BuildingCollections.Systems
                 clock.Restart();
 
                 int buildingsPlanned = preview.Count;
-                var blockers = planned.Lots.SelectMany(l => l.Shapes()).Concat(existing).ToList();
+                var blockers = planned.Lots.Select(l => l.Footprint(0)).Concat(existing).ToList();
                 int plants = PlanDecor(decor, blockers, decorDensity, ageMask, seed, log);
                 Lap("decoration");
                 log.AppendLine($"  timings: {string.Join(", ", times)}.");
@@ -113,42 +108,6 @@ namespace BuildingCollections.Systems
                 preview.Clear();
                 Say("Preview failed (see log).", error: true);
             }
-        }
-
-        List<BuildingInfo> WithFootprints(List<CatalogEntry> entries, out List<string> noShape)
-        {
-            var prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
-            var withShape = new List<BuildingInfo>();
-            noShape = new List<string>();
-            foreach (var e in entries)
-            {
-                if (MeshFootprints.TryGet(EntityManager, prefabSystem, e.Prefab, out var rects))
-                {
-                    var info = e.Info.InGroup(e.Info.Group, e.Info.Share);
-                    info.Footprint = rects;
-                    withShape.Add(info);
-                }
-                else
-                {
-                    noShape.Add(e.Info.PrefabName);
-                }
-            }
-
-            return withShape;
-        }
-
-        static Planned Angled(PlannedLot lot, Entity prefab)
-        {
-            var c = lot.Center;
-            var x = lot.Owner.Frame.AxisX;
-            return new Planned
-            {
-                Lot = lot,
-                Prefab = prefab,
-                IsAngled = true,
-                Pos = new float3((float)c.X, 0, (float)c.Y),
-                Rot = quaternion.RotateY((float)Math.Atan2(-x.Y, x.X)),
-            };
         }
 
         int PlanDecor(IReadOnlyList<CatalogEntry> decor, List<Quad> blockers, int decorDensity, int ageMask, int seed, StringBuilder log)
@@ -349,8 +308,7 @@ namespace BuildingCollections.Systems
                     continue;
                 }
 
-                var shapes = p.Lot.Shapes().ToList();
-                var culprits = plants.Where(t => shapes.Min(s => s.DistanceTo(new Pt(t.Pos.x, t.Pos.z))) < PlantRadius(t.Prefab) + 1.0).ToList();
+                var culprits = plants.Where(t => lot.DistanceTo(new Pt(t.Pos.x, t.Pos.z)) < PlantRadius(t.Prefab) + 1.0).ToList();
                 if (culprits.Count > 0)
                 {
                     drop.UnionWith(culprits);
@@ -397,12 +355,6 @@ namespace BuildingCollections.Systems
                 {
                     t = new Transform(p.Pos, p.Rot);
                     y = TerrainUtils.SampleHeight(ref heights, p.Pos);
-                }
-                else if (p.IsAngled)
-                {
-                    t = new Transform(p.Pos, p.Rot);
-                    float3 front = BuildingUtils.CalculateFrontPosition(t, p.Lot.Depth);
-                    y = TerrainUtils.SampleHeight(ref heights, front);
                 }
                 else
                 {
@@ -458,13 +410,24 @@ namespace BuildingCollections.Systems
 
             double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
             double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
-            foreach (var (prefab, tr) in NearbyBuildings(outline))
+            const double Reach = 300;
+            using (var transforms = buildingQuery.ToComponentDataArray<Transform>(Allocator.Temp))
+            using (var prefabRefs = buildingQuery.ToComponentDataArray<PrefabRef>(Allocator.Temp))
             {
-                foreach (var q in BuildingQuads(prefab, tr))
+                for (int i = 0; i < transforms.Length; i++)
                 {
-                    if (q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
+                    var tr = transforms[i];
+                    if (tr.m_Position.x < minX - Reach || tr.m_Position.x > maxX + Reach || tr.m_Position.z < minZ - Reach || tr.m_Position.z > maxZ + Reach)
                     {
-                        result.Add(q);
+                        continue;
+                    }
+
+                    foreach (var q in BuildingQuads(prefabRefs[i].m_Prefab, tr))
+                    {
+                        if (q.MaxX >= minX && q.MinX <= maxX && q.MaxY >= minZ && q.MinY <= maxZ)
+                        {
+                            result.Add(q);
+                        }
                     }
                 }
             }
@@ -494,28 +457,6 @@ namespace BuildingCollections.Systems
                 yield return q;
             }
         }
-
-        IEnumerable<string> AngledPlaced(List<Pt> outline)
-        {
-            foreach (var (prefab, tr) in NearbyBuildings(outline))
-            {
-                if (!IsAngledCorner(prefab, out PrefabBase p))
-                {
-                    continue;
-                }
-
-                var lot = EntityManager.GetComponentData<BuildingData>(prefab).m_LotSize;
-                float hw = lot.x * 4f, hd = lot.y * 4f;
-                string mesh = PrefabCatalog.TryMeshBounds(EntityManager, prefab, out var min, out var max) ? PointList(Corners(tr, min.x, min.y, max.x, max.y)) : "-";
-                float3 forward = math.rotate(tr.m_Rotation, new float3(0, 0, 1));
-                double yaw = math.degrees(math.atan2(forward.x, forward.z));
-                yield return string.Format(CultureInfo.InvariantCulture, "  [data] angled placed {0} angle {1} lot {2}x{3}: pos {4:F2},{5:F2} yaw {6:F1} lot {7} mesh {8}",
-                    p.name.Replace(":", "_"), AngledCorner.Angle(p.name), lot.x, lot.y, tr.m_Position.x, tr.m_Position.z, yaw,
-                    PointList(Corners(tr, -hw, -hd, hw, hd)), mesh);
-            }
-        }
-
-        static string PointList(Quad q) => string.Join(";", q.P.Select(pt => string.Format(CultureInfo.InvariantCulture, "{0:F2},{1:F2}", pt.X, pt.Y)));
 
         static Quad Corners(Transform tr, float minX, float minZ, float maxX, float maxZ)
         {
@@ -558,36 +499,6 @@ namespace BuildingCollections.Systems
             }
 
             return p != null;
-        }
-
-        IEnumerable<(Entity Prefab, Transform Transform)> NearbyBuildings(List<Pt> outline)
-        {
-            if (outline == null || outline.Count == 0)
-            {
-                yield break;
-            }
-
-            double minX = outline.Min(p => p.X), maxX = outline.Max(p => p.X);
-            double minZ = outline.Min(p => p.Y), maxZ = outline.Max(p => p.Y);
-            const double Reach = 300;
-            var found = new List<(Entity, Transform)>();
-            using (var transforms = buildingQuery.ToComponentDataArray<Transform>(Allocator.Temp))
-            using (var prefabRefs = buildingQuery.ToComponentDataArray<PrefabRef>(Allocator.Temp))
-            {
-                for (int i = 0; i < transforms.Length; i++)
-                {
-                    var tr = transforms[i];
-                    if (tr.m_Position.x >= minX - Reach && tr.m_Position.x <= maxX + Reach && tr.m_Position.z >= minZ - Reach && tr.m_Position.z <= maxZ + Reach)
-                    {
-                        found.Add((prefabRefs[i].m_Prefab, tr));
-                    }
-                }
-            }
-
-            foreach (var item in found)
-            {
-                yield return item;
-            }
         }
 
         List<Pt> TreePoints(List<Pt> outline)
