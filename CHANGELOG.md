@@ -4,6 +4,12 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.23
+- Esquinas abiertas: si la pareja deja un hueco, el constructor mueve hasta tres edificios vecinos de esa calle y rellena
+  con otros, en lugar de renunciar a la esquina.
+- El reshuffle ya no se para varios segundos en manzanas con colecciones grandes: cada forma de lote se evalúa una vez.
+- Cada reshuffle elige al azar el modelo de la pareja entre los de la mejor forma.
+
 ## 0.3.21
 - Esquinas abiertas (100° a 150°, con las dos calles rectas): con el solape activado, el constructor pone el mismo modelo
   en las dos calles, cada uno girado hacia la suya y con la esquina delantera del lote en el mismo punto. Si no cabe en
