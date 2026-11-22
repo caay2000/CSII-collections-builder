@@ -198,7 +198,7 @@ namespace BuildingCollections.Core
                 .OrderBy(n => n.gap)
                 .ToList();
             var moved = new List<PlannedLot>();
-            for (int i = 0; i < neighbours.Count && moved.Count <= MaxMovedNeighbours; i++)
+            for (int i = 0; i < neighbours.Count; i++)
             {
                 if (neighbours[i].gap <= ClosedGap)
                 {
@@ -213,7 +213,7 @@ namespace BuildingCollections.Core
                 }
 
                 var next = neighbours[i].lot;
-                if (next.Corner || paired.Contains(next) || next.Building.Group != lot.Building.Group)
+                if (moved.Count == MaxMovedNeighbours || next.Corner || paired.Contains(next) || next.Building.Group != lot.Building.Group)
                 {
                     break;
                 }
