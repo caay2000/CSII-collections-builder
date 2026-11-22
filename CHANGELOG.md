@@ -4,6 +4,12 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.21
+- Esquinas abiertas (100° a 150°, con las dos calles rectas): con el solape activado, el constructor pone el mismo modelo
+  en las dos calles, cada uno girado hacia la suya y con la esquina delantera del lote en el mismo punto. Si no cabe en
+  las dos calles o deja más huecos, la esquina se queda como antes. Junto a una curva, el tramo recto debe medir al menos
+  48 m. Los lotes pueden pasar hasta 3 m sobre el bordillo redondeado de la esquina.
+
 ## 0.3.16
 - El constructor deja de colocar esquineros en ángulo (se quita lo de 0.3.13–0.3.15): en el juego las esquinas casi
   nunca coinciden con 45°/63°/117°/135°, así que salían torcidos o muy retirados, y la vista previa pasaba de ~20 ms a
