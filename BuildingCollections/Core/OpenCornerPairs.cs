@@ -148,7 +148,7 @@ namespace BuildingCollections.Core
             }
 
             var displaced = lots.Where(l => Blocks(a, l) || Blocks(b, l)).ToList();
-            if (displaced.Any(l => paired.Contains(l) || (l.Owner != first && l.Owner != second)))
+            if (displaced.Any(l => paired.Contains(l) || l.Building.Group != model.Group || (l.Owner != first && l.Owner != second)))
             {
                 return null;
             }
@@ -185,7 +185,7 @@ namespace BuildingCollections.Core
             }
 
             double gap = gaps.Min();
-            var options = catalog.Where(m => m.LotDepth <= block.Grid.Depth).ToList();
+            var options = catalog.Where(m => m.LotDepth <= block.Grid.Depth && m.Group == lot.Building.Group).ToList();
             var rows = options.Select(m => new[] { m }).Concat(options.SelectMany(m => options.Select(n => new[] { m, n })))
                 .Where(row => row.Length <= MaxFillers)
                 .Select(row => (row, excess: row.Sum(m => m.LotWidth) * CellFrame.Size - gap))
