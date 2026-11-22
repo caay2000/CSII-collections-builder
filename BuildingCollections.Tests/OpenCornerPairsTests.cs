@@ -55,6 +55,26 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void A_clear_open_corner_is_paired_on_every_shuffle_moving_neighbours_when_needed()
+        {
+            var scenario = BuildingCollections.Simulator.GameBlocks.All().Single(s => s.Name.Contains("(13111, -8496)"));
+            var sizes = new[] { (1, 2), (2, 1), (2, 2), (2, 3), (3, 2), (3, 3) };
+            var plain = sizes.Select(size => new BuildingInfo { PrefabName = $"{size.Item1}x{size.Item2}", LotWidth = size.Item1, LotDepth = size.Item2 }).ToList();
+            var corners = new List<BuildingInfo>
+            {
+                new BuildingInfo { PrefabName = "corner L", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Left },
+                new BuildingInfo { PrefabName = "corner R", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Right },
+            };
+
+            foreach (int seed in Enumerable.Range(1, 12))
+            {
+                var run = BuildingCollections.Simulator.Simulation.Simulate(scenario, 2f, seed, plain, corners);
+
+                Assert.Contains(run.Result.Log, l => l.Contains(" on both streets, "));
+            }
+        }
+
+        [Fact]
         public void Without_overlap_no_corner_is_paired()
         {
             var result = Plan(Block(120), FootprintMask.StrictOverlap, out _);

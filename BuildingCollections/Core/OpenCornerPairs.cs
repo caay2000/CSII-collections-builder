@@ -17,7 +17,8 @@ namespace BuildingCollections.Core
         const double GapTolerance = 0.05;
         const double JointMargin = 0.01;
         const double ClosedGap = 0.5;
-        const int MaxFillers = 2;
+        const int MaxFillers = 3;
+        const int MaxMovedNeighbours = 3;
 
         readonly List<PlannedLot> lots;
         readonly IReadOnlyList<PlanBlock> blocks;
@@ -27,10 +28,11 @@ namespace BuildingCollections.Core
         readonly IReadOnlyList<Pt> frontCells;
         readonly float overlap;
         readonly IList<string> log;
+        readonly Random random;
         readonly HashSet<PlannedLot> paired = new HashSet<PlannedLot>();
 
         OpenCornerPairs(List<PlannedLot> lots, IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
-            IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<Pt> frontCells, float overlap, IList<string> log)
+            IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<Pt> frontCells, float overlap, int seed, IList<string> log)
         {
             this.lots = lots;
             this.blocks = blocks.Where(b => b.Strip != null).ToList();
@@ -40,11 +42,12 @@ namespace BuildingCollections.Core
             this.frontCells = frontCells;
             this.overlap = overlap;
             this.log = log;
+            random = new Random(seed ^ 0x51ed270b);
         }
 
         public static int Apply(List<PlannedLot> lots, IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
-            IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<Pt> frontCells, float overlap, IList<string> log) =>
-            new OpenCornerPairs(lots, blocks, existing, outline, catalog, frontCells, overlap, log).Run();
+            IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<Pt> frontCells, float overlap, int seed, IList<string> log) =>
+            new OpenCornerPairs(lots, blocks, existing, outline, catalog, frontCells, overlap, seed, log).Run();
 
         int Run()
         {
@@ -100,12 +103,15 @@ namespace BuildingCollections.Core
             int gapsBefore = FrontCoverage.GapsBetweenOwn(lots, existing, new[] { first, second });
             int filledBefore = FrontCoverage.CountFilled(lots, frontCells);
             var best = catalog
+                .GroupBy(model => (model.LotWidth, model.LotDepth, model.Group))
+                .OrderBy(shape => shape.Key)
+                .Select(PickModel)
+                .ToList()
                 .Select(model => Candidate(model, first, second, corner, strips, gapsBefore, filledBefore))
                 .Where(c => c != null && c.Uncovered <= before + GapTolerance)
                 .OrderBy(c => Math.Round(c.Uncovered, 1))
-                .ThenByDescending(c => c.Displaced.Count(l => l.Building == c.A.Building))
                 .ThenByDescending(c => c.A.Width)
-                .ThenBy(c => c.A.Building.PrefabName, StringComparer.Ordinal)
+                .ThenByDescending(c => c.A.Depth)
                 .FirstOrDefault();
             if (best == null)
             {
@@ -154,11 +160,16 @@ namespace BuildingCollections.Core
             }
 
             var trial = lots.Where(l => !displaced.Contains(l)).Append(a).Append(b).ToList();
-            var fillers = Fillers(a, first, -1, trial);
-            trial.AddRange(fillers);
-            var secondFillers = Fillers(b, second, 1, trial);
-            trial.AddRange(secondFillers);
-            fillers.AddRange(secondFillers);
+            var fillers = new List<PlannedLot>();
+            foreach (var (lot, block, inward) in new[] { (a, first, -1), (b, second, 1) })
+            {
+                var (moved, placed) = CloseRow(lot, block, inward, trial);
+                trial.RemoveAll(moved.Contains);
+                trial.AddRange(placed);
+                displaced.AddRange(moved);
+                fillers.AddRange(placed);
+            }
+
             if (FrontCoverage.GapsBetweenOwn(trial, existing, new[] { first, second }) > gapsBefore
                 || FrontCoverage.CountFilled(trial, frontCells) < filledBefore)
             {
@@ -168,34 +179,64 @@ namespace BuildingCollections.Core
             return new Pair { A = a, B = b, Displaced = displaced, Fillers = fillers, Uncovered = Uncovered(strips, trial) };
         }
 
-        List<PlannedLot> Fillers(PlannedLot lot, PlanBlock block, int inward, List<PlannedLot> planned)
+        BuildingInfo PickModel(IEnumerable<BuildingInfo> shape)
+        {
+            var models = shape.ToList();
+            return models[random.Next(models.Count)];
+        }
+
+        (List<PlannedLot> Moved, List<PlannedLot> Fillers) CloseRow(PlannedLot lot, PlanBlock block, int inward, List<PlannedLot> planned)
         {
             var strip = block.Strip;
             var (from, to) = Span(lot, strip);
             double inner = inward > 0 ? to : from;
-            var gaps = planned
+            var neighbours = planned
                 .Where(l => l != lot && l.Owner == block)
-                .Select(l => Span(l, strip))
-                .Select(s => inward > 0 ? s.From - inner : inner - s.To)
-                .Where(g => g > -overlap)
+                .Select(l => (lot: l, span: Span(l, strip)))
+                .Select(n => (n.lot, gap: inward > 0 ? n.span.From - inner : inner - n.span.To))
+                .Where(n => n.gap > -overlap)
+                .OrderBy(n => n.gap)
                 .ToList();
-            if (gaps.Count == 0 || gaps.Min() <= ClosedGap)
+            var moved = new List<PlannedLot>();
+            for (int i = 0; i < neighbours.Count && moved.Count <= MaxMovedNeighbours; i++)
             {
-                return new List<PlannedLot>();
+                if (neighbours[i].gap <= ClosedGap)
+                {
+                    return (moved, new List<PlannedLot>());
+                }
+
+                var kept = planned.Where(l => !moved.Contains(l)).ToList();
+                var fillers = Fillers(lot, block, inner, inward, neighbours[i].gap, kept);
+                if (fillers.Count > 0)
+                {
+                    return (moved, fillers);
+                }
+
+                var next = neighbours[i].lot;
+                if (next.Corner || paired.Contains(next) || next.Building.Group != lot.Building.Group)
+                {
+                    break;
+                }
+
+                moved.Add(next);
             }
 
-            double gap = gaps.Min();
-            var options = catalog.Where(m => m.LotDepth <= block.Grid.Depth && m.Group == lot.Building.Group).ToList();
-            var rows = options.Select(m => new[] { m }).Concat(options.SelectMany(m => options.Select(n => new[] { m, n })))
-                .Where(row => row.Length <= MaxFillers)
-                .Select(row => (row, excess: row.Sum(m => m.LotWidth) * CellFrame.Size - gap))
-                .Where(o => o.excess >= -ClosedGap && o.excess <= (overlap - JointMargin) * (o.row.Length + 1))
-                .OrderBy(o => o.row.Length)
-                .ThenBy(o => Math.Abs(o.excess));
-            foreach (var (row, excess) in rows)
+            return (new List<PlannedLot>(), new List<PlannedLot>());
+        }
+
+        List<PlannedLot> Fillers(PlannedLot lot, PlanBlock block, double inner, int inward, double gap, List<PlannedLot> planned)
+        {
+            var options = catalog
+                .Where(m => m.LotDepth <= block.Grid.Depth && m.Group == lot.Building.Group)
+                .GroupBy(m => (m.LotWidth, m.LotDepth))
+                .OrderBy(shape => shape.Key)
+                .Select(PickModel)
+                .OrderByDescending(m => m.LotDepth)
+                .ToList();
+            foreach (var (widths, excess) in WidthRows(options.Select(m => m.LotWidth).Distinct().ToList(), gap))
             {
-                var placed = Row(row, block, inner, inward, Math.Max(0, excess) / (row.Length + 1));
-                if (placed.All(l => Fits(l) && !planned.Any(o => Quad.Touch(o.Footprint(0), l.Footprint(overlap)))))
+                var placed = Row(widths, options, block, inner, inward, Math.Max(0, excess) / (widths.Count + 1), planned);
+                if (placed != null)
                 {
                     return placed;
                 }
@@ -204,18 +245,44 @@ namespace BuildingCollections.Core
             return new List<PlannedLot>();
         }
 
-        static List<PlannedLot> Row(BuildingInfo[] row, PlanBlock block, double inner, int inward, double joint)
+        IEnumerable<(List<int> Widths, double Excess)> WidthRows(List<int> widths, double gap)
+        {
+            IEnumerable<List<int>> rows = widths.Select(w => new List<int> { w }).ToList();
+            var all = rows.ToList();
+            for (int length = 2; length <= MaxFillers; length++)
+            {
+                rows = rows.SelectMany(row => widths.Select(w => row.Append(w).ToList())).ToList();
+                all.AddRange(rows);
+            }
+
+            return all
+                .Select(row => (row, excess: row.Sum() * CellFrame.Size - gap))
+                .Where(o => o.excess >= -ClosedGap && o.excess <= (overlap - JointMargin) * (o.row.Count + 1))
+                .OrderBy(o => o.row.Count)
+                .ThenBy(o => Math.Abs(o.excess));
+        }
+
+        List<PlannedLot> Row(List<int> widths, List<BuildingInfo> options, PlanBlock block, double inner, int inward, double joint, List<PlannedLot> planned)
         {
             var strip = block.Strip;
             var direction = strip.T * inward;
             var placed = new List<PlannedLot>();
             double cursor = inner - inward * joint;
-            foreach (var model in row)
+            foreach (int width in widths)
             {
-                var lot = LotAt(block, model, strip.ChunkStart + strip.T * cursor, direction);
+                var start = strip.ChunkStart + strip.T * cursor;
+                var lot = options
+                    .Where(m => m.LotWidth == width)
+                    .Select(m => LotAt(block, m, start, direction))
+                    .FirstOrDefault(l => Fits(l) && !planned.Any(o => Quad.Touch(o.Footprint(0), l.Footprint(overlap))));
+                if (lot == null)
+                {
+                    return null;
+                }
+
                 lot.Corner = false;
                 placed.Add(lot);
-                cursor += inward * (model.LotWidth * CellFrame.Size - joint);
+                cursor += inward * (width * CellFrame.Size - joint);
             }
 
             return placed;
