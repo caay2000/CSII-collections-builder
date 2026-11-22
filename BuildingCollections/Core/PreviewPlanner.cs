@@ -430,7 +430,7 @@ namespace BuildingCollections.Core
         {
             if (request.PairOpenCorners && WedgesMayOverlap && request.Density >= 100 && request.Outline != null)
             {
-                var catalog = mix == null ? request.Plain.Concat(corners).Distinct().ToList() : result.Lots.Select(l => l.Building).Distinct().ToList();
+                var catalog = request.Plain.Where(b => AccessMapping.FitsFront(b.Corner)).ToList();
                 int pairs = OpenCornerPairs.Apply(result.Lots, request.Blocks, existing, request.Outline, catalog, result.FrontCells, request.Overlap, result.Log);
                 result.Log.Add($"  open corners: {pairs} paired with the same model.");
             }

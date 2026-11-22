@@ -62,6 +62,44 @@ namespace BuildingCollections.Tests
             Assert.DoesNotContain(result.Log, l => l.Contains("on both streets"));
         }
 
+        [Fact]
+        public void Models_without_a_front_access_are_never_paired()
+        {
+            var sides = Block(120);
+            var strips = VirtualLots.Build(sides, new List<Quad>(), curveOverlap: 0.5);
+            var blocks = strips.Where(s => s.Grid.FreeCount() > 0).Select(s => new PlanBlock
+            {
+                Frame = CellFrame.FromStrip(s), Grid = s.Grid, Strip = s, Priority = s.Width * 100, IsVirtual = true,
+            }).ToList();
+            var leftOnly = new BuildingInfo { PrefabName = "left only", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Left };
+
+            var result = PreviewPlanner.Plan(new PreviewRequest
+            {
+                Blocks = blocks, Existing = new List<Quad>(), Outline = VirtualLots.Outline(sides), Plain = Catalog, Corners = new[] { leftOnly }, Overlap = 0.5f, Seed = 3,
+            });
+
+            Assert.DoesNotContain(result.Log, l => l.Contains("left only") && l.Contains("on both streets"));
+        }
+
+        [Fact]
+        public void A_pair_keeps_the_mix_group_of_the_lots_it_replaces()
+        {
+            var sides = Block(120);
+            var strips = VirtualLots.Build(sides, new List<Quad>(), curveOverlap: 0.5);
+            var blocks = strips.Where(s => s.Grid.FreeCount() > 0).Select(s => new PlanBlock
+            {
+                Frame = CellFrame.FromStrip(s), Grid = s.Grid, Strip = s, Priority = s.Width * 100, IsVirtual = true,
+            }).ToList();
+            var plain = Catalog.Select(b => b.InGroup(0, 1)).ToList();
+
+            var result = PreviewPlanner.Plan(new PreviewRequest
+            {
+                Blocks = blocks, Existing = new List<Quad>(), Outline = VirtualLots.Outline(sides), Plain = plain, Corners = new List<BuildingInfo>(), Overlap = 0.5f, Seed = 3,
+            });
+
+            Assert.All(result.Lots, l => Assert.Equal(0, l.Building.Group));
+        }
+
         static double Distance(Pt a, Pt b) => Math.Sqrt(Pt.Dot(a - b, a - b));
     }
 }
