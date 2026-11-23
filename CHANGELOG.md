@@ -4,6 +4,11 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.24
+- Se quitan las parejas de esquina abierta de 0.3.21 y 0.3.23 (`OpenCornerPairs`, sus tests y la manzana
+  `block_13111_-8496` del simulador). Las esquinas abiertas vuelven a colocarse como en 0.3.16, y la referencia de
+  `regress` vuelve a la de esa versión.
+
 ## 0.3.23
 - Esquinas abiertas: si la pareja deja un hueco, el constructor mueve hasta tres edificios vecinos de esa calle y rellena
   con otros, en lugar de renunciar a la esquina.

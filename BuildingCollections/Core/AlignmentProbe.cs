@@ -95,7 +95,7 @@ namespace BuildingCollections.Core
             {
                 var result = PreviewPlanner.Plan(new PreviewRequest
                 {
-                    Blocks = blocks, Existing = existing, Outline = outline, Plain = Plain, Corners = corners, Overlap = overlap, Seed = seed, PairOpenCorners = false,
+                    Blocks = blocks, Existing = existing, Outline = outline, Plain = Plain, Corners = corners, Overlap = overlap, Seed = seed,
                 });
                 total.Meters += SidewalkGaps.Find(strips, result.Lots).Where(g => g.Length > EndGapCloser.MaxSpreadSliver).Sum(g => g.Length);
                 total.BetweenOwn += FrontCoverage.GapsBetweenOwn(result.Lots, existing, blocks);
