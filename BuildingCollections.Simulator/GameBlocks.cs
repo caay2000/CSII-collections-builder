@@ -17,7 +17,6 @@ namespace BuildingCollections.Simulator
             ["whitestone_big_loop"] = "Whitestone, big loop",
             ["prospect_tight_curve"] = "Prospect, tight curve",
             ["cobblestone_long_curve"] = "Cobblestone, long curve and short street",
-            ["block_13111_-8496"] = "block with a clear 127° open corner (13111, -8496)",
             ["block_17334_-10268"] = "narrow triangle (17334, -10268), 8 existing in the game",
             ["block_17569_-10291"] = "block (17569, -10291)",
             ["block_17608_-10348"] = "block (17608, -10348)",
