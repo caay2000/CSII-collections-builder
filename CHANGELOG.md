@@ -4,6 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.27
+- Vuelven las parejas de esquina abierta de 0.3.21 y 0.3.23 (`OpenCornerPairs`): el mismo modelo en las dos calles, con
+  las esquinas delanteras de los lotes juntas. El rango pasa a 95°–150° (antes 100°–150°); recortarlo a 130° empeora la
+  regresión.
+- Cada pareja mide la cobertura solo alrededor de su esquina, no en toda la selección: con 40 manzanas a la vez, la fase
+  pasa de ~640 ms a ~100 ms con el mismo resultado.
+- Simulador: `bench-blocks [semillas] [solape]` mide la vista previa manzana a manzana, y `SIM_CATALOG_FILE` carga el
+  catálogo desde las líneas `[heights]` del log.
+
 ## 0.3.26
 - El log se escribe siempre a nivel INFO, aunque el juego o Skyve bajen el nivel global a avisos (antes el fichero ni se
   creaba).
