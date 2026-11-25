@@ -17,6 +17,7 @@ namespace BuildingCollections
         public BuildingInfo Info;
         public int AccessType;
         public string Icon;
+        public string Zone;
 
         public bool IsDecor;
     }
@@ -70,6 +71,17 @@ namespace BuildingCollections
             }
         }
 
+        static string ZoneOf(EntityManager em, PrefabSystem prefabSystem, Entity e)
+        {
+            if (!em.HasComponent<SpawnableBuildingData>(e))
+            {
+                return "none";
+            }
+
+            var zone = em.GetComponentData<SpawnableBuildingData>(e).m_ZonePrefab;
+            return zone != Entity.Null && prefabSystem.TryGetPrefab(zone, out ZonePrefab z) && z != null ? z.name : "none";
+        }
+
         static void Rebuild(World world, bool swap)
         {
             var em = world.EntityManager;
@@ -104,6 +116,7 @@ namespace BuildingCollections
                         Prefab = e,
                         AccessType = access,
                         Icon = icon ?? string.Empty,
+                        Zone = ZoneOf(em, prefabSystem, e),
                         Info = new BuildingInfo
                         {
                             PrefabName = prefab.name,

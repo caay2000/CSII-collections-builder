@@ -379,9 +379,9 @@ namespace BuildingCollections.Systems
         void LogHeights(BuildingCollection c)
         {
             var known = c.Prefabs
-                .Select(n => PrefabCatalog.TryGet(n, out var e) ? e.Info : null)
-                .Where(i => i != null)
-                .OrderBy(i => i.Level).ThenByDescending(i => i.Height).ThenBy(i => i.PrefabName, StringComparer.Ordinal)
+                .Select(n => PrefabCatalog.TryGet(n, out var e) ? e : null)
+                .Where(e => e != null)
+                .OrderBy(e => e.Info.Level).ThenByDescending(e => e.Info.Height).ThenBy(e => e.Info.PrefabName, StringComparer.Ordinal)
                 .ToList();
             if (known.Count == 0 || (loggedHeights.TryGetValue(c.Name, out int logged) && logged >= known.Count))
             {
@@ -390,7 +390,7 @@ namespace BuildingCollections.Systems
 
             loggedHeights[c.Name] = known.Count;
             Mod.Log.Info($"[heights] '{c.Name}': {known.Count} of {c.Prefabs.Count} buildings loaded.\n"
-                + string.Join("\n", known.Select(i => $"  [data] height {i.PrefabName}: level {i.Level}, lot {i.LotWidth}x{i.LotDepth}, {i.Height} m")));
+                + string.Join("\n", known.Select(e => $"  [data] height {e.Info.PrefabName}: level {e.Info.Level}, lot {e.Info.LotWidth}x{e.Info.LotDepth}, {e.Info.Height} m, zone {e.Zone}")));
         }
 
         static bool OverlapWanted => (Mod.Settings?.OverlapMeters ?? 0.5f) > FootprintMask.StrictOverlap;
