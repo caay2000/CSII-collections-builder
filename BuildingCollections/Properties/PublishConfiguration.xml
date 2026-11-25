@@ -59,14 +59,14 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/simulator.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-collections-builder.1949529/" />
-	<ModVersion Value="0.3.24" />
+	<ModVersion Value="0.3.25" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
-0.3.24
-- Selecting a block is lighter: the city's buildings are scanned once instead of twice.
-- The log now says that angled corner buildings are left out because the builder does not place them, so they should be placed by hand.
+0.3.25
+- New Min Height and Max Height filters, in metres, in the Collections tab and in the builder. The height comes from the building bounds, so it includes antennas and chimneys.
+- Each card in a collection shows the building height.
 	</ChangeLog>
 	<ExternalLink Type="github" Url="https://github.com/caay2000/CSII-collections-builder" />
 	<!--Public, Private or Unlisted. Private while testing.-->

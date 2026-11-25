@@ -175,6 +175,14 @@ namespace BuildingCollections
         [SettingsUISection(Section, Builder)]
         public int LevelValue { get; set; }
 
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public int MinHeight { get; set; }
+
+        [SettingsUIHidden]
+        [SettingsUISection(Section, Builder)]
+        public int MaxHeight { get; set; }
+
         [SettingsUISlider(min = 1, max = 100, step = 1, unit = Unit.kPercentage)]
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
@@ -228,6 +236,8 @@ namespace BuildingCollections
             Width = ToNumber(WidthOp, WidthValue),
             Depth = ToNumber(DepthOp, DepthValue),
             Level = ToNumber(LevelOp, LevelValue),
+            MinHeight = MinHeight,
+            MaxHeight = MaxHeight,
         };
 
         static NumberFilter ToNumber(CompareOp op, int value) => value <= 0 ? NumberFilter.All : NumberFilter.Of(op, value);
@@ -247,7 +257,7 @@ namespace BuildingCollections
             NewCollectionName = string.Empty;
             findItTags = false;
             WidthOp = DepthOp = LevelOp = CompareOp.Equal;
-            WidthValue = DepthValue = LevelValue = 0;
+            WidthValue = DepthValue = LevelValue = MinHeight = MaxHeight = 0;
             Density = 100;
             Trees = false;
             DecorDensity = 50;

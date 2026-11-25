@@ -50,11 +50,12 @@ namespace BuildingCollections.Systems
         int defaultFrames;
         const int ExitFrames = 30;
         const int ReactivateFrames = 3;
+        const int MaxHeightFilter = 500;
 
         sealed class BuilderDto
         {
             public string mode = "block";
-            public int widthOp, widthValue, depthOp, depthValue, levelOp, levelValue;
+            public int widthOp, widthValue, depthOp, depthValue, levelOp, levelValue, minHeight, maxHeight;
             public int density = 100;
             public bool trees;
             public int decorDensity = 50;
@@ -334,7 +335,7 @@ namespace BuildingCollections.Systems
             {
                 if (PrefabCatalog.TryGet(name, out var e))
                 {
-                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, icon = string.Empty });
+                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, h = e.Info.Height, icon = string.Empty });
                 }
             }
 
@@ -350,17 +351,18 @@ namespace BuildingCollections.Systems
                 return list;
             }
 
+            LogHeights(c);
             int missing = 0;
             foreach (var name in c.Prefabs)
             {
                 if (PrefabCatalog.TryGet(name, out var e))
                 {
-                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, icon = e.Icon });
+                    list.Add(new { id = name, name, w = e.Info.LotWidth, d = e.Info.LotDepth, level = e.Info.Level, h = e.Info.Height, icon = e.Icon });
                 }
                 else
                 {
                     missing++;
-                    list.Add(new { id = name, name = name + " (not loaded)", w = 0, d = 0, level = 0, icon = string.Empty });
+                    list.Add(new { id = name, name = name + " (not loaded)", w = 0, d = 0, level = 0, h = 0, icon = string.Empty });
                 }
             }
 
@@ -370,6 +372,25 @@ namespace BuildingCollections.Systems
             }
 
             return list;
+        }
+
+        readonly Dictionary<string, int> loggedHeights = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        void LogHeights(BuildingCollection c)
+        {
+            var known = c.Prefabs
+                .Select(n => PrefabCatalog.TryGet(n, out var e) ? e.Info : null)
+                .Where(i => i != null)
+                .OrderBy(i => i.Level).ThenByDescending(i => i.Height).ThenBy(i => i.PrefabName, StringComparer.Ordinal)
+                .ToList();
+            if (known.Count == 0 || (loggedHeights.TryGetValue(c.Name, out int logged) && logged >= known.Count))
+            {
+                return;
+            }
+
+            loggedHeights[c.Name] = known.Count;
+            Mod.Log.Info($"[heights] '{c.Name}': {known.Count} of {c.Prefabs.Count} buildings loaded.\n"
+                + string.Join("\n", known.Select(i => $"  [data] height {i.PrefabName}: level {i.Level}, lot {i.LotWidth}x{i.LotDepth}, {i.Height} m")));
         }
 
         static bool OverlapWanted => (Mod.Settings?.OverlapMeters ?? 0.5f) > FootprintMask.StrictOverlap;
@@ -516,6 +537,7 @@ namespace BuildingCollections.Systems
                 widthOp = (int)s.WidthOp, widthValue = s.WidthValue,
                 depthOp = (int)s.DepthOp, depthValue = s.DepthValue,
                 levelOp = (int)s.LevelOp, levelValue = s.LevelValue,
+                minHeight = s.MinHeight, maxHeight = s.MaxHeight,
                 density = s.Density,
                 trees = s.Trees,
                 decorDensity = s.DecorDensity,
@@ -540,6 +562,8 @@ namespace BuildingCollections.Systems
             s.WidthOp = ToOp(f.widthOp); s.WidthValue = Clamp(f.widthValue, 0, 5);
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
+            s.MinHeight = Clamp(f.minHeight, 0, MaxHeightFilter);
+            s.MaxHeight = Clamp(f.maxHeight, 0, MaxHeightFilter);
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);

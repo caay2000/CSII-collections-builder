@@ -17,6 +17,7 @@ namespace BuildingCollections.Core
         public int LotWidth { get; set; }
         public int LotDepth { get; set; }
         public int Level { get; set; }
+        public int Height { get; set; }
         public CornerKind Corner { get; set; } = CornerKind.Front;
 
         public int CornerAngle { get; set; }
@@ -29,7 +30,7 @@ namespace BuildingCollections.Core
 
         public BuildingInfo InGroup(int group, double share) => new BuildingInfo
         {
-            PrefabName = PrefabName, LotWidth = LotWidth, LotDepth = LotDepth, Level = Level, Corner = Corner, CornerAngle = CornerAngle,
+            PrefabName = PrefabName, LotWidth = LotWidth, LotDepth = LotDepth, Level = Level, Height = Height, Corner = Corner, CornerAngle = CornerAngle,
             Group = group, Share = share,
         };
 

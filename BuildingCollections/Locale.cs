@@ -47,6 +47,8 @@ namespace BuildingCollections
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.DepthValue)), "Lot depth: value" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.LevelOp)), "Building level: operator" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.LevelValue)), "Building level: value" },
+                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.MinHeight)), "Minimum height" },
+                { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.MaxHeight)), "Maximum height" },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.Density)), "Density" },
                 { s.GetOptionDescLocaleID(nameof(BuildingCollectionsSettings.Density)), "Percentage of free cells to cover with buildings." },
                 { s.GetOptionLabelLocaleID(nameof(BuildingCollectionsSettings.VersionLabel)), $"Version {Mod.Version}" },

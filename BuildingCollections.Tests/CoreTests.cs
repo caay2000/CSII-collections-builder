@@ -24,6 +24,22 @@ namespace BuildingCollections.Tests
 
     public class BuildingFilterTests
     {
+        [Theory]
+        [InlineData(0, 0, 0, true)]
+        [InlineData(0, 0, 30, true)]
+        [InlineData(10, 0, 0, false)]
+        [InlineData(0, 20, 0, false)]
+        [InlineData(10, 20, 9, false)]
+        [InlineData(10, 20, 10, true)]
+        [InlineData(10, 20, 20, true)]
+        [InlineData(10, 20, 21, false)]
+        [InlineData(10, 0, 200, true)]
+        public void Filters_by_height_range(int min, int max, int height, bool expected) =>
+            Assert.Equal(expected, new BuildingFilter { MinHeight = min, MaxHeight = max }.Matches(new BuildingInfo { Height = height }));
+
+        [Fact]
+        public void Mix_group_keeps_the_height() => Assert.Equal(18, new BuildingInfo { Height = 18 }.InGroup(1, 0.5).Height);
+
         static BuildingInfo B(string n, int w, int d, int l) => new BuildingInfo { PrefabName = n, LotWidth = w, LotDepth = d, Level = l };
 
         [Fact]
