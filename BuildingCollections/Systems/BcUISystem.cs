@@ -564,6 +564,11 @@ namespace BuildingCollections.Systems
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
             s.MinHeight = Clamp(f.minHeight, 0, MaxHeightFilter);
             s.MaxHeight = Clamp(f.maxHeight, 0, MaxHeightFilter);
+            if (s.MaxHeight > 0 && s.MinHeight > s.MaxHeight)
+            {
+                (s.MinHeight, s.MaxHeight) = (s.MaxHeight, s.MinHeight);
+            }
+
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
