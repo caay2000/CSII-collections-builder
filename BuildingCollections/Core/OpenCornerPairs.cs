@@ -20,7 +20,6 @@ namespace BuildingCollections.Core
         const int MaxFillers = 3;
         const int MaxMovedNeighbours = 3;
         const double ScopeMargin = 16;
-        const int ShortlistPerStreet = 3;
 
         readonly List<PlannedLot> lots;
         readonly IReadOnlyList<PlanBlock> blocks;
@@ -108,24 +107,20 @@ namespace BuildingCollections.Core
             double before = Uncovered(strips, scope);
             int gapsBefore = FrontCoverage.GapsBetweenOwn(scope, nearby, new[] { first, second });
             int filledBefore = FrontCoverage.CountFilled(scope, cells);
-            var models = catalog
+            var best = catalog
                 .GroupBy(model => (model.LotWidth, model.LotDepth, model.Group))
                 .OrderBy(shape => shape.Key)
                 .Select(PickModel)
-                .ToList();
-            var firstChoices = Shortlist(models, first, second, corner, first.Strip.T * -1, -1);
-            var secondChoices = Shortlist(models, second, first, corner, second.Strip.T, 1);
-            var best = firstChoices
-                .SelectMany(ma => secondChoices.Where(mb => mb.Group == ma.Group).Select(mb => (ma, mb)))
-                .Select(m => Candidate(m.ma, m.mb, first, second, corner, strips, gapsBefore, filledBefore))
+                .ToList()
+                .Select(model => Candidate(model, first, second, corner, strips, gapsBefore, filledBefore))
                 .Where(c => c != null && c.Uncovered <= before + GapTolerance)
                 .OrderBy(c => Math.Round(c.Uncovered, 1))
-                .ThenByDescending(c => c.A.Width + c.B.Width)
-                .ThenByDescending(c => c.A.Depth + c.B.Depth)
+                .ThenByDescending(c => c.A.Width)
+                .ThenByDescending(c => c.A.Depth)
                 .FirstOrDefault();
             if (best == null)
             {
-                log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): no pair of buildings fits, kept as planned.");
+                log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): no model fits on both streets, kept as planned.");
                 return false;
             }
 
@@ -135,7 +130,7 @@ namespace BuildingCollections.Core
             lots.AddRange(best.Fillers);
             paired.Add(best.A);
             paired.Add(best.B);
-            log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): paired {best.A.Building} and {best.B.Building}, {before:F1} -> {best.Uncovered:F1} m uncovered.");
+            log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): {best.A.Building} on both streets, {before:F1} -> {best.Uncovered:F1} m uncovered.");
             return true;
         }
 
@@ -158,62 +153,23 @@ namespace BuildingCollections.Core
             public double Uncovered;
         }
 
-        List<BuildingInfo> Shortlist(List<BuildingInfo> models, PlanBlock block, PlanBlock other, Pt corner, Pt inward, int rowInward) =>
-            models
-                .Select(model => (model, uncovered: StreetScore(model, block, other, corner, inward, rowInward)))
-                .Where(m => m.uncovered.HasValue)
-                .OrderBy(m => Math.Round(m.uncovered.Value, 1))
-                .ThenByDescending(m => m.model.LotWidth)
-                .ThenByDescending(m => m.model.LotDepth)
-                .Take(ShortlistPerStreet)
-                .Select(m => m.model)
-                .ToList();
-
-        double? StreetScore(BuildingInfo model, PlanBlock block, PlanBlock other, Pt corner, Pt inward, int rowInward)
+        Pair Candidate(BuildingInfo model, PlanBlock first, PlanBlock second, Pt corner, LotStrip[] strips, int gapsBefore, int filledBefore)
         {
-            if (!FitsStreet(model, block))
+            if (model.LotWidth * CellFrame.Size > first.Strip.ChunkLength || model.LotWidth * CellFrame.Size > second.Strip.ChunkLength
+                || model.LotDepth > first.Grid.Depth || model.LotDepth > second.Grid.Depth)
             {
                 return null;
             }
 
-            var lot = LotAt(block, model, corner, inward);
-            if (!Fits(lot, corner))
-            {
-                return null;
-            }
-
-            var displaced = scope.Where(l => Blocks(lot, l)).ToList();
-            if (displaced.Any(l => paired.Contains(l) || l.Building.Group != model.Group || (l.Owner != block && l.Owner != other)))
-            {
-                return null;
-            }
-
-            var trial = scope.Where(l => !displaced.Contains(l)).Append(lot).ToList();
-            var (moved, placed) = CloseRow(lot, block, rowInward, trial);
-            trial.RemoveAll(moved.Contains);
-            trial.AddRange(placed);
-            return Uncovered(new[] { block.Strip }, trial);
-        }
-
-        static bool FitsStreet(BuildingInfo model, PlanBlock block) =>
-            model.LotWidth * CellFrame.Size <= block.Strip.ChunkLength && model.LotDepth <= block.Grid.Depth;
-
-        Pair Candidate(BuildingInfo modelA, BuildingInfo modelB, PlanBlock first, PlanBlock second, Pt corner, LotStrip[] strips, int gapsBefore, int filledBefore)
-        {
-            if (!FitsStreet(modelA, first) || !FitsStreet(modelB, second))
-            {
-                return null;
-            }
-
-            var a = LotAt(first, modelA, corner, first.Strip.T * -1);
-            var b = LotAt(second, modelB, corner, second.Strip.T);
+            var a = LotAt(first, model, corner, first.Strip.T * -1);
+            var b = LotAt(second, model, corner, second.Strip.T);
             if (!Fits(a, corner) || !Fits(b, corner))
             {
                 return null;
             }
 
             var displaced = scope.Where(l => Blocks(a, l) || Blocks(b, l)).ToList();
-            if (displaced.Any(l => paired.Contains(l) || l.Building.Group != modelA.Group || (l.Owner != first && l.Owner != second)))
+            if (displaced.Any(l => paired.Contains(l) || l.Building.Group != model.Group || (l.Owner != first && l.Owner != second)))
             {
                 return null;
             }
