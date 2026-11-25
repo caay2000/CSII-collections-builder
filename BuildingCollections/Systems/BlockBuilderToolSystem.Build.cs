@@ -56,6 +56,7 @@ namespace BuildingCollections.Systems
             Mod.Log.Info($"[build] frame {frame}, {Origin}: applying {preview.Count} planned, {temps.Count} temporary buildings.\n"
                 + string.Join("\n", BuiltSummary.Lines(Describe(temps))));
             SessionMarker.Record($"build of {temps.Count} buildings from {Origin}, frame {frame}");
+            Origin = UnknownOrigin;
             int filled = CountFront(), total = FrontTotal;
             ClearSelection();
             Say(total > 0 ? $"Built {temps.Count} buildings: {filled} of {total} street-front cells filled ({100 * filled / total}%)." : $"Built {temps.Count} buildings.");
@@ -64,7 +65,9 @@ namespace BuildingCollections.Systems
             return inputDeps;
         }
 
-        public string Origin { get; set; } = "unknown collection";
+        const string UnknownOrigin = "unknown collection";
+
+        public string Origin { get; set; } = UnknownOrigin;
 
         IEnumerable<(string name, string source)> Describe(IEnumerable<Entity> entities)
         {

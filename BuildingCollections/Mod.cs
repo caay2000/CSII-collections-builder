@@ -83,8 +83,14 @@ namespace BuildingCollections
                 Settings = null;
             }
 
-            CollectionStore.Save();
-            SessionMarker.End();
+            try
+            {
+                CollectionStore.Save();
+            }
+            finally
+            {
+                SessionMarker.End();
+            }
         }
     }
 }

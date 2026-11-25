@@ -6,6 +6,8 @@ namespace BuildingCollections
 {
     public static class SessionMarker
     {
+        static string started = "started: ?";
+
         static string FilePath => Path.Combine(EnvPath.kUserDataPath, "ModsData", "BuildingCollections", "session.marker");
 
         public static void Start(string header)
@@ -19,7 +21,8 @@ namespace BuildingCollections
                 }
 
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
-                Write($"started: {header}");
+                started = $"started: {header}";
+                Write(started);
             }
             catch (Exception e)
             {
@@ -31,8 +34,6 @@ namespace BuildingCollections
         {
             try
             {
-                var lines = File.Exists(FilePath) ? File.ReadAllLines(FilePath) : Array.Empty<string>();
-                var started = lines.Length > 0 && lines[0].StartsWith("started:") ? lines[0] : "started: ?";
                 Write(started + "\n" + $"last action: {DateTime.Now:yyyy-MM-dd HH:mm:ss} {action}");
             }
             catch (Exception e)
