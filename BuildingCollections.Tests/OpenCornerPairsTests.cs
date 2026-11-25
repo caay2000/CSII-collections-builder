@@ -43,15 +43,13 @@ namespace BuildingCollections.Tests
         [Theory]
         [InlineData(110)]
         [InlineData(120)]
-        public void An_open_corner_gets_the_same_model_on_both_streets_with_the_lot_corners_together(double angle)
+        public void An_open_corner_gets_a_building_on_each_street_with_the_lot_corners_together(double angle)
         {
             var result = Plan(Block(angle), 0.5f, out _);
 
-            var pairs = result.Lots.Where(l => l.Corner).GroupBy(l => l.Building).Where(g => g.Count() >= 2).ToList();
-            Assert.NotEmpty(pairs);
-            Assert.Contains(result.Log, l => l.Contains("on both streets"));
+            Assert.Contains(result.Log, l => l.Contains("): paired "));
             var fronts = result.Lots.Where(l => l.Corner).SelectMany(l => l.Footprint(0).P.Take(2).Select(p => (l, p))).ToList();
-            Assert.Contains(fronts, x => fronts.Any(y => y.l != x.l && y.l.Building == x.l.Building && Distance(x.p, y.p) < 0.01));
+            Assert.Contains(fronts, x => fronts.Any(y => y.l != x.l && Distance(x.p, y.p) < 0.01));
         }
 
         [Fact]
@@ -70,7 +68,7 @@ namespace BuildingCollections.Tests
             {
                 var run = BuildingCollections.Simulator.Simulation.Simulate(scenario, 2f, seed, plain, corners);
 
-                Assert.Contains(run.Result.Log, l => l.Contains(" on both streets, "));
+                Assert.Contains(run.Result.Log, l => l.Contains("): paired "));
             }
         }
 
@@ -79,7 +77,7 @@ namespace BuildingCollections.Tests
         {
             var result = Plan(Block(120), FootprintMask.StrictOverlap, out _);
 
-            Assert.DoesNotContain(result.Log, l => l.Contains("on both streets"));
+            Assert.DoesNotContain(result.Log, l => l.Contains("): paired "));
         }
 
         [Fact]
@@ -98,7 +96,7 @@ namespace BuildingCollections.Tests
                 Blocks = blocks, Existing = new List<Quad>(), Outline = VirtualLots.Outline(sides), Plain = Catalog, Corners = new[] { leftOnly }, Overlap = 0.5f, Seed = 3,
             });
 
-            Assert.DoesNotContain(result.Log, l => l.Contains("left only") && l.Contains("on both streets"));
+            Assert.DoesNotContain(result.Log, l => l.Contains("left only") && l.Contains("): paired "));
         }
 
         [Fact]
