@@ -70,6 +70,37 @@ namespace BuildingCollections.Simulator
             }
         }
 
+        public static void RunBlocks(int seeds, float overlap)
+        {
+            Simulation.Simulate(GameBlocks.All().First(), overlap, 1);
+            var rows = new List<(string Name, double Phase, double Total)>();
+            foreach (var scenario in GameBlocks.All())
+            {
+                double phase = 0, total = 0;
+                for (int seed = 1; seed <= seeds; seed++)
+                {
+                    var clock = Stopwatch.StartNew();
+                    var run = Simulation.Simulate(scenario, overlap, seed);
+                    total = Math.Max(total, clock.Elapsed.TotalMilliseconds);
+                    phase = Math.Max(phase, run.Result.Timings
+                        .Select(t => Regex.Match(t, @"^open corners (\d+) ms$"))
+                        .Where(m => m.Success)
+                        .Select(m => double.Parse(m.Groups[1].Value))
+                        .DefaultIfEmpty(0)
+                        .Max());
+                }
+
+                rows.Add((scenario.Name, phase, total));
+            }
+
+            Console.WriteLine($"Bench per block: {rows.Count} game blocks, overlap {overlap} m, worst of {seeds} seeds.");
+            Console.WriteLine($"  open corners: max {rows.Max(r => r.Phase):F0} ms, mean {rows.Average(r => r.Phase):F1} ms; plan: max {rows.Max(r => r.Total):F0} ms, mean {rows.Average(r => r.Total):F1} ms.");
+            foreach (var r in rows.OrderByDescending(r => r.Phase).Take(8))
+            {
+                Console.WriteLine($"  {r.Name}: open corners {r.Phase:F0} ms, plan {r.Total:F0} ms");
+            }
+        }
+
         static void RunCut(List<Scenario> scenarios, int seeds)
         {
             var cuts = scenarios.Select(s => (scenario: s, clip: LeftHalf(s))).ToList();
