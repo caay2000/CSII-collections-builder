@@ -64,7 +64,7 @@ namespace BuildingCollections.Systems
 
             if (placed > 0 || lost > 0)
             {
-                Mod.Log.Info($"[build] {placed} buildings placed, {lost} not applied or deleted, {pending.Count} pending.");
+                Mod.Log.Info($"[build] frame {World.GetOrCreateSystemManaged<Game.Simulation.SimulationSystem>().frameIndex}, {placed} buildings placed, {lost} not applied or deleted, {pending.Count} pending.");
             }
         }
 
