@@ -177,8 +177,8 @@ export const CollectionsTab = () => {
                     <StepFilter label="Lot Width" op={f.wOp} value={f.wV} onChange={(o, v) => setF({ ...f, wOp: o, wV: v })} />
                     <StepFilter label="Lot Depth" op={f.dOp} value={f.dV} onChange={(o, v) => setF({ ...f, dOp: o, dV: v })} />
                     <StepFilter label="Building Level" op={f.lOp} value={f.lV} onChange={(o, v) => setF({ ...f, lOp: o, lV: v })} />
-                    <HeightFilter label="Min Height" value={f.hMin} onChange={(v) => { const r = heightRange(v, f.hMax, "min"); setF({ ...f, hMin: r.min, hMax: r.max }); }} />
-                    <HeightFilter label="Max Height" value={f.hMax} onChange={(v) => { const r = heightRange(f.hMin, v, "max"); setF({ ...f, hMin: r.min, hMax: r.max }); }} />
+                    <HeightFilter label="Min Height" bound="min" value={f.hMin} onChange={(v) => { const r = heightRange(v, f.hMax, "min"); setF({ ...f, hMin: r.min, hMax: r.max }); }} />
+                    <HeightFilter label="Max Height" bound="max" value={f.hMax} onChange={(v) => { const r = heightRange(f.hMin, v, "max"); setF({ ...f, hMin: r.min, hMax: r.max }); }} />
                 </div>
                 <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable" controller={controller} onScroll={measure}>
                     <div className={styles.grid} ref={gridRef}>
