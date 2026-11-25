@@ -14,6 +14,12 @@ namespace BuildingCollections.Simulator
             if (!string.IsNullOrEmpty(catalogFile))
             {
                 Simulation.Plain = Simulation.FromHeightsLog(File.ReadAllLines(catalogFile));
+                if (Simulation.Plain.Count == 0)
+                {
+                    Console.Error.WriteLine($"No '[data] height' lines in {catalogFile}.");
+                    return 2;
+                }
+
                 Console.WriteLine($"Catalog from {catalogFile}: {Simulation.Plain.Count} buildings.");
             }
 
@@ -53,8 +59,9 @@ namespace BuildingCollections.Simulator
             if (string.IsNullOrEmpty(catalogFile))
             {
                 Simulation.Plain = plain;
+                Console.WriteLine($"Catalog: {catalog} ({string.Join(", ", plain.Select(b => b.PrefabName))})");
             }
-            Console.WriteLine($"Catalog: {catalog} ({string.Join(", ", plain.Select(b => b.PrefabName))})");
+
             var runs = Scenarios.All()
                 .Where(s => filter == null || filter.Split('|').Any(f => s.Name.Contains(f)))
                 .SelectMany(s => overlaps.Select(o => Simulation.Simulate(s, o, seed)))
