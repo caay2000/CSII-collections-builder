@@ -18,6 +18,7 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   (`ObjectGeometryData`), sin leer la malla, así que incluye antenas y chimeneas. Con un límite activo, los edificios sin
   altura conocida quedan fuera.
 - Cada tarjeta de la colección muestra la altura del edificio.
+- Pasos de 5 a 200 m. `Min Height` va de `All` a 200 m; `Max Height` va de 5 m a `+200 m`, que es sin límite.
 
 ## 0.3.24
 - Se quitan las parejas de esquina abierta de 0.3.21 y 0.3.23 (`OpenCornerPairs`, sus tests y la manzana

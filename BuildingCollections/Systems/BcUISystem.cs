@@ -50,7 +50,7 @@ namespace BuildingCollections.Systems
         int defaultFrames;
         const int ExitFrames = 30;
         const int ReactivateFrames = 3;
-        const int MaxHeightFilter = 500;
+        const int MaxHeightFilter = 200;
 
         sealed class BuilderDto
         {

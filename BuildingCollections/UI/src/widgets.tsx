@@ -57,22 +57,28 @@ export const StepFilter = (p: {
     );
 };
 
-export const HEIGHT_STEPS = [0, 5, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100, 150, 200];
+const HEIGHTS = [5, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100, 150, 200];
+
+const HEIGHT_BOUNDS = {
+    min: { steps: [0, ...HEIGHTS], unset: "All", rank: (v: number) => v },
+    max: { steps: [...HEIGHTS, 0], unset: `+${HEIGHTS[HEIGHTS.length - 1]} m`, rank: (v: number) => v === 0 ? Infinity : v },
+};
 
 export function heightRange(min: number, max: number, changed: "min" | "max") {
     if (min > 0 && max > 0 && min > max) return changed === "min" ? { min, max: min } : { min: max, max };
     return { min, max };
 }
 
-export const HeightFilter = (p: { label: string; value: number; onChange: (value: number) => void }) => {
-    const at = HEIGHT_STEPS.reduce((best, step, i) => step <= p.value ? i : best, 0);
+export const HeightFilter = (p: { label: string; bound: "min" | "max"; value: number; onChange: (value: number) => void }) => {
+    const { steps, unset, rank } = HEIGHT_BOUNDS[p.bound];
+    const at = steps.reduce((best, step, i) => rank(step) <= rank(p.value) ? i : best, 0);
     return (
         <div className={styles.filter}>
             <span className={styles.filterLabel}>{p.label}</span>
             <button className={`${styles.stepOp} ${styles.stepOpHidden}`} disabled />
-            <Stepper value={p.value === 0 ? "All" : `${p.value} m`}
-                onDown={() => p.onChange(HEIGHT_STEPS[p.value > HEIGHT_STEPS[at] ? at : Math.max(0, at - 1)])}
-                onUp={() => p.onChange(HEIGHT_STEPS[Math.min(HEIGHT_STEPS.length - 1, at + 1)])} />
+            <Stepper value={p.value === 0 ? unset : `${p.value} m`}
+                onDown={() => p.onChange(steps[rank(p.value) > rank(steps[at]) ? at : Math.max(0, at - 1)])}
+                onUp={() => p.onChange(steps[Math.min(steps.length - 1, at + 1)])} />
         </div>
     );
 };
