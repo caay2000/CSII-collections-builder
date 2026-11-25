@@ -9,15 +9,25 @@ namespace BuildingCollections
 {
     public class Mod : IMod
     {
-        public static ILog Log = LogManager.GetLogger(nameof(BuildingCollections)).SetShowsErrorsInUI(false);
+        public static ILog Log = CreateLog();
 
         public static BuildingCollectionsSettings Settings { get; private set; }
 
         public static string Version { get; } = typeof(Mod).Assembly.GetName().Version is System.Version v ? $"{v.Major}.{v.Minor}.{v.Build}" : "?";
 
+        static ILog CreateLog()
+        {
+            var log = LogManager.GetLogger(nameof(BuildingCollections)).SetShowsErrorsInUI(false);
+            log.effectivenessLevel = Level.Info;
+            return log;
+        }
+
         public void OnLoad(UpdateSystem updateSystem)
         {
             Log.Info($"{nameof(OnLoad)} v{Version}");
+            var header = $"Collections Builder v{Version}, game {UnityEngine.Application.version}, Unity {UnityEngine.Application.unityVersion}, {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+            Log.Info("[session] " + header);
+            SessionMarker.Start(header);
             try
             {
                 CollectionStore.Load();
@@ -74,6 +84,7 @@ namespace BuildingCollections
             }
 
             CollectionStore.Save();
+            SessionMarker.End();
         }
     }
 }

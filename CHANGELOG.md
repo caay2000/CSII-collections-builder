@@ -4,6 +4,15 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.26
+- El log se escribe siempre a nivel INFO, aunque el juego o Skyve bajen el nivel global a avisos (antes el fichero ni se
+  creaba).
+- Cabecera de sesión con la versión del mod, la del juego, la de Unity y la fecha.
+- Cada construcción registra el frame de simulación, la colección (y la mezcla) y la lista exacta de edificios colocados,
+  con cuántos de cada modelo y el pack de origen (`pdx <id> v<versión>`, `game` o `local`).
+- Marcador de sesión en `ModsData/BuildingCollections/session.marker` con la última acción (preview o build). Si al
+  arrancar sigue ahí, la sesión anterior no cerró bien y el log lo avisa con esa última acción.
+
 ## 0.3.25
 - Filtros `Min Height` y `Max Height` en Colecciones y en el constructor, en metros. La altura sale de la caja del edificio
   (`ObjectGeometryData`), sin leer la malla, así que incluye antenas y chimeneas. Con un límite activo, los edificios sin

@@ -610,6 +610,8 @@ namespace BuildingCollections.Systems
                     .Concat(second.Select(e => Tagged(e, 1, 1 - share))).ToList();
                 Mod.Log.Info($"[preview] mix: {c.Name} {s.MixShare}% ({firstNames.Count} buildings) + {mix.Name} {100 - s.MixShare}% ({second.Count}).");
             }
+            builder.Origin = mix != null ? $"'{c.Name}' {s.MixShare}% + '{mix.Name}' {100 - s.MixShare}%" : $"'{c.Name}'";
+            SessionMarker.Record($"preview from {builder.Origin}");
             int seed = unchecked(Environment.TickCount * 31 + ++seedCounter);
             var decor = s.Trees ? TreeDecor(s.TreeSet) : new List<CatalogEntry>();
             long prep = clock.ElapsedMilliseconds;

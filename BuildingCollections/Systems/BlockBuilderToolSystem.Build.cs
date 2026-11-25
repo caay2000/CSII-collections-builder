@@ -52,13 +52,43 @@ namespace BuildingCollections.Systems
             }
 
             guard.Track(temps, cfg.ReportAfterFrames);
-            Mod.Log.Info($"[build] Applying: {preview.Count} planned, {temps.Count} temporary buildings.");
+            uint frame = World.GetOrCreateSystemManaged<SimulationSystem>().frameIndex;
+            Mod.Log.Info($"[build] frame {frame}, {Origin}: applying {preview.Count} planned, {temps.Count} temporary buildings.\n"
+                + string.Join("\n", BuiltSummary.Lines(Describe(temps))));
+            SessionMarker.Record($"build of {temps.Count} buildings from {Origin}, frame {frame}");
             int filled = CountFront(), total = FrontTotal;
             ClearSelection();
             Say(total > 0 ? $"Built {temps.Count} buildings: {filled} of {total} street-front cells filled ({100 * filled / total}%)." : $"Built {temps.Count} buildings.");
             definitionsDirty = true;
             applyMode = ApplyMode.Apply;
             return inputDeps;
+        }
+
+        public string Origin { get; set; } = "unknown collection";
+
+        IEnumerable<(string name, string source)> Describe(IEnumerable<Entity> entities)
+        {
+            var prefabs = World.GetOrCreateSystemManaged<PrefabSystem>();
+            foreach (var e in entities)
+            {
+                if (EntityManager.HasComponent<PrefabRef>(e)
+                    && prefabs.TryGetPrefab<PrefabBase>(EntityManager.GetComponentData<PrefabRef>(e).m_Prefab, out var prefab))
+                {
+                    yield return (prefab.name, SourceOf(prefab));
+                }
+            }
+        }
+
+        static string SourceOf(PrefabBase prefab)
+        {
+            try
+            {
+                return prefab.asset == null ? "unknown" : BuiltSummary.Source(prefab.asset.path, prefab.asset.isBuiltin);
+            }
+            catch (Exception)
+            {
+                return "unknown";
+            }
         }
     }
 }

@@ -249,4 +249,32 @@ namespace BuildingCollections.Tests
             Assert.Single(GridPlanner.Thin(items, 10, 70, new System.Random(3)));
         }
     }
+
+    public class BuiltSummaryTests
+    {
+        [Theory]
+        [InlineData("C:/Users/x/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/pdx_mods/167363_2/LBE Liberty Pack.cok", false, "pdx 167363 v2")]
+        [InlineData(@"C:\cache\Mods\pdx_mods\165696_4\RZitapackv2-1.cok", false, "pdx 165696 v4")]
+        [InlineData("C:/Users/x/AppData/LocalLow/Colossal Order/Cities Skylines II/StreamingData~/Building.Prefab", false, "local")]
+        [InlineData(null, false, "local")]
+        [InlineData("anything", true, "game")]
+        public void Source_names_the_pack(string path, bool builtin, string expected) =>
+            Assert.Equal(expected, BuiltSummary.Source(path, builtin));
+
+        [Fact]
+        public void Lines_count_each_model_most_frequent_first()
+        {
+            var lines = BuiltSummary.Lines(new[]
+            {
+                ("B", "pdx 1 v1"), ("A", "game"), ("B", "pdx 1 v1"), ("C", "local"),
+            }).ToList();
+
+            Assert.Equal(new[]
+            {
+                "  [built] 2x B (pdx 1 v1)",
+                "  [built] 1x A (game)",
+                "  [built] 1x C (local)",
+            }, lines);
+        }
+    }
 }
