@@ -10,6 +10,19 @@ namespace BuildingCollections.Simulator
     {
         public static int Main(string[] args)
         {
+            string catalogFile = Environment.GetEnvironmentVariable("SIM_CATALOG_FILE");
+            if (!string.IsNullOrEmpty(catalogFile))
+            {
+                Simulation.Plain = Simulation.FromHeightsLog(File.ReadAllLines(catalogFile));
+                Console.WriteLine($"Catalog from {catalogFile}: {Simulation.Plain.Count} buildings.");
+            }
+
+            if (args.Length > 0 && args[0] == "bench-blocks")
+            {
+                Bench.RunBlocks(args.Length > 1 ? int.Parse(args[1]) : 3, args.Length > 2 ? float.Parse(args[2], System.Globalization.CultureInfo.InvariantCulture) : 2f);
+                return 0;
+            }
+
             if (args.Length > 0 && args[0] == "bench")
             {
                 Bench.Run(args.Length > 1 ? int.Parse(args[1]) : 10, args.Length > 2 ? int.Parse(args[2]) : 3, args.Contains("polygon"));
@@ -37,7 +50,10 @@ namespace BuildingCollections.Simulator
                 return 2;
             }
 
-            Simulation.Plain = plain;
+            if (string.IsNullOrEmpty(catalogFile))
+            {
+                Simulation.Plain = plain;
+            }
             Console.WriteLine($"Catalog: {catalog} ({string.Join(", ", plain.Select(b => b.PrefabName))})");
             var runs = Scenarios.All()
                 .Where(s => filter == null || filter.Split('|').Any(f => s.Name.Contains(f)))

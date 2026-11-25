@@ -77,6 +77,7 @@ namespace BuildingCollections.Core
         public float Overlap;
         public int Density = 100;
         public int Seed;
+        public bool PairOpenCorners = true;
     }
 
     public sealed class PreviewResult

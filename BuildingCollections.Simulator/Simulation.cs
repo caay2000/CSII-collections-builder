@@ -65,6 +65,21 @@ namespace BuildingCollections.Simulator
             B("corner 2x2 L", 2, 2, CornerKind.Front | CornerKind.Left), B("corner 2x2 R", 2, 2, CornerKind.Front | CornerKind.Right),
         };
 
+        public static IReadOnlyList<BuildingInfo> FromHeightsLog(IEnumerable<string> lines) =>
+            lines
+                .Select(l => System.Text.RegularExpressions.Regex.Match(l, @"\[data\] height (.+): level (\d+), lot (\d+)x(\d+), (\d+) m"))
+                .Where(m => m.Success)
+                .Select(m => new BuildingInfo
+                {
+                    PrefabName = m.Groups[1].Value,
+                    Level = int.Parse(m.Groups[2].Value),
+                    LotWidth = int.Parse(m.Groups[3].Value),
+                    LotDepth = int.Parse(m.Groups[4].Value),
+                    Height = int.Parse(m.Groups[5].Value),
+                    Corner = CornerKind.Front,
+                })
+                .ToList();
+
         internal static BuildingInfo B(string name, int w, int d, CornerKind corner = CornerKind.Front) =>
             new BuildingInfo { PrefabName = name, LotWidth = w, LotDepth = d, Corner = corner };
 
