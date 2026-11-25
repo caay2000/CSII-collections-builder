@@ -94,6 +94,7 @@ namespace BuildingCollections
 
                     var data = em.GetComponentData<BuildingData>(e);
                     int level = em.HasComponent<SpawnableBuildingData>(e) ? em.GetComponentData<SpawnableBuildingData>(e).m_Level : 0;
+                    int height = em.HasComponent<ObjectGeometryData>(e) ? (int)math.ceil(math.max(0f, em.GetComponentData<ObjectGeometryData>(e).m_Bounds.max.y)) : 0;
                     int access = (int)prefab.m_AccessType;
                     string icon = null;
                     try { icon = ImageSystem.GetThumbnail(prefab); } catch { }
@@ -109,6 +110,7 @@ namespace BuildingCollections
                             LotWidth = data.m_LotSize.x,
                             LotDepth = data.m_LotSize.y,
                             Level = level,
+                            Height = height,
                             Corner = AccessMapping.ToCorner(access, swap),
                             CornerAngle = AngledCorner.Angle(prefab.name),
                         },

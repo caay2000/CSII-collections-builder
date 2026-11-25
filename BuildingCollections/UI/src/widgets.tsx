@@ -57,6 +57,26 @@ export const StepFilter = (p: {
     );
 };
 
+export const HEIGHT_STEPS = [0, 5, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100, 150, 200];
+
+export function heightRange(min: number, max: number, changed: "min" | "max") {
+    if (min > 0 && max > 0 && min > max) return changed === "min" ? { min, max: min } : { min: max, max };
+    return { min, max };
+}
+
+export const HeightFilter = (p: { label: string; value: number; onChange: (value: number) => void }) => {
+    const at = HEIGHT_STEPS.reduce((best, step, i) => step <= p.value ? i : best, 0);
+    return (
+        <div className={styles.filter}>
+            <span className={styles.filterLabel}>{p.label}</span>
+            <button className={`${styles.stepOp} ${styles.stepOpHidden}`} disabled />
+            <Stepper value={p.value === 0 ? "All" : `${p.value} m`}
+                onDown={() => p.onChange(HEIGHT_STEPS[p.value > HEIGHT_STEPS[at] ? at : Math.max(0, at - 1)])}
+                onUp={() => p.onChange(HEIGHT_STEPS[Math.min(HEIGHT_STEPS.length - 1, at + 1)])} />
+        </div>
+    );
+};
+
 export const Stepper = (p: { value: string; onDown: () => void; onUp: () => void }) => (
     <>
         <button className={styles.stepBtn} title="Decrease" onClick={p.onDown}><img src={icon("chevron-down")} /></button>

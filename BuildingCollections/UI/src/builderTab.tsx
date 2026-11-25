@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import styles from "./panel.module.scss";
 import { actions, BuilderDto, BuildingDto, useBuilder, useBuilderMessage, useBuilderMessageError, useBuildings, useCollections, useMixBuildings, usePlan, useSelected } from "./bindings";
-import { matches } from "./collectionsTab";
-import { CheckRow, CollectionPicker, icon, MixSlider, StepFilter, Stepper } from "./widgets";
+import { matches, matchesHeight } from "./collectionsTab";
+import { CheckRow, CollectionPicker, HeightFilter, heightRange, icon, MixSlider, StepFilter, Stepper } from "./widgets";
 
 const TREE_SET_ICONS: Record<string, string> = {
     "YYTC-wild-deciduous-trees": "coui://uil/Standard/TreesDeciduous.svg",
@@ -43,7 +43,7 @@ export const BuilderTab = () => {
 
     const mixBuildings = useMixBuildings();
     const passes = (x: BuildingDto) =>
-        matches(b.widthOp, b.widthValue, x.w) && matches(b.depthOp, b.depthValue, x.d) && matches(b.levelOp, b.levelValue, x.level);
+        matches(b.widthOp, b.widthValue, x.w) && matches(b.depthOp, b.depthValue, x.d) && matches(b.levelOp, b.levelValue, x.level) && matchesHeight(b.minHeight, b.maxHeight, x.h);
     const mix = b.mix && b.mix !== selected && collections.some((c) => c.name === b.mix) ? b.mix : "";
     const candidates = buildings.filter(passes);
     const mixCandidates = mix ? mixBuildings.filter(passes) : [];
@@ -122,6 +122,8 @@ export const BuilderTab = () => {
                     <StepFilter label="Lot Width" op={b.widthOp} value={b.widthValue} onChange={(o, v) => set({ widthOp: o, widthValue: v })} />
                     <StepFilter label="Lot Depth" op={b.depthOp} value={b.depthValue} onChange={(o, v) => set({ depthOp: o, depthValue: v })} />
                     <StepFilter label="Building Level" op={b.levelOp} value={b.levelValue} onChange={(o, v) => set({ levelOp: o, levelValue: v })} />
+                    <HeightFilter label="Min Height" value={b.minHeight} onChange={(v) => { const r = heightRange(v, b.maxHeight, "min"); set({ minHeight: r.min, maxHeight: r.max }); }} />
+                    <HeightFilter label="Max Height" value={b.maxHeight} onChange={(v) => { const r = heightRange(b.minHeight, v, "max"); set({ minHeight: r.min, maxHeight: r.max }); }} />
                     <div className={styles.filter}>
                         <span className={styles.filterLabel}>Density</span>
                         <Stepper value={`${density}%`}

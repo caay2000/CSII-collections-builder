@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./panel.module.scss";
 import { actions, BuildingDto, useBuildings, useCollections, useFindIt, usePlopping, useSelected, useStatus } from "./bindings";
-import { icon, IconButton, InlineInput, StepFilter } from "./widgets";
+import { HeightFilter, heightRange, icon, IconButton, InlineInput, StepFilter } from "./widgets";
 import { Scrollable, ScrollController } from "cs2/ui";
 
 export function prettyName(n: string): string {
@@ -13,20 +13,26 @@ export function matches(op: number, value: number, n: number): boolean {
     return op === 0 ? n === value : op === 1 ? n !== value : op === 2 ? n > value : n < value;
 }
 
+export function matchesHeight(min: number, max: number, h: number): boolean {
+    if (!min && !max) return true;
+    return h > 0 && h >= min && (!max || h <= max);
+}
+
 type Editing = "" | "new" | "rename" | "delete" | "removeAll";
 
 const Card = memo(({ b, label, on }: { b: BuildingDto; label: string; on: boolean }) => (
-    <div className={on ? `${styles.card} ${styles.cardOn}` : styles.card} title={b.w > 0 ? `${b.name} · level ${b.level}. Click to place it.` : b.name}
+    <div className={on ? `${styles.card} ${styles.cardOn}` : styles.card} title={b.w > 0 ? `${b.name} · level ${b.level}${b.h > 0 ? ` · ${b.h} m` : ""}. Click to place it.` : b.name}
         onClick={() => { if (b.w > 0) actions.plop(b.id); }}>
         <img className={styles.thumb} src={b.icon} />
         {b.w > 0 && <span className={styles.sizeTag}>{`${b.w}×${b.d}`}</span>}
+        {b.h > 0 && <span className={styles.heightTag}>{`${b.h} m`}</span>}
         <div className={styles.pips}>
             {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= b.level ? styles.pipOn : styles.pip} />)}
         </div>
         <div className={styles.cardName}>{label}</div>
         <button className={styles.remove} title="Remove from collection" onClick={(e) => { e.stopPropagation(); actions.removeBuildings([b.id]); }} />
     </div>
-), (a, c) => a.on === c.on && a.label === c.label && a.b.id === c.b.id && a.b.icon === c.b.icon && a.b.level === c.b.level && a.b.w === c.b.w && a.b.d === c.b.d);
+), (a, c) => a.on === c.on && a.label === c.label && a.b.id === c.b.id && a.b.icon === c.b.icon && a.b.level === c.b.level && a.b.w === c.b.w && a.b.d === c.b.d && a.b.h === c.b.h);
 
 const FIRST_BATCH = 40;
 const BATCH = 60;
@@ -50,7 +56,7 @@ export const CollectionsTab = () => {
     const plopping = usePlopping();
     const [editing, setEditing] = useState<Editing>("");
     const [q, setQ] = useState("");
-    const [f, setF] = useState({ wOp: 0, wV: 0, dOp: 0, dV: 0, lOp: 0, lV: 0 });
+    const [f, setF] = useState({ wOp: 0, wV: 0, dOp: 0, dV: 0, lOp: 0, lV: 0, hMin: 0, hMax: 0 });
     const cancel = useCallback(() => setEditing(""), []);
 
     const indexed = useMemo(() => buildings.map((b) => {
@@ -64,7 +70,7 @@ export const CollectionsTab = () => {
     const shown = useMemo(() => {
         const needle = q.toLowerCase();
         return indexed.filter(({ b, search }) =>
-            matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) && search.includes(needle));
+            matches(f.wOp, f.wV, b.w) && matches(f.dOp, f.dV, b.d) && matches(f.lOp, f.lV, b.level) && matchesHeight(f.hMin, f.hMax, b.h) && search.includes(needle));
     }, [indexed, f, q]);
     const shownIds = useMemo(() => shown.map(({ b }) => b.id), [shown]);
     useEffect(() => { actions.setShown(shownIds); }, [shownIds]);
@@ -171,6 +177,8 @@ export const CollectionsTab = () => {
                     <StepFilter label="Lot Width" op={f.wOp} value={f.wV} onChange={(o, v) => setF({ ...f, wOp: o, wV: v })} />
                     <StepFilter label="Lot Depth" op={f.dOp} value={f.dV} onChange={(o, v) => setF({ ...f, dOp: o, dV: v })} />
                     <StepFilter label="Building Level" op={f.lOp} value={f.lV} onChange={(o, v) => setF({ ...f, lOp: o, lV: v })} />
+                    <HeightFilter label="Min Height" value={f.hMin} onChange={(v) => { const r = heightRange(v, f.hMax, "min"); setF({ ...f, hMin: r.min, hMax: r.max }); }} />
+                    <HeightFilter label="Max Height" value={f.hMax} onChange={(v) => { const r = heightRange(f.hMin, v, "max"); setF({ ...f, hMin: r.min, hMax: r.max }); }} />
                 </div>
                 <Scrollable className={styles.gridScroll} vertical trackVisibility="scrollable" controller={controller} onScroll={measure}>
                     <div className={styles.grid} ref={gridRef}>
