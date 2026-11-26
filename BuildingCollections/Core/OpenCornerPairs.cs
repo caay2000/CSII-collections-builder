@@ -29,7 +29,8 @@ namespace BuildingCollections.Core
         readonly IReadOnlyList<CornerTwin> twins;
         readonly float overlap;
         readonly IList<string> log;
-        readonly Random random;
+        readonly int seed;
+        Random random;
         readonly List<PlannedLot> reserved = new List<PlannedLot>();
         readonly IReadOnlyList<PairKind> wanted;
         readonly List<PairKind> used = new List<PairKind>();
@@ -45,7 +46,7 @@ namespace BuildingCollections.Core
             this.catalog = catalog;
             this.overlap = overlap;
             this.log = log;
-            random = new Random(seed ^ 0x51ed270b);
+            this.seed = seed;
         }
 
         public static (List<PlannedLot> Lots, List<PairKind> Kinds) Reserve(IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
@@ -57,6 +58,7 @@ namespace BuildingCollections.Core
             foreach (var (first, second, angle) in Corners())
             {
                 var kind = used.Count < wanted.Count ? wanted[used.Count] : PairKind.Twins;
+                random = new Random(seed ^ 0x51ed270b ^ (used.Count * 7919));
                 if (kind == PairKind.None)
                 {
                     log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): left to the regular corner buildings, the street is better covered without a pair.");

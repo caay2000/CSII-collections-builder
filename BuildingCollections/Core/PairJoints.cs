@@ -88,7 +88,7 @@ namespace BuildingCollections.Core
             }
 
             string how = row.Anchor != null && Respace(row) ? "closed by spreading the row up to the next corner"
-                : !row.EndsInPair && Slide(row, gap) ? "closed by sliding the rest of the street towards it"
+                : !row.EndsInPair && FarEndIsACorner(row) && Slide(row, gap) ? "closed by sliding the rest of the street towards it"
                 : "left open";
             log.Add($"{side}: {gap:F1} m to the next building {how}.");
         }
@@ -120,6 +120,8 @@ namespace BuildingCollections.Core
 
             return row;
         }
+
+        static bool FarEndIsACorner(Row row) => row.Inward > 0 ? row.Strip.ChunkIndex == row.Strip.ChunkCount - 1 : row.Strip.ChunkIndex == 0;
 
         bool Slide(Row row, double gap)
         {
@@ -237,9 +239,10 @@ namespace BuildingCollections.Core
         {
             var others = lots.ToList();
             var widths = plain.Select(b => b.LotWidth).Distinct().OrderByDescending(w => w).ToList();
+            double room = row.Inward > 0 ? row.Strip.ChunkLength - row.Inner : row.Inner;
             double u = 0;
             int added = 0;
-            while (u < row.Strip.ChunkLength)
+            while (u + CellFrame.Size <= room + overlap)
             {
                 var lot = widths
                     .SelectMany(w => Models(row, w, null).Select(model => At(row, model, null, Math.Min(row.At(u), row.At(u + w * CellFrame.Size)))))
