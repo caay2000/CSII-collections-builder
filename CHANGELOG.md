@@ -12,6 +12,7 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   con cuántos de cada modelo y el pack de origen (`pdx <id> v<versión>`, `game` o `local`).
 - Marcador de sesión en `ModsData/BuildingCollections/session.marker` con la última acción (preview o build). Si al
   arrancar sigue ahí, la sesión anterior no cerró bien y el log lo avisa con esa última acción.
+- La primera vez que se selecciona una colección en la sesión, el log lista sus edificios con nivel, tamaño de lote, altura y zona.
 
 ## 0.3.25
 - Filtros `Min Height` y `Max Height` en Colecciones y en el constructor, en metros. La altura sale de la caja del edificio
