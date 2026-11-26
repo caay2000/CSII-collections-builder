@@ -910,6 +910,24 @@
       "EmptyCells": 0
     },
     {
+      "Scenario": "Oak Lane and Sheffield (13111, -8478), 127\u00B0 corner next to a short side with a corner building at its other end",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 637.4,
+      "MaxGap": 8.5,
+      "GapsBetweenBuildings": 11,
+      "EmptyCells": 96
+    },
+    {
+      "Scenario": "Oak Lane and Sheffield (13111, -8478), 127\u00B0 corner next to a short side with a corner building at its other end",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 98.4,
+      "MaxGap": 2.7,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 24
+    },
+    {
       "Scenario": "block with a clear 127\u00B0 open corner (13111, -8496)",
       "Overlap": 0.05,
       "MissedCorners": 0,

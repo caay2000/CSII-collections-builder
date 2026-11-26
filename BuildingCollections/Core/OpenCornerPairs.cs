@@ -28,6 +28,7 @@ namespace BuildingCollections.Core
         readonly IReadOnlyList<Pt> outline;
         readonly IReadOnlyList<BuildingInfo> catalog;
         readonly IReadOnlyList<CornerTwin> twins;
+        readonly IReadOnlyList<BuildingInfo> cornerModels;
         readonly IReadOnlyList<Pt> frontCells;
         readonly float overlap;
         readonly IList<string> log;
@@ -42,6 +43,7 @@ namespace BuildingCollections.Core
         {
             this.lots = lots;
             twins = CornerTwins.Find(corners);
+            cornerModels = corners;
             this.blocks = blocks.Where(b => b.Strip != null).ToList();
             this.existing = existing;
             this.outline = outline;
@@ -213,6 +215,11 @@ namespace BuildingCollections.Core
             foreach (var (lot, block, inward) in new[] { (a, first, -1), (b, second, 1) })
             {
                 var (moved, placed) = CloseRow(lot, block, inward, trial);
+                if (moved.Count == 0 && placed.Count == 0)
+                {
+                    placed = RestoreFarCorner(lot, block, inward, displaced, trial);
+                }
+
                 trial.RemoveAll(moved.Contains);
                 trial.AddRange(placed);
                 displaced.AddRange(moved);
@@ -272,6 +279,64 @@ namespace BuildingCollections.Core
             }
 
             return (new List<PlannedLot>(), new List<PlannedLot>());
+        }
+
+        List<PlannedLot> RestoreFarCorner(PlannedLot lot, PlanBlock block, int inward, List<PlannedLot> displaced, List<PlannedLot> planned)
+        {
+            var strip = block.Strip;
+            var (from, to) = Span(lot, strip);
+            double inner = inward > 0 ? to : from;
+            bool Beyond(PlannedLot other)
+            {
+                var span = Span(other, strip);
+                return inward > 0 ? span.To > inner : span.From < inner;
+            }
+
+            if (planned.Any(l => l != lot && l.Owner == block && Beyond(l)))
+            {
+                return new List<PlannedLot>();
+            }
+
+            var far = displaced
+                .Where(l => l.Corner && l.Owner == block && Beyond(l))
+                .OrderBy(l => inward > 0 ? -Span(l, strip).To : Span(l, strip).From)
+                .FirstOrDefault();
+            if (far == null)
+            {
+                return new List<PlannedLot>();
+            }
+
+            var farSpan = Span(far, strip);
+            double edge = inward > 0 ? farSpan.To : farSpan.From;
+            double gap = Math.Abs(edge - inner);
+            var start = strip.ChunkStart + strip.T * edge;
+            var options = cornerModels
+                .Where(m => m.Corner == far.Building.Corner && m.Group == lot.Building.Group && m.LotDepth <= block.Grid.Depth && m.LotWidth * CellFrame.Size <= gap + overlap)
+                .GroupBy(m => (m.LotWidth, m.LotDepth))
+                .OrderByDescending(shape => shape.Key)
+                .Select(PickModel);
+            foreach (var model in options)
+            {
+                var corner = LotAt(block, model, start, strip.T * -inward);
+                if (!Fits(corner) || planned.Any(o => Quad.Touch(o.Footprint(0), corner.Footprint(overlap))))
+                {
+                    continue;
+                }
+
+                double remaining = gap - model.LotWidth * CellFrame.Size;
+                if (remaining <= ClosedGap)
+                {
+                    return new List<PlannedLot> { corner };
+                }
+
+                var fillers = Fillers(lot, block, inner, inward, remaining, planned.Append(corner).ToList());
+                if (fillers.Count > 0)
+                {
+                    return fillers.Prepend(corner).ToList();
+                }
+            }
+
+            return new List<PlannedLot>();
         }
 
         List<PlannedLot> Fillers(PlannedLot lot, PlanBlock block, double inner, int inward, double gap, List<PlannedLot> planned)
