@@ -14,7 +14,7 @@ namespace BuildingCollections.Core
         public static IEnumerable<string> Existing(IEnumerable<Quad> quads) => quads.Select(q => $"{Tag}existing: {Points(q.P)}");
 
         public static IEnumerable<string> Proposed(IEnumerable<PlannedLot> lots) =>
-            lots.Select(l => $"{Tag}proposed {l.Building.LotWidth}x{l.Building.LotDepth}{(l.Corner ? " corner" : string.Empty)} {Escape(l.Building.PrefabName)}: {Points(l.Footprint(0).P)}");
+            lots.Select(l => $"{Tag}proposed {l.Width}x{l.Depth}{(l.Corner ? " corner" : string.Empty)} {Escape(l.Building.PrefabName)}: {Points(l.Footprint(0).P)}");
 
         public static IEnumerable<string> Roads(IEnumerable<(int id, RoadEdge edge)> roads) =>
             roads.Select(r => $"{Tag}road {r.id} nodes {r.edge.Start}-{r.edge.End}: {Points(r.edge.Points)}");

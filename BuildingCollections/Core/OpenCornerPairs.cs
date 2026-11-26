@@ -173,7 +173,7 @@ namespace BuildingCollections.Core
                 .OrderBy(shape => shape.Key)
                 .Select(PickModel)
                 .Select(model => new Shape { First = model, Second = model });
-            var firstSide = SideFacingStreet(first, Pt.Dot(first.Frame.AxisX, first.Strip.T) > 0 ? 1 : -1);
+            var firstSide = SideFacingStreet(Pt.Dot(first.Frame.AxisX, first.Strip.T) > 0 ? 1 : -1);
             var sideOn = twins
                 .Where(twin => twin.Left.LotWidth < twin.Left.LotDepth)
                 .GroupBy(twin => (twin.Left.LotWidth, twin.Left.LotDepth, twin.Left.Group))
@@ -184,12 +184,7 @@ namespace BuildingCollections.Core
             return straight.Concat(sideOn).ToList();
         }
 
-        static CornerKind SideFacingStreet(PlanBlock block, int frontAlong)
-        {
-            var front = block.Frame.AxisX * frontAlong;
-            var left = new Pt(front.Y, -front.X);
-            return Pt.Dot(left, block.Frame.AxisY) < 0 ? CornerKind.Left : CornerKind.Right;
-        }
+        public static CornerKind SideFacingStreet(int frontAlong) => frontAlong > 0 ? CornerKind.Left : CornerKind.Right;
 
         static CornerKind Opposite(CornerKind side) => side == CornerKind.Left ? CornerKind.Right : CornerKind.Left;
 

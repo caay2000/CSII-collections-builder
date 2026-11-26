@@ -29,7 +29,7 @@ export interface PlanDto {
 }
 
 export const DEFAULT_BUILDER: BuilderDto = {
-    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, minHeight: 0, maxHeight: 0, density: 100, trees: false, decorDensity: 50, overlapMeters: 0.5, treeSet: "", treeAges: 4, mix: "", mixShare: 50,
+    mode: "block", widthOp: 0, widthValue: 0, depthOp: 0, depthValue: 0, levelOp: 0, levelValue: 0, minHeight: 0, maxHeight: 0, density: 100, trees: false, decorDensity: 50, overlapMeters: 2, treeSet: "", treeAges: 4, mix: "", mixShare: 50,
 };
 
 const panelOpen$ = bindValue<boolean>(G, "panelOpen", false);
