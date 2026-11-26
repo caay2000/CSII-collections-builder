@@ -72,7 +72,7 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 - When a collection is shown, the log lists its loaded buildings with their level, lot size, height and zone, and lists them again if more load later.
 
 0.3.25
-- New Min Height and Max Height filters, in metres, in the Collections tab and in the builder. The height comes from the building bounds, so it includes antennas and chimneys. While a limit is set, buildings with no known height are left out.
+- New Min Height and Max Height filters, in metres, in the Collections tab and in the builder. The height comes from the building bounds, so it includes antennas and chimneys.
 - Each card in a collection shows the building height.
 - Heights go in 5 m steps up to 200 m. Min starts at All and Max ends at +200 m, which means no limit. If Min goes above Max, or Max below Min, the other one follows.
 	</ChangeLog>
