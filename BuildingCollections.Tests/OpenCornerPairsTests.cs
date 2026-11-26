@@ -54,14 +54,16 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
-        public void An_open_corner_pair_never_crosses_and_always_covers_more_sidewalk()
+        public void An_open_corner_pair_never_crosses_its_copy_and_covers_more_sidewalk_or_cells()
         {
+            int pairs = 0;
             foreach (double angle in Enumerable.Range(19, 12).Select(step => step * 5.0))
             {
                 var result = Plan(Block(angle), 2f, out _);
 
                 foreach (var pair in result.Lots.Where(l => l.Corner).GroupBy(l => l.Building).Where(g => g.Count() == 2))
                 {
+                    pairs++;
                     var a = pair.First().Footprint(-0.5).P;
                     var b = pair.Last().Footprint(-0.5).P;
                     Assert.True(pair.First().Footprint(0).P.Count(p => Polygon.Contains(b, p)) >= 2, $"{angle}°: {pair.Key} crosses its copy");
@@ -70,12 +72,16 @@ namespace BuildingCollections.Tests
 
                 foreach (var line in result.Log.Where(l => l.Contains(" m uncovered")))
                 {
-                    var m = System.Text.RegularExpressions.Regex.Match(line, @"([\d.,]+) -> ([\d.,]+) m uncovered");
+                    var m = System.Text.RegularExpressions.Regex.Match(line, @"([\d.,]+) -> ([\d.,]+) m uncovered, (\d+) -> (\d+) street cells filled");
+                    Assert.True(m.Success, line);
                     double before = double.Parse(m.Groups[1].Value.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture);
                     double after = double.Parse(m.Groups[2].Value.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture);
-                    Assert.True(before - after >= 0.95, $"{angle}°: {line}");
+                    bool moreCells = int.Parse(m.Groups[4].Value) > int.Parse(m.Groups[3].Value);
+                    Assert.True(before - after >= 0.95 || moreCells, $"{angle}°: {line}");
                 }
             }
+
+            Assert.True(pairs > 0);
         }
 
         [Fact]

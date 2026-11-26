@@ -141,21 +141,17 @@ namespace BuildingCollections.Core
 
     public static class Polygon
     {
-        public static double Area(IReadOnlyList<Pt> poly)
-        {
-            double a = 0;
-            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
-            {
-                a += poly[j].X * poly[i].Y - poly[i].X * poly[j].Y;
-            }
-
-            return System.Math.Abs(a) / 2;
-        }
+        public static double Area(IReadOnlyList<Pt> poly) => Math.Abs(SignedArea(poly));
 
         public static List<Pt> ConvexIntersection(IReadOnlyList<Pt> subject, IReadOnlyList<Pt> clip)
         {
-            var output = new List<Pt>(subject);
             double orientation = Math.Sign(SignedArea(clip));
+            if (orientation == 0)
+            {
+                return new List<Pt>();
+            }
+
+            var output = new List<Pt>(subject);
             for (int i = 0; i < clip.Count && output.Count > 0; i++)
             {
                 var a = clip[i];
