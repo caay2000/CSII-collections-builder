@@ -12,7 +12,8 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   con cuántos de cada modelo y el pack de origen (`pdx <id> v<versión>`, `game` o `local`).
 - Marcador de sesión en `ModsData/BuildingCollections/session.marker` con la última acción (preview o build). Si al
   arrancar sigue ahí, la sesión anterior no cerró bien y el log lo avisa con esa última acción.
-- La primera vez que se selecciona una colección en la sesión, el log lista sus edificios con nivel, tamaño de lote, altura y zona.
+- Al mostrar una colección, el log lista sus edificios cargados con nivel, tamaño de lote, altura y zona, y los vuelve a
+  listar si se cargan más.
 
 ## 0.3.25
 - Filtros `Min Height` y `Max Height` en Colecciones y en el constructor, en metros. La altura sale de la caja del edificio
@@ -20,6 +21,7 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
   altura conocida quedan fuera.
 - Cada tarjeta de la colección muestra la altura del edificio.
 - Pasos de 5 a 200 m. `Min Height` va de `All` a 200 m; `Max Height` va de 5 m a `+200 m`, que es sin límite.
+- Si `Min Height` pasa de `Max Height` (o al revés), el otro límite se ajusta.
 
 ## 0.3.24
 - Se quitan las parejas de esquina abierta de 0.3.21 y 0.3.23 (`OpenCornerPairs`, sus tests y la manzana
