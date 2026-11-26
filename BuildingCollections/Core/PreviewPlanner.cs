@@ -21,9 +21,12 @@ namespace BuildingCollections.Core
         readonly IReadOnlyList<BuildingInfo> corners;
         readonly IReadOnlyList<Quad> existing;
 
-        PreviewPlanner(PreviewRequest request)
+        readonly IReadOnlyList<PairKind> pairKinds;
+
+        PreviewPlanner(PreviewRequest request, IReadOnlyList<PairKind> pairKinds)
         {
             this.request = request;
+            this.pairKinds = pairKinds;
             corners = request.Corners.Where(c => !c.IsAngledCorner).ToList();
             mix = MixSplit.Of(request.Plain.Concat(corners));
             firstPlain = Own(request.Plain);
@@ -37,14 +40,15 @@ namespace BuildingCollections.Core
             return own.Count > 0 ? own : plain;
         }
 
-        public static PreviewResult Plan(PreviewRequest request) => new PreviewPlanner(request).Run();
+        public static PreviewResult Plan(PreviewRequest request) => OpenCornerChoice.Plan(request, kinds => new PreviewPlanner(request, kinds).Run());
 
         PreviewResult Run()
         {
             clock.Start();
             BuildGrids();
+            ReservePairs();
             ReserveFronts();
-            Lap("grids");
+            Lap("grids and open corners");
             var cornerPlans = ReserveCorners();
             Fill(cornerPlans);
             Lap($"corners and fill ({grids.Count} strips)");
@@ -60,8 +64,8 @@ namespace BuildingCollections.Core
             Lap("end gaps");
             FillFrontGaps();
             Lap("front gaps");
-            PairOpenCorners();
-            Lap("open corners");
+            JoinPairs();
+            Lap("pair joints");
             MeasureFrontage();
             Lap("frontage");
             Diagnose();
@@ -275,7 +279,7 @@ namespace BuildingCollections.Core
         void Replace(PlanBlock block, IEnumerable<Placement> plan)
         {
             footprints.RemoveAll(f => f.owner == block);
-            result.Lots.RemoveAll(l => l.Owner == block);
+            result.Lots.RemoveAll(l => l.Owner == block && !l.Paired);
             foreach (var p in plan)
             {
                 footprints.Add((Footprint(block, p), FrontRow(block, p), block));
@@ -310,14 +314,14 @@ namespace BuildingCollections.Core
             var depth = grids.ToDictionary(g => g.block, g => Enumerable.Range(0, g.grid.Width).Select(x => FreeDepth(g.grid, x)).DefaultIfEmpty(0).Max());
             int Room(PlanBlock block) => secondPlain.Concat(secondCorners).Where(b => b.LotDepth <= depth[block]).Select(b => b.LotWidth).DefaultIfEmpty(1).Min();
             var surplus = mix.Surplus(front, result.FrontCells.Count, Room, new Random(request.Seed ^ MixSalt));
-            result.Lots.RemoveAll(surplus.Contains);
+            result.Lots.RemoveAll(l => surplus.Contains(l) && !l.Paired);
             footprints.Clear();
             footprints.AddRange(result.Lots.Select(l => (l.Footprint(0), FrontRow(l), l.Owner)));
             result.Log.Add($"  mix: first pass with group {mix.First} only covers {before:P0} of the filled street cells (target {mix.FirstShare:P0}); {surplus.Count} of its buildings make room for group {mix.Second}.");
 
             foreach (var (block, grid) in grids)
             {
-                var kept = result.Lots.Where(l => l.Owner == block).Select(Kept).ToList();
+                var kept = result.Lots.Where(l => l.Owner == block && !l.Paired).Select(Kept).ToList();
                 footprints.RemoveAll(f => f.owner == block);
                 MaskOthers(block, grid, withFronts: true);
                 var plan = GridPlanner.Refill(grid, PlainFor(block, grid, secondPlain), secondCorners, firstPlain, NextSeed(), kept);
@@ -426,14 +430,32 @@ namespace BuildingCollections.Core
             }
         }
 
-        void PairOpenCorners()
+        void JoinPairs()
         {
-            if (request.PairOpenCorners && WedgesMayOverlap && request.Density >= 100 && request.Outline != null)
+            if (result.Lots.Any(l => l.Paired))
             {
-                var catalog = request.Plain.Where(b => AccessMapping.FitsFront(b.Corner)).ToList();
-                int pairs = OpenCornerPairs.Apply(result.Lots, request.Blocks, existing, request.Outline, catalog, corners, result.FrontCells, request.Overlap, request.Seed, result.Log);
-                result.Log.Add($"  open corners: {pairs} paired.");
+                PairJoints.Apply(result.Lots, existing, request.Outline, firstPlain, request.Overlap, request.Seed, result.Log);
             }
+        }
+
+        void ReservePairs()
+        {
+            if (pairKinds == null || !request.PairOpenCorners || !WedgesMayOverlap || request.Density < 100 || request.Outline == null)
+            {
+                return;
+            }
+
+            var catalog = firstPlain.Where(b => AccessMapping.FitsFront(b.Corner)).ToList();
+            var (pairs, kinds) = OpenCornerPairs.Reserve(grids.Select(g => g.block).ToList(), existing, request.Outline, catalog, firstCorners, pairKinds, request.Overlap, request.Seed, result.Log);
+            result.OpenCornerPairs = kinds;
+            var quads = pairs.Select(l => l.Footprint(0)).ToList();
+            foreach (var (block, grid) in grids)
+            {
+                FootprintMask.Apply(grid, block, quads, request.Overlap);
+            }
+
+            result.Lots.AddRange(pairs);
+            result.Log.Add($"  open corners: {pairs.Count / 2} paired.");
         }
 
         void MeasureFrontage()

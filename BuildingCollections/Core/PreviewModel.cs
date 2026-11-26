@@ -24,6 +24,7 @@ namespace BuildingCollections.Core
         public int MaxX;
         public int MaxY;
         public bool Corner;
+        public bool Paired;
         public float Shift;
         public int FrontAlong;
 
@@ -90,5 +91,6 @@ namespace BuildingCollections.Core
         public double? FirstGroupShare;
         public List<string> Log = new List<string>();
         public List<string> Timings = new List<string>();
+        public List<PairKind> OpenCornerPairs = new List<PairKind>();
     }
 }

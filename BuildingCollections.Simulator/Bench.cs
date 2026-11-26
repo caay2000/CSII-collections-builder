@@ -83,7 +83,7 @@ namespace BuildingCollections.Simulator
                     var run = Simulation.Simulate(scenario, overlap, seed);
                     total = Math.Max(total, clock.Elapsed.TotalMilliseconds);
                     phase = Math.Max(phase, run.Result.Timings
-                        .Select(t => Regex.Match(t, @"^open corners (\d+) ms$"))
+                        .Select(t => Regex.Match(t, @"^open corner choice \d+ plans (\d+) ms$"))
                         .Where(m => m.Success)
                         .Select(m => double.Parse(m.Groups[1].Value))
                         .DefaultIfEmpty(0)
