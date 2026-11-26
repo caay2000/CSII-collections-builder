@@ -138,12 +138,16 @@ namespace BuildingCollections.Tests
                 new BuildingInfo { PrefabName = "narrow corner Right", LotWidth = 1, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Right },
             };
 
+            int restored = 0;
             foreach (int seed in Enumerable.Range(1, 12))
             {
                 var run = BuildingCollections.Simulator.Simulation.Simulate(scenario, 2f, seed, plain, corners);
 
                 Assert.Contains(run.Result.Log, l => l.Contains("open corner 127°") && l.Contains(" on both streets, "));
+                restored += run.Result.Lots.Count(l => l.Corner && l.FrontAlong == 0 && l.Building.PrefabName.StartsWith("narrow corner"));
             }
+
+            Assert.True(restored > 0);
         }
 
         [Fact]
