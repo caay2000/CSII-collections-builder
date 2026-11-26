@@ -364,7 +364,7 @@ namespace BuildingCollections.Systems
                         ? ZoneUtils.GetRotation(p.Block)
                         : quaternion.LookRotationSafe(new float3(frontAxis.x * p.Lot.FrontAlong, 0, frontAxis.y * p.Lot.FrontAlong), math.up());
                     t = new Transform(ZoneUtils.GetPosition(p.Block, p.Min, p.Max) + new float3(axis.x, 0, axis.y), rotation);
-                    float3 front = BuildingUtils.CalculateFrontPosition(t, p.Lot.Building.LotDepth);
+                    float3 front = BuildingUtils.CalculateFrontPosition(t, p.Lot.FrontAlong == 0 ? p.Max.y - p.Min.y : p.Max.x - p.Min.x);
                     y = TerrainUtils.SampleHeight(ref heights, front);
                 }
 

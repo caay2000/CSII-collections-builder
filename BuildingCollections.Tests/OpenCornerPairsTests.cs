@@ -178,9 +178,8 @@ namespace BuildingCollections.Tests
                     Assert.Equal(2, lot.Width);
                     Assert.Equal(1, lot.Depth);
                     var front = lot.Owner.Frame.AxisX * lot.FrontAlong;
-                    var left = new Pt(front.Y, -front.X);
-                    var streetSide = Pt.Dot(left, lot.Owner.Frame.AxisY) < 0 ? CornerKind.Left : CornerKind.Right;
-                    Assert.Equal(streetSide, lot.Building.Corner & (CornerKind.Left | CornerKind.Right));
+                    var expected = lot.FrontAlong > 0 ? CornerKind.Left : CornerKind.Right;
+                    Assert.Equal(expected, lot.Building.Corner & (CornerKind.Left | CornerKind.Right));
                     var corner = result.Lots.Single(o => o != lot && o.FrontAlong != 0 && o.Owner != lot.Owner && Distance(o.Center, lot.Center) < 24);
                     Assert.NotEqual(lot.Building.Corner, corner.Building.Corner);
                     Assert.True(Pt.Dot(corner.Center - lot.Center, front) > 0, $"{angle}°: the short facade does not face the corner");
@@ -188,6 +187,25 @@ namespace BuildingCollections.Tests
             }
 
             Assert.NotEmpty(found);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(-1)]
+        public void The_twin_facing_the_street_does_not_depend_on_the_handedness_of_the_grid(int handedness)
+        {
+            var axisX = new Pt(0.6, 0.8);
+            var axisY = new Pt(-axisX.Y, axisX.X) * handedness;
+            Pt Turn(Pt v, int sign) => new Pt(-v.Y * sign, v.X * sign);
+            int toSide = Pt.Cross(axisY * -1, axisX * -1) > 0 ? 1 : -1;
+
+            foreach (int frontAlong in new[] { 1, -1 })
+            {
+                var leftFacade = Turn(axisX * frontAlong, toSide);
+                var facingStreet = Pt.Dot(leftFacade, axisY) < -0.99 ? CornerKind.Left : CornerKind.Right;
+
+                Assert.Equal(facingStreet, OpenCornerPairs.SideFacingStreet(frontAlong));
+            }
         }
 
         static double Distance(Pt a, Pt b) => Math.Sqrt(Pt.Dot(a - b, a - b));

@@ -76,7 +76,7 @@ namespace BuildingCollections.Simulator
                     LotWidth = int.Parse(m.Groups[3].Value),
                     LotDepth = int.Parse(m.Groups[4].Value),
                     Height = int.Parse(m.Groups[5].Value),
-                    Corner = m.Groups[6].Success ? (CornerKind)Enum.Parse(typeof(CornerKind), m.Groups[6].Value.Replace("+", ", ")) : CornerKind.Front,
+                    Corner = m.Groups[6].Success && Enum.TryParse(m.Groups[6].Value.Replace("+", ", "), out CornerKind kind) ? kind : CornerKind.Front,
                 })
                 .ToList();
 
