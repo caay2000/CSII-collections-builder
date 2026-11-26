@@ -152,6 +152,48 @@ namespace BuildingCollections.Core
             return System.Math.Abs(a) / 2;
         }
 
+        public static List<Pt> ConvexIntersection(IReadOnlyList<Pt> subject, IReadOnlyList<Pt> clip)
+        {
+            var output = new List<Pt>(subject);
+            double orientation = Math.Sign(SignedArea(clip));
+            for (int i = 0; i < clip.Count && output.Count > 0; i++)
+            {
+                var a = clip[i];
+                var b = clip[(i + 1) % clip.Count];
+                var input = output;
+                output = new List<Pt>();
+                for (int j = 0; j < input.Count; j++)
+                {
+                    var p = input[j];
+                    var q = input[(j + 1) % input.Count];
+                    double sp = orientation * Pt.Cross(b - a, p - a);
+                    double sq = orientation * Pt.Cross(b - a, q - a);
+                    if (sp >= 0)
+                    {
+                        output.Add(p);
+                    }
+
+                    if ((sp >= 0) != (sq >= 0))
+                    {
+                        output.Add(p + (q - p) * (sp / (sp - sq)));
+                    }
+                }
+            }
+
+            return output;
+        }
+
+        static double SignedArea(IReadOnlyList<Pt> poly)
+        {
+            double a = 0;
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+            {
+                a += poly[j].X * poly[i].Y - poly[i].X * poly[j].Y;
+            }
+
+            return a / 2;
+        }
+
         public static bool Contains(IReadOnlyList<Pt> poly, Pt q)
         {
             bool inside = false;

@@ -14,7 +14,8 @@ namespace BuildingCollections.Core
         const double MinStraight = 16;
         const double MinStraightBesideCurve = 48;
         const double InsideInset = 0.1;
-        const double GapTolerance = 0.05;
+        const double MinGain = 1;
+        const double CrossTolerance = 0.5;
         const double JointMargin = 0.01;
         const double ClosedGap = 0.5;
         const int MaxFillers = 3;
@@ -113,7 +114,7 @@ namespace BuildingCollections.Core
                 .Select(PickModel)
                 .ToList()
                 .Select(model => Candidate(model, first, second, corner, strips, gapsBefore, filledBefore))
-                .Where(c => c != null && c.Uncovered <= before + GapTolerance)
+                .Where(c => c != null && c.Uncovered <= before - MinGain)
                 .OrderBy(c => Math.Round(c.Uncovered, 1))
                 .ThenByDescending(c => c.A.Width)
                 .ThenByDescending(c => c.A.Depth)
@@ -130,7 +131,7 @@ namespace BuildingCollections.Core
             lots.AddRange(best.Fillers);
             paired.Add(best.A);
             paired.Add(best.B);
-            log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): {best.A.Building} on both streets, {before:F1} -> {best.Uncovered:F1} m uncovered.");
+            log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): {best.A.Building} on both streets, {before:F1} -> {best.Uncovered:F1} m uncovered, {SharedShare(best.A, best.B):P0} of each lot shared.");
             return true;
         }
 
@@ -163,7 +164,7 @@ namespace BuildingCollections.Core
 
             var a = LotAt(first, model, corner, first.Strip.T * -1);
             var b = LotAt(second, model, corner, second.Strip.T);
-            if (!Fits(a, corner) || !Fits(b, corner))
+            if (!Fits(a, corner) || !Fits(b, corner) || Crosses(a, b, corner) || Crosses(b, a, corner))
             {
                 return null;
             }
@@ -383,6 +384,23 @@ namespace BuildingCollections.Core
 
         static double Uncovered(IEnumerable<LotStrip> strips, IEnumerable<PlannedLot> planned) =>
             SidewalkGaps.Find(strips, planned).Sum(g => g.Length);
+
+        static bool Crosses(PlannedLot lot, PlannedLot other, Pt corner)
+        {
+            var p = lot.Footprint(0).P;
+            int front = Enumerable.Range(0, 4).OrderBy(i => Distance(p[i], corner)).First();
+            var along = lot.Owner.Strip.T;
+            var back = new[] { p[(front + 1) % 4], p[(front + 3) % 4] }.OrderBy(v => Math.Abs(Pt.Dot(v - p[front], along))).First();
+            return !Polygon.Contains(other.Footprint(-CrossTolerance).P, back);
+        }
+
+        static double SharedShare(PlannedLot a, PlannedLot b)
+        {
+            var qa = a.Footprint(0).P;
+            var qb = b.Footprint(0).P;
+            double smaller = Math.Min(Polygon.Area(qa), Polygon.Area(qb));
+            return smaller <= 0 ? 0 : Polygon.Area(Polygon.ConvexIntersection(qa, qb)) / smaller;
+        }
 
         static double Distance(Pt a, Pt b) => Math.Sqrt(Pt.Dot(a - b, a - b));
     }
