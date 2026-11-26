@@ -59,11 +59,14 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/simulator.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-collections-builder.1949529/" />
-	<ModVersion Value="0.3.28" />
+	<ModVersion Value="0.3.29" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.29
+- Corners where a straight street meets a curve are now paired too.
+
 0.3.28
 - Overlap is now a single checkbox: buildings overlap up to 2 m at each joint, only as much as needed.
 - Open corners can use the left and right versions of a corner building turned sideways, with the long facade on each street and the short one at the corner.

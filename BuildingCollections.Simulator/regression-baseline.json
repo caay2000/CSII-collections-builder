@@ -745,7 +745,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 24
+      "EmptyCells": 0
     },
     {
       "Scenario": "small rounded corner R 8 m",
@@ -820,6 +820,42 @@
       "EmptyCells": 0
     },
     {
+      "Scenario": "Riverbend and Sheffield (12914, -8529), straight street meeting a curve at 102\u00B0",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 844.9,
+      "MaxGap": 8,
+      "GapsBetweenBuildings": 11,
+      "EmptyCells": 83
+    },
+    {
+      "Scenario": "Riverbend and Sheffield (12914, -8529), straight street meeting a curve at 102\u00B0",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
+      "Scenario": "block (13056, -8474), 97\u00B0 and 127\u00B0 corners",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 790.4,
+      "MaxGap": 13.2,
+      "GapsBetweenBuildings": 2,
+      "EmptyCells": 120
+    },
+    {
+      "Scenario": "block (13056, -8474), 97\u00B0 and 127\u00B0 corners",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
       "Scenario": "Crest and Evergreen (13068, -8455), 97\u00B0 and 127\u00B0 corners, same-model pair crossing at 97\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
@@ -838,6 +874,24 @@
       "EmptyCells": 0
     },
     {
+      "Scenario": "Oak Lane (13094, -8500), 127\u00B0 and 104\u00B0 corners paired only on some shuffles",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 513.4,
+      "MaxGap": 8.6,
+      "GapsBetweenBuildings": 36,
+      "EmptyCells": 84
+    },
+    {
+      "Scenario": "Oak Lane (13094, -8500), 127\u00B0 and 104\u00B0 corners paired only on some shuffles",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
       "Scenario": "Belmont and Oak Lane (13109, -8496), 53\u00B0 and 127\u00B0 corners, 135\u00B0 building over the sidewalk in the game",
       "Overlap": 0.05,
       "MissedCorners": 0,
@@ -870,6 +924,24 @@
       "MissedCorners": 0,
       "GapMeters": 0,
       "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
+      "Scenario": "block (13149, -8503), 104\u00B0 corner paired only on some shuffles",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 148.8,
+      "MaxGap": 8.1,
+      "GapsBetweenBuildings": 36,
+      "EmptyCells": 36
+    },
+    {
+      "Scenario": "block (13149, -8503), 104\u00B0 corner paired only on some shuffles",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 53.8,
+      "MaxGap": 3.4,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
