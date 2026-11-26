@@ -17,8 +17,7 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
 ## 0.3.25
 - Filtros `Min Height` y `Max Height` en Colecciones y en el constructor, en metros. La altura sale de la caja del edificio
-  (`ObjectGeometryData`), sin leer la malla, así que incluye antenas y chimeneas. Con un límite activo, los edificios sin
-  altura conocida quedan fuera.
+  (`ObjectGeometryData`), sin leer la malla, así que incluye antenas y chimeneas.
 - Cada tarjeta de la colección muestra la altura del edificio.
 - Pasos de 5 a 200 m. `Min Height` va de `All` a 200 m; `Max Height` va de 5 m a `+200 m`, que es sin límite.
 - Si `Min Height` pasa de `Max Height` (o al revés), el otro límite se ajusta.
