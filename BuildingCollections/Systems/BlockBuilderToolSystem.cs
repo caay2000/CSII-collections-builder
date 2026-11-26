@@ -330,8 +330,8 @@ namespace BuildingCollections.Systems
 
         float CurrentOverlap()
         {
-            float meters = Math.Min(2f, Math.Max(0f, Mod.Settings?.OverlapMeters ?? OverlapOn));
-            return AnarchyBridge.Enabled && meters > StrictOverlap ? meters : StrictOverlap;
+            bool wanted = (Mod.Settings?.OverlapMeters ?? FootprintMask.MaxOverlap) > StrictOverlap;
+            return AnarchyBridge.Enabled && wanted ? FootprintMask.MaxOverlap : StrictOverlap;
         }
 
         static double CurveOverlap(float overlap) => overlap > StrictOverlap ? overlap : 0;

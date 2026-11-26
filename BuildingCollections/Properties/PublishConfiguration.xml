@@ -39,11 +39,11 @@ The builder tab shows a warning if either is missing.
 
 **Overlap**
 - Street lengths are rarely a multiple of the 8 m lot grid, so a strict layout leaves gaps at street ends and along curves.
-- With "Overlap per joint" (0.5 to 2 m), neighbouring buildings may overlap each other by up to that much, so they always touch and the leftover goes to the corner instead of showing as gaps between buildings. Existing buildings are never removed or overlapped.
-- Overlap uses the **Anarchy** mod: the builder turns Anarchy on while its tab is open and turns it back off when you leave (only if it was the one that turned it on). Set it to Off to build without overlap.
+- With "Overlap" checked, neighbouring buildings may overlap each other by up to 2 m at each joint, only as much as needed, so they always touch and the leftover goes to the corner instead of showing as gaps between buildings. Existing buildings are never removed or overlapped.
+- Overlap uses the **Anarchy** mod: the builder turns Anarchy on while its tab is open and turns it back off when you leave (only if it was the one that turned it on). Uncheck it to build without overlap.
 
 **How it is tested**
-- Every change to the layout runs through a simulator that builds 86 block shapes (curves, S-bends, triangles and real city blocks taken from the game) with 24 reshuffles and 4 overlap settings, and checks that corners and sidewalk coverage never get worse.
+- Every change to the layout runs through a simulator that builds 103 block shapes (curves, S-bends, triangles and real city blocks taken from the game) with 24 reshuffles, with and without overlap, and checks that corners and sidewalk coverage never get worse.
 - Every release is then tested in game before it is published.
 - No amount of testing covers every block a city can have, so if a block comes out wrong, please report it with a screenshot.
 
@@ -59,11 +59,15 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/simulator.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-collections-builder.1949529/" />
-	<ModVersion Value="0.3.27" />
+	<ModVersion Value="0.3.28" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.28
+- Overlap is now a single checkbox: buildings overlap up to 2 m at each joint, only as much as needed.
+- Open corners can use the left and right versions of a corner building turned sideways, with the long facade on each street and the short one at the corner.
+
 0.3.27
 - Open corners from 95° to 150° are built with the same building on both streets.
 	</ChangeLog>

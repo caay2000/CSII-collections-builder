@@ -190,7 +190,7 @@ namespace BuildingCollections
 
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
-        public float OverlapMeters { get; set; } = 0.5f;
+        public float OverlapMeters { get; set; } = 2f;
 
         [SettingsUIHidden]
         [SettingsUISection(Section, Builder)]
@@ -267,7 +267,7 @@ namespace BuildingCollections
             MixShare = 50;
             Mode = "block";
             MaxBlockHectares = 5;
-            OverlapMeters = 0.5f;
+            OverlapMeters = 2f;
         }
     }
 }

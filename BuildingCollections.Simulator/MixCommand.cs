@@ -32,7 +32,7 @@ namespace BuildingCollections.Simulator
             {
                 var plain = Wide.Select(b => b.InGroup(0, share / 100.0)).Concat(Row.Select(b => b.InGroup(1, 1 - share / 100.0))).ToList();
                 var corners = RowCorners.Select(b => b.InGroup(1, 1 - share / 100.0)).ToList();
-                var runs = scenarios.SelectMany(s => seeds.Select(seed => Simulation.Simulate(s, 0.5f, seed, plain, corners))).ToList();
+                var runs = scenarios.SelectMany(s => seeds.Select(seed => Simulation.Simulate(s, FootprintMask.MaxOverlap, seed, plain, corners))).ToList();
                 foreach (var r in runs.Where(r => Environment.GetEnvironmentVariable("SIM_MIX_ALL") == "1"))
                 {
                     Console.WriteLine($"  {r.Scenario.Name,-58} wide {r.Result.FirstGroupShare,5:P0}  cells {r.Result.FrontFilled}/{r.Result.FrontCells.Count}");

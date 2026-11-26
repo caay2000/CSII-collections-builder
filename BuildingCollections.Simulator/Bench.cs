@@ -64,7 +64,7 @@ namespace BuildingCollections.Simulator
                 total.Restart();
                 var result = PreviewPlanner.Plan(new PreviewRequest
                 {
-                    Blocks = blocks, Existing = existing, Outline = outline, Plain = Simulation.Plain, Corners = Simulation.Corners, Overlap = 0.5f, Seed = seed,
+                    Blocks = blocks, Existing = existing, Outline = outline, Plain = Simulation.Plain, Corners = Simulation.Corners, Overlap = FootprintMask.MaxOverlap, Seed = seed,
                 });
                 Console.WriteLine($"  seed {seed}: {total.ElapsedMilliseconds} ms, {result.Lots.Count} buildings, {result.FrontFilled}/{result.FrontCells.Count} cells; {string.Join(", ", result.Timings)}");
             }
@@ -124,7 +124,7 @@ namespace BuildingCollections.Simulator
                 {
                     var result = PreviewPlanner.Plan(new PreviewRequest
                     {
-                        Blocks = blocks, Existing = scenario.Existing, Outline = clip, Plain = Simulation.Plain, Corners = Simulation.Corners, Overlap = 0.5f, Seed = seed,
+                        Blocks = blocks, Existing = scenario.Existing, Outline = clip, Plain = Simulation.Plain, Corners = Simulation.Corners, Overlap = FootprintMask.MaxOverlap, Seed = seed,
                     });
                     buildings += result.Lots.Count;
                     foreach (var t in result.Timings)

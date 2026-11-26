@@ -13,14 +13,20 @@ namespace BuildingCollections.Simulator
             string catalogFile = Environment.GetEnvironmentVariable("SIM_CATALOG_FILE");
             if (!string.IsNullOrEmpty(catalogFile))
             {
-                Simulation.Plain = Simulation.FromHeightsLog(File.ReadAllLines(catalogFile));
+                var loaded = Simulation.FromHeightsLog(File.ReadAllLines(catalogFile));
+                Simulation.Plain = loaded.Where(b => AccessMapping.FitsFront(b.Corner)).ToList();
+                if (loaded.Any(b => AccessMapping.FitsCorner(b.Corner)))
+                {
+                    Simulation.Corners = loaded.Where(b => AccessMapping.FitsCorner(b.Corner)).ToList();
+                }
+
                 if (Simulation.Plain.Count == 0)
                 {
                     Console.Error.WriteLine($"No '[data] height' lines in {catalogFile}.");
                     return 2;
                 }
 
-                Console.WriteLine($"Catalog from {catalogFile}: {Simulation.Plain.Count} buildings.");
+                Console.WriteLine($"Catalog from {catalogFile}: {Simulation.Plain.Count} regular, {Simulation.Corners.Count} corner buildings.");
             }
 
             if (args.Length > 0 && args[0] == "bench-blocks")
@@ -47,7 +53,7 @@ namespace BuildingCollections.Simulator
 
             string output = args.Length > 0 ? args[0] : "simulation.html";
             int seed = args.Length > 1 ? int.Parse(args[1]) : 7;
-            var overlaps = new[] { FootprintMask.StrictOverlap, 0.5f, 1f, 2f };
+            var overlaps = Regression.Overlaps;
             string filter = args.Length > 2 ? args[2] : null;
             string catalog = Environment.GetEnvironmentVariable("SIM_CATALOG") ?? Simulation.DefaultCatalog;
             if (!Simulation.Catalogs.TryGetValue(catalog, out var plain))
@@ -74,7 +80,7 @@ namespace BuildingCollections.Simulator
 
             if (Environment.GetEnvironmentVariable("SIM_WHY") == "1")
             {
-                foreach (var r in runs.Where(r => Math.Abs(r.Overlap - 0.5f) < 0.01f))
+                foreach (var r in runs.Where(r => Math.Abs(r.Overlap - FootprintMask.MaxOverlap) < 0.01f))
                 {
                     Console.WriteLine($"WHY {r.Scenario.Name,-50} cells {r.Result.FrontFilled}/{r.Result.FrontCells.Count} corners {r.CornersOk}/{r.Corners.Count} gaps: {string.Join(" ", r.RealGaps.Where(g => g.Length >= 0.75).Select(g => g.Length.ToString("0.0")))}");
                 }

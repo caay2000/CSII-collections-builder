@@ -58,7 +58,7 @@ namespace BuildingCollections.Simulator
 
         public static IReadOnlyList<BuildingInfo> Plain { get; set; } = Catalogs[DefaultCatalog];
 
-        public static readonly IReadOnlyList<BuildingInfo> Corners = new List<BuildingInfo>
+        public static IReadOnlyList<BuildingInfo> Corners { get; set; } = new List<BuildingInfo>
         {
             B("corner 1x1 L", 1, 1, CornerKind.Front | CornerKind.Left), B("corner 1x1 R", 1, 1, CornerKind.Front | CornerKind.Right),
             B("corner 1x2 L", 1, 2, CornerKind.Front | CornerKind.Left), B("corner 1x2 R", 1, 2, CornerKind.Front | CornerKind.Right),
@@ -67,7 +67,7 @@ namespace BuildingCollections.Simulator
 
         public static IReadOnlyList<BuildingInfo> FromHeightsLog(IEnumerable<string> lines) =>
             lines
-                .Select(l => System.Text.RegularExpressions.Regex.Match(l, @"\[data\] height (.+): level (\d+), lot (\d+)x(\d+), (\d+) m"))
+                .Select(l => System.Text.RegularExpressions.Regex.Match(l, @"\[data\] height (.+): level (\d+), lot (\d+)x(\d+), (\d+) m(?:, access ([A-Za-z+]+))?"))
                 .Where(m => m.Success)
                 .Select(m => new BuildingInfo
                 {
@@ -76,7 +76,7 @@ namespace BuildingCollections.Simulator
                     LotWidth = int.Parse(m.Groups[3].Value),
                     LotDepth = int.Parse(m.Groups[4].Value),
                     Height = int.Parse(m.Groups[5].Value),
-                    Corner = CornerKind.Front,
+                    Corner = m.Groups[6].Success ? (CornerKind)Enum.Parse(typeof(CornerKind), m.Groups[6].Value.Replace("+", ", ")) : CornerKind.Front,
                 })
                 .ToList();
 
