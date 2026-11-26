@@ -41,8 +41,7 @@ namespace BuildingCollections.Tests
         }
 
         [Theory]
-        [InlineData(110)]
-        [InlineData(120)]
+        [InlineData(140)]
         public void An_open_corner_gets_the_same_model_on_both_streets_with_the_lot_corners_together(double angle)
         {
             var result = Plan(Block(angle), 0.5f, out _);
@@ -52,6 +51,31 @@ namespace BuildingCollections.Tests
             Assert.Contains(result.Log, l => l.Contains("on both streets"));
             var fronts = result.Lots.Where(l => l.Corner).SelectMany(l => l.Footprint(0).P.Take(2).Select(p => (l, p))).ToList();
             Assert.Contains(fronts, x => fronts.Any(y => y.l != x.l && y.l.Building == x.l.Building && Distance(x.p, y.p) < 0.01));
+        }
+
+        [Fact]
+        public void An_open_corner_pair_never_crosses_and_always_covers_more_sidewalk()
+        {
+            foreach (double angle in Enumerable.Range(19, 12).Select(step => step * 5.0))
+            {
+                var result = Plan(Block(angle), 2f, out _);
+
+                foreach (var pair in result.Lots.Where(l => l.Corner).GroupBy(l => l.Building).Where(g => g.Count() == 2))
+                {
+                    var a = pair.First().Footprint(-0.5).P;
+                    var b = pair.Last().Footprint(-0.5).P;
+                    Assert.True(pair.First().Footprint(0).P.Count(p => Polygon.Contains(b, p)) >= 2, $"{angle}°: {pair.Key} crosses its copy");
+                    Assert.True(pair.Last().Footprint(0).P.Count(p => Polygon.Contains(a, p)) >= 2, $"{angle}°: {pair.Key} crosses its copy");
+                }
+
+                foreach (var line in result.Log.Where(l => l.Contains(" m uncovered")))
+                {
+                    var m = System.Text.RegularExpressions.Regex.Match(line, @"([\d.,]+) -> ([\d.,]+) m uncovered");
+                    double before = double.Parse(m.Groups[1].Value.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture);
+                    double after = double.Parse(m.Groups[2].Value.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture);
+                    Assert.True(before - after >= 0.95, $"{angle}°: {line}");
+                }
+            }
         }
 
         [Fact]

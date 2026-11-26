@@ -8,6 +8,10 @@ en `BuildingCollections/Properties/PublishConfiguration.xml`.
 - Vuelven las parejas de esquina abierta de 0.3.21 y 0.3.23 (`OpenCornerPairs`): el mismo modelo en las dos calles, con
   las esquinas delanteras de los lotes juntas. El rango pasa a 95°–150° (antes 100°–150°); recortarlo a 130° empeora la
   regresión.
+- Una pareja solo se acepta si las dos copias no se cruzan (la esquina trasera de cada una queda dentro de la otra) y
+  si tapa al menos 1 m más de acera. En la manzana de Crest y Evergreen dos `1x2` a 97° formaban una X; en el catálogo
+  de Mediterranean City las parejas pasan de 675 a 173 (8 semillas) y ya no salen `1x2` cerca de 90°. El log indica qué
+  parte del lote comparten las dos copias.
 - Cada pareja mide la cobertura solo alrededor de su esquina, no en toda la selección: con 40 manzanas a la vez, la fase
   pasa de ~640 ms a ~100 ms con el mismo resultado.
 - Simulador: `bench-blocks [semillas] [solape]` mide la vista previa manzana a manzana, y `SIM_CATALOG_FILE` carga el
