@@ -114,14 +114,14 @@ namespace BuildingCollections.Core
                 .Select(PickModel)
                 .ToList()
                 .Select(model => Candidate(model, first, second, corner, strips, gapsBefore, filledBefore))
-                .Where(c => c != null && c.Uncovered <= before - MinGain)
+                .Where(c => c != null && (c.Uncovered <= before - MinGain || c.Filled > filledBefore))
                 .OrderBy(c => Math.Round(c.Uncovered, 1))
                 .ThenByDescending(c => c.A.Width)
                 .ThenByDescending(c => c.A.Depth)
                 .FirstOrDefault();
             if (best == null)
             {
-                log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): no model fits on both streets, kept as planned.");
+                log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): no model fits on both streets without crossing its copy and covers more, kept as planned.");
                 return false;
             }
 
@@ -131,7 +131,7 @@ namespace BuildingCollections.Core
             lots.AddRange(best.Fillers);
             paired.Add(best.A);
             paired.Add(best.B);
-            log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): {best.A.Building} on both streets, {before:F1} -> {best.Uncovered:F1} m uncovered, {SharedShare(best.A, best.B):P0} of each lot shared.");
+            log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): {best.A.Building} on both streets, {before:F1} -> {best.Uncovered:F1} m uncovered, {filledBefore} -> {best.Filled} street cells filled, {SharedShare(best.A, best.B) * 100:F0}% of each lot shared.");
             return true;
         }
 
@@ -152,6 +152,7 @@ namespace BuildingCollections.Core
             public List<PlannedLot> Displaced;
             public List<PlannedLot> Fillers;
             public double Uncovered;
+            public int Filled;
         }
 
         Pair Candidate(BuildingInfo model, PlanBlock first, PlanBlock second, Pt corner, LotStrip[] strips, int gapsBefore, int filledBefore)
@@ -164,7 +165,7 @@ namespace BuildingCollections.Core
 
             var a = LotAt(first, model, corner, first.Strip.T * -1);
             var b = LotAt(second, model, corner, second.Strip.T);
-            if (!Fits(a, corner) || !Fits(b, corner) || Crosses(a, b, corner) || Crosses(b, a, corner))
+            if (!Fits(a, corner) || !Fits(b, corner) || BackLeavesCopy(a, b, corner) || BackLeavesCopy(b, a, corner))
             {
                 return null;
             }
@@ -186,13 +187,13 @@ namespace BuildingCollections.Core
                 fillers.AddRange(placed);
             }
 
-            if (FrontCoverage.GapsBetweenOwn(trial, nearby, new[] { first, second }) > gapsBefore
-                || FrontCoverage.CountFilled(trial, cells) < filledBefore)
+            int filled = FrontCoverage.CountFilled(trial, cells);
+            if (FrontCoverage.GapsBetweenOwn(trial, nearby, new[] { first, second }) > gapsBefore || filled < filledBefore)
             {
                 return null;
             }
 
-            return new Pair { A = a, B = b, Displaced = displaced, Fillers = fillers, Uncovered = Uncovered(strips, trial) };
+            return new Pair { A = a, B = b, Displaced = displaced, Fillers = fillers, Uncovered = Uncovered(strips, trial), Filled = filled };
         }
 
         BuildingInfo PickModel(IEnumerable<BuildingInfo> shape)
@@ -385,13 +386,13 @@ namespace BuildingCollections.Core
         static double Uncovered(IEnumerable<LotStrip> strips, IEnumerable<PlannedLot> planned) =>
             SidewalkGaps.Find(strips, planned).Sum(g => g.Length);
 
-        static bool Crosses(PlannedLot lot, PlannedLot other, Pt corner)
+        static bool BackLeavesCopy(PlannedLot lot, PlannedLot copy, Pt corner)
         {
             var p = lot.Footprint(0).P;
             int front = Enumerable.Range(0, 4).OrderBy(i => Distance(p[i], corner)).First();
-            var along = lot.Owner.Strip.T;
+            var along = lot.Owner.Frame.AxisX;
             var back = new[] { p[(front + 1) % 4], p[(front + 3) % 4] }.OrderBy(v => Math.Abs(Pt.Dot(v - p[front], along))).First();
-            return !Polygon.Contains(other.Footprint(-CrossTolerance).P, back);
+            return !Polygon.Contains(copy.Footprint(-CrossTolerance).P, back);
         }
 
         static double SharedShare(PlannedLot a, PlannedLot b)
