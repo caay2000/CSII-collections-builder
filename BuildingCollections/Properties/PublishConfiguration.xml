@@ -65,13 +65,7 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Dependency Id="74604" />
 	<ChangeLog>
 0.3.27
-- Open corners from 95° to 150° are built again with the same model on each street, the front corners of both lots together. Previewing and reshuffling them is faster than in 0.3.23.
-
-0.3.26
-- Improved the mod's log to help troubleshoot possible issues.
-
-0.3.25
-- New Min Height and Max Height filters, in metres, in the Collections tab and in the builder.
+- Open corners from 95° to 150° are built with the same building on both streets.
 	</ChangeLog>
 	<ExternalLink Type="github" Url="https://github.com/caay2000/CSII-collections-builder" />
 	<!--Public, Private or Unlisted. Private while testing.-->
