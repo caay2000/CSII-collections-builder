@@ -12,7 +12,6 @@ namespace BuildingCollections.Core
         const double MaxCurbOverhang = 3;
         const double SharedCorner = 0.5;
         const double MinStraight = 16;
-        const double MinStraightBesideCurve = 48;
         const double InsideInset = 0.1;
         const double MinGain = 1;
         const double SideOnTolerance = 0.05;
@@ -96,8 +95,7 @@ namespace BuildingCollections.Core
             }
         }
 
-        static bool IsStraightEnough(LotStrip strip) =>
-            strip.ChunkLength >= (strip.ChunkCount > 1 ? MinStraightBesideCurve : MinStraight);
+        static bool IsStraightEnough(LotStrip strip) => strip.ChunkLength >= MinStraight;
 
         bool TryPair(PlanBlock first, PlanBlock second, double angle)
         {

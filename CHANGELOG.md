@@ -4,6 +4,14 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.29
+- Parejas de esquina abierta también donde una calle recta se une con una curva: el primer tramo de la curva cuenta como
+  calle si mide al menos 16 m (antes se pedían 48 m junto a una curva y esa esquina nunca se evaluaba). En
+  Riverbend/Sheffield (`block_12914_-8529`, 102°) el hueco de 6,5 m al empezar la curva queda cubierto en todas las
+  semillas.
+- Simulador: cuatro manzanas nuevas del log del 26/11 (Riverbend/Sheffield, Oak Lane y dos más con esquinas de 97°–127°).
+  En la regresión, «two curved sides in a row» pasa de 24 a 0 celdas vacías con 2 m.
+
 ## 0.3.28
 - El solape pasa a ser una casilla «Overlap»: marcada, los edificios se solapan hasta 2 m por junta, solo lo necesario
   (el planificador ya usaba el valor como máximo); sin marcar, sin solape. Los ajustes guardados con más de 0 m pasan a
