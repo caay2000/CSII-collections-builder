@@ -63,6 +63,7 @@ export const BuilderTab = () => {
         actions.select(n);
     };
     const density = Math.max(10, Math.min(100, Math.round(b.density / 10) * 10));
+    const overlapOn = (b.overlapMeters ?? 2) > 0;
 
     return (
         <>
@@ -131,12 +132,9 @@ export const BuilderTab = () => {
                             onUp={() => set({ density: Math.min(100, density + 10) })} />
                     </div>
                     {plan.anarchyAvailable && (
-                        <div className={styles.filter} title="Street lengths are rarely a multiple of 8 m. Each joint between two new buildings may overlap up to this much to close the leftover at street ends and along curves (curves usually need 0.5-1 m to fit one more building). Off: no overlap, small gaps stay. Existing buildings are never removed. Needs Anarchy: the builder turns it on while this tab is open and overlap is not Off, and turns it back off when you leave. Press Reshuffle to apply.">
-                            <span className={styles.filterLabelAnarchy}>Overlap per joint{(b.overlapMeters ?? 0.5) > 0 && !plan.anarchy ? " (Anarchy off: not applied)" : ""}</span>
-                            <Stepper value={(b.overlapMeters ?? 0.5) > 0 ? `${(b.overlapMeters ?? 0.5).toFixed(1)} m` : "Off"}
-                                onDown={() => set({ overlapMeters: Math.max(0, (b.overlapMeters ?? 0.5) - 0.5) })}
-                                onUp={() => set({ overlapMeters: Math.min(2, (b.overlapMeters ?? 0.5) + 0.5) })} />
-                        </div>
+                        <CheckRow accent label={`Overlap${overlapOn && !plan.anarchy ? " (Anarchy off: not applied)" : ""}`} checked={overlapOn}
+                            onChange={(v) => set({ overlapMeters: v ? 2 : 0 })}
+                            title="Street lengths are rarely a multiple of 8 m. When checked, buildings may overlap up to 2 m at each joint, only as much as needed, to close the leftover at street ends, along curves and at open corners. Unchecked: no overlap, small gaps stay. Existing buildings are never removed. Needs Anarchy: the builder turns it on while this tab is open and overlap is checked, and turns it back off when you leave. Press Reshuffle to apply." />
                     )}
                 </div>
             </div>

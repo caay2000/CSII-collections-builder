@@ -60,7 +60,7 @@ namespace BuildingCollections.Systems
             public bool trees;
             public int decorDensity = 50;
 
-            public float overlapMeters = 0.5f;
+            public float overlapMeters = 2f;
 
             public string treeSet = string.Empty;
             public int treeAges = 4;
@@ -390,10 +390,10 @@ namespace BuildingCollections.Systems
 
             loggedHeights[c.Name] = known.Count;
             Mod.Log.Info($"[heights] '{c.Name}': {known.Count} of {c.Prefabs.Count} buildings loaded.\n"
-                + string.Join("\n", known.Select(e => $"  [data] height {e.Info.PrefabName}: level {e.Info.Level}, lot {e.Info.LotWidth}x{e.Info.LotDepth}, {e.Info.Height} m, zone {e.Zone}")));
+                + string.Join("\n", known.Select(e => $"  [data] height {e.Info.PrefabName}: level {e.Info.Level}, lot {e.Info.LotWidth}x{e.Info.LotDepth}, {e.Info.Height} m, access {e.Info.Corner.ToString().Replace(", ", "+")}, zone {e.Zone}")));
         }
 
-        static bool OverlapWanted => (Mod.Settings?.OverlapMeters ?? 0.5f) > FootprintMask.StrictOverlap;
+        static bool OverlapWanted => (Mod.Settings?.OverlapMeters ?? 2f) > FootprintMask.StrictOverlap;
 
         public void TogglePanel() => SetPanelOpen(!panelOpen.value);
 
@@ -572,7 +572,7 @@ namespace BuildingCollections.Systems
             s.Density = Clamp((int)Math.Round(f.density / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
             s.Trees = f.trees;
             s.DecorDensity = Clamp((int)Math.Round(f.decorDensity / 10.0, MidpointRounding.AwayFromZero) * 10, 10, 100);
-            s.OverlapMeters = Math.Min(2f, Math.Max(0f, (float)Math.Round(f.overlapMeters * 2, MidpointRounding.AwayFromZero) / 2));
+            s.OverlapMeters = f.overlapMeters > FootprintMask.StrictOverlap ? FootprintMask.MaxOverlap : 0f;
             s.TreeSet = TreeControllerBridge.SetIds.Contains(f.treeSet) ? f.treeSet : string.Empty;
             s.TreeAges = (f.treeAges & 15) == 0 ? 4 : f.treeAges & 15;
             s.MixCollection = CollectionStore.Find(f.mix ?? string.Empty)?.Name ?? string.Empty;

@@ -150,6 +150,46 @@ namespace BuildingCollections.Tests
             Assert.All(result.Lots, l => Assert.Equal(0, l.Building.Group));
         }
 
+        [Fact]
+        public void Corner_twins_go_side_on_with_the_long_facade_on_each_street_and_the_short_one_at_the_corner()
+        {
+            var corners = new[]
+            {
+                new BuildingInfo { PrefabName = "Corner05L_L3_1x2", LotWidth = 1, LotDepth = 2, Level = 3, Corner = CornerKind.Front | CornerKind.Left },
+                new BuildingInfo { PrefabName = "Corner05R_L3_1x2", LotWidth = 1, LotDepth = 2, Level = 3, Corner = CornerKind.Front | CornerKind.Right },
+            };
+            var found = new List<string>();
+            foreach (double angle in Enumerable.Range(19, 12).Select(step => step * 5.0))
+            {
+                var sides = Block(angle);
+                var strips = VirtualLots.Build(sides, new List<Quad>(), curveOverlap: 2);
+                var blocks = strips.Where(s => s.Grid.FreeCount() > 0).Select(s => new PlanBlock
+                {
+                    Frame = CellFrame.FromStrip(s), Grid = s.Grid, Strip = s, Priority = s.Width * 100, IsVirtual = true,
+                }).ToList();
+                var result = PreviewPlanner.Plan(new PreviewRequest
+                {
+                    Blocks = blocks, Existing = new List<Quad>(), Outline = VirtualLots.Outline(sides), Plain = Catalog, Corners = corners, Overlap = 2f, Seed = 3,
+                });
+
+                foreach (var lot in result.Lots.Where(l => l.FrontAlong != 0))
+                {
+                    found.Add($"{angle}");
+                    Assert.Equal(2, lot.Width);
+                    Assert.Equal(1, lot.Depth);
+                    var front = lot.Owner.Frame.AxisX * lot.FrontAlong;
+                    var left = new Pt(front.Y, -front.X);
+                    var streetSide = Pt.Dot(left, lot.Owner.Frame.AxisY) < 0 ? CornerKind.Left : CornerKind.Right;
+                    Assert.Equal(streetSide, lot.Building.Corner & (CornerKind.Left | CornerKind.Right));
+                    var corner = result.Lots.Single(o => o != lot && o.FrontAlong != 0 && o.Owner != lot.Owner && Distance(o.Center, lot.Center) < 24);
+                    Assert.NotEqual(lot.Building.Corner, corner.Building.Corner);
+                    Assert.True(Pt.Dot(corner.Center - lot.Center, front) > 0, $"{angle}°: the short facade does not face the corner");
+                }
+            }
+
+            Assert.NotEmpty(found);
+        }
+
         static double Distance(Pt a, Pt b) => Math.Sqrt(Pt.Dot(a - b, a - b));
     }
 }

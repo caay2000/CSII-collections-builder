@@ -233,6 +233,12 @@ namespace BuildingCollections.Simulator
 
         static IEnumerable<Pt> Facade(PlannedLot lot, Quad q)
         {
+            if (lot.FrontAlong != 0)
+            {
+                var sideOn = lot.FrontAlong > 0 ? new[] { q.P[0], q.P[1], q.P[2] } : new[] { q.P[3], q.P[0], q.P[1] };
+                return sideOn.Select(p => Inset(p, q, 1.8));
+            }
+
             bool left = lot.Corner && (lot.Building.Corner & CornerKind.Left) != 0;
             bool right = lot.Corner && (lot.Building.Corner & CornerKind.Right) != 0;
             var pts = new List<Pt>();

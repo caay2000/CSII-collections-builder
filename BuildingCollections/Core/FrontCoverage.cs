@@ -51,6 +51,9 @@ namespace BuildingCollections.Core
         public static int GapsBetweenOwn(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks) =>
             Sidewalks(lots, existing, blocks).Sum(s => s.runs.Count(r => r.BetweenOwn));
 
+        public static int GapsBetweenBuildings(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks) =>
+            Sidewalks(lots, existing, blocks).Sum(s => s.runs.Count(r => r.BetweenBuildings));
+
         static IEnumerable<(LotStrip strip, List<UncoveredRun> runs)> Sidewalks(IEnumerable<PlannedLot> lots, IEnumerable<Quad> existing, IEnumerable<PlanBlock> blocks)
         {
             var all = lots.Select(p => (q: p.Footprint(0), strip: p.Owner?.Strip)).Concat(existing.Select(q => (q, strip: (LotStrip)null))).ToList();
@@ -110,6 +113,7 @@ namespace BuildingCollections.Core
                         {
                             Length = end - runStart,
                             BetweenOwn = around.Contains(BetweenOwn),
+                            BetweenBuildings = around.Contains(BetweenBuildings),
                             Text = $"{runStart:F1}-{end:F1} m ({end - runStart:F1} m, {where}){around}",
                         });
                     }
@@ -125,6 +129,7 @@ namespace BuildingCollections.Core
         {
             public double Length;
             public bool BetweenOwn;
+            public bool BetweenBuildings;
             public string Text;
         }
 
@@ -134,6 +139,8 @@ namespace BuildingCollections.Core
             quads.Any(o => q.X >= o.MinX && q.X <= o.MaxX && q.Y >= o.MinY && q.Y <= o.MaxY && Polygon.Contains(o.P, q));
 
         public const string BetweenOwn = "between two buildings of this side";
+
+        const string BetweenBuildings = "between two buildings";
 
         static string Surroundings(List<Quad> quads, LotStrip st, double depth, double a, double b, Func<double, string> neighbour)
         {

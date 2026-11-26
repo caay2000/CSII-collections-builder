@@ -7,7 +7,7 @@ namespace BuildingCollections.Simulator
 {
     public static class Regression
     {
-        public static readonly float[] Overlaps = { FootprintMask.StrictOverlap, 0.5f, 1f, 2f };
+        public static readonly float[] Overlaps = { FootprintMask.StrictOverlap, FootprintMask.MaxOverlap };
 
         public const int SeedCount = 24;
 

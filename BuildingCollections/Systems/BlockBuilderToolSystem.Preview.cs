@@ -358,9 +358,13 @@ namespace BuildingCollections.Systems
                 }
                 else
                 {
-                    var axis = FrontAxis(p.Block) * p.Shift;
-                    t = new Transform(ZoneUtils.GetPosition(p.Block, p.Min, p.Max) + new float3(axis.x, 0, axis.y), ZoneUtils.GetRotation(p.Block));
-                    float3 front = BuildingUtils.CalculateFrontPosition(t, p.Max.y - p.Min.y);
+                    var frontAxis = FrontAxis(p.Block);
+                    var axis = frontAxis * p.Shift;
+                    var rotation = p.Lot.FrontAlong == 0
+                        ? ZoneUtils.GetRotation(p.Block)
+                        : quaternion.LookRotationSafe(new float3(frontAxis.x * p.Lot.FrontAlong, 0, frontAxis.y * p.Lot.FrontAlong), math.up());
+                    t = new Transform(ZoneUtils.GetPosition(p.Block, p.Min, p.Max) + new float3(axis.x, 0, axis.y), rotation);
+                    float3 front = BuildingUtils.CalculateFrontPosition(t, p.Lot.Building.LotDepth);
                     y = TerrainUtils.SampleHeight(ref heights, front);
                 }
 
@@ -546,8 +550,6 @@ namespace BuildingCollections.Systems
         }
 
         const float StrictOverlap = FootprintMask.StrictOverlap;
-
-        const float OverlapOn = 0.5f;
 
         static float2 FrontAxis(Block b) =>
             math.normalizesafe(ZoneUtils.GetCellPosition(b, new int2(1, 0)).xz - ZoneUtils.GetCellPosition(b, new int2(0, 0)).xz);

@@ -4,6 +4,23 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.28
+- El solape pasa a ser una casilla «Overlap»: marcada, los edificios se solapan hasta 2 m por junta, solo lo necesario
+  (el planificador ya usaba el valor como máximo); sin marcar, sin solape. Los ajustes guardados con más de 0 m pasan a
+  marcada. Sigue necesitando Anarchy.
+- Esquinas abiertas con esquineros girados: un esquinero `L` en una calle y su `R` (el mismo modelo, nivel y tamaño, con
+  el nombre casi igual; el lado sale del tipo de acceso del prefab) en la otra, girados 90° para que la fachada larga
+  quede sobre cada calle y la corta en la esquina; se pisan por detrás. Solo con esquineros más hondos que anchos
+  (`1x2`, `1x3`, `2x3`) y si no empeoran la acera ni las celdas. El juego gira el edificio al construirlo (`FrontAlong`
+  en el lote).
+- Una pareja de esquina, girada o recta, ya no se acepta si añade un hueco entre dos edificios, también contra el
+  edificio de otra calle.
+- El log de alturas (`[data] height`) incluye el tipo de acceso, y el simulador lo usa para cargar los esquineros
+  reales con `SIM_CATALOG_FILE`.
+- Simulador y regresión: solo sin solape y con 2 m (antes también 0,5 y 1 m); `regress` tarda la mitad. En la regresión,
+  `block_18840` mejora (de 134 a 91 m sin cubrir y de 24 a 12 celdas vacías con 2 m); `block_18912` sube de 60 a 91 m
+  sin cubrir con 2 m por una pareja girada a 98°, dentro del margen de ruido, y el baseline conserva el valor anterior.
+
 ## 0.3.27
 - Vuelven las parejas de esquina abierta de 0.3.21 y 0.3.23 (`OpenCornerPairs`): el mismo modelo en las dos calles, con
   las esquinas delanteras de los lotes juntas. El rango pasa a 95°–150° (antes 100°–150°); recortarlo a 130° empeora la

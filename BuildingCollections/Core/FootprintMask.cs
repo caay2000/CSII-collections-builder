@@ -6,6 +6,8 @@ namespace BuildingCollections.Core
     {
         public const float StrictOverlap = 0.05f;
 
+        public const float MaxOverlap = 2f;
+
         public static int Apply(PlanGrid grid, PlanBlock block, IReadOnlyList<Quad> footprints, float overlap, int fromRow = 0)
         {
             if (footprints.Count == 0)

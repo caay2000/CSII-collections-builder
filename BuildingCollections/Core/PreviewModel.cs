@@ -25,6 +25,7 @@ namespace BuildingCollections.Core
         public int MaxY;
         public bool Corner;
         public float Shift;
+        public int FrontAlong;
 
         public int Width => MaxX - MinX;
 
