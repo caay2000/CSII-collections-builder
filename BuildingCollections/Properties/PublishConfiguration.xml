@@ -69,6 +69,11 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 - The log starts each session with the mod version, the game version and the date.
 - Each build lists the exact buildings placed, how many of each, and the pack they come from, together with the simulation frame.
 - If the previous session crashed, the log says so at start and shows the last action taken (preview or build, collection and time).
+- The first time a collection is selected in a session, the log lists its buildings with their level, lot size, height and zone.
+
+0.3.25
+- New Min Height and Max Height filters, in metres, in the Collections tab and in the builder. The height comes from the building bounds, so it includes antennas and chimneys. While a limit is set, buildings with no known height are left out.
+- Each card in a collection shows the building height.
 	</ChangeLog>
 	<ExternalLink Type="github" Url="https://github.com/caay2000/CSII-collections-builder" />
 	<!--Public, Private or Unlisted. Private while testing.-->
