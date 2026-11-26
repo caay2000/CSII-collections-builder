@@ -14,12 +14,12 @@ Collections Builder does two things: it lets you keep your own **collections** o
 - A collection is a named list of buildings you pick yourself: a style, a theme, a street mood, anything.
 - With the panel open and a collection selected, Shift+click a building in Find It or in the game's asset menu to add it, or add everything Find It is currently showing with one button.
 - With the "Tag collections in Find It" option on, every collection is also a **Find It tag**, so you can browse it straight from Find It.
-- Browse a collection as cards (thumbnail, name, lot size, level), search it, filter it, and remove buildings you no longer want.
+- Browse a collection as cards (thumbnail, name, lot size, level, height), search it, filter it, and remove buildings you no longer want.
 
 **Block builder**
 - Click a block surrounded by roads, or draw a polygon, and pick a collection.
 - The mod lays buildings from that collection along every sidewalk, facing the street, with corner buildings on the corners when the collection has them. It also handles curved streets.
-- Filter by lot width, depth and level, and set the density (how much of the street front gets built).
+- Filter by lot width, depth, level and height, and set the density (how much of the street front gets built).
 - Preview the result as a transparent plan, press Reshuffle for another random layout with the same rules, and press Build when you like it. No zoning needed: **Plop the Growables** keeps the placed buildings from being condemned.
 - Optional trees in the leftover space inside the block.
 
@@ -69,11 +69,12 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 - The log starts each session with the mod version, the game version and the date.
 - Each build lists the exact buildings placed, how many of each, and the pack they come from, together with the simulation frame.
 - If the previous session crashed, the log says so at start and shows the last action taken (preview or build, collection and time).
-- The first time a collection is selected in a session, the log lists its buildings with their level, lot size, height and zone.
+- When a collection is shown, the log lists its loaded buildings with their level, lot size, height and zone, and lists them again if more load later.
 
 0.3.25
 - New Min Height and Max Height filters, in metres, in the Collections tab and in the builder. The height comes from the building bounds, so it includes antennas and chimneys. While a limit is set, buildings with no known height are left out.
 - Each card in a collection shows the building height.
+- Heights go in 5 m steps up to 200 m. Min starts at All and Max ends at +200 m, which means no limit. If Min goes above Max, or Max below Min, the other one follows.
 	</ChangeLog>
 	<ExternalLink Type="github" Url="https://github.com/caay2000/CSII-collections-builder" />
 	<!--Public, Private or Unlisted. Private while testing.-->
