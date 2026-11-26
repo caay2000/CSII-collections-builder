@@ -54,7 +54,7 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
-        public void An_open_corner_pair_never_crosses_its_copy_and_covers_more_sidewalk_or_cells()
+        public void An_open_corner_pair_never_crosses_its_copy_and_never_covers_less_than_no_pair()
         {
             int pairs = 0;
             foreach (double angle in Enumerable.Range(19, 12).Select(step => step * 5.0))
@@ -70,14 +70,14 @@ namespace BuildingCollections.Tests
                     Assert.True(pair.Last().Footprint(0).P.Count(p => Polygon.Contains(a, p)) >= 2, $"{angle}°: {pair.Key} crosses its copy");
                 }
 
-                foreach (var line in result.Log.Where(l => l.Contains(" m uncovered")))
+                foreach (var line in result.Log.Where(l => l.Contains(": pair kept (")))
                 {
-                    var m = System.Text.RegularExpressions.Regex.Match(line, @"([\d.,]+) -> ([\d.,]+) m uncovered, (\d+) -> (\d+) street cells filled");
+                    var m = System.Text.RegularExpressions.Regex.Match(line, @"\((\d+) street cells filled, (\d+) gaps[^,]*, ([\d.,]+) m uncovered.*; without it (\d+) street cells filled, (\d+) gaps[^,]*, ([\d.,]+) m uncovered");
                     Assert.True(m.Success, line);
-                    double before = double.Parse(m.Groups[1].Value.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture);
-                    double after = double.Parse(m.Groups[2].Value.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture);
-                    bool moreCells = int.Parse(m.Groups[4].Value) > int.Parse(m.Groups[3].Value);
-                    Assert.True(before - after >= 0.95 || moreCells, $"{angle}°: {line}");
+                    double Meters(int group) => double.Parse(m.Groups[group].Value.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture);
+                    Assert.True(int.Parse(m.Groups[1].Value) >= int.Parse(m.Groups[4].Value), $"{angle}°: {line}");
+                    Assert.True(int.Parse(m.Groups[2].Value) <= int.Parse(m.Groups[5].Value), $"{angle}°: {line}");
+                    Assert.True(Meters(3) <= Meters(6) + 0.5, $"{angle}°: {line}");
                 }
             }
 
@@ -148,6 +148,29 @@ namespace BuildingCollections.Tests
             }
 
             Assert.True(restored > 0);
+        }
+
+        [Fact]
+        public void A_corner_next_to_a_short_side_with_a_row_ending_at_the_pair_is_paired_on_every_shuffle()
+        {
+            var scenario = BuildingCollections.Simulator.GameBlocks.All().Single(s => s.Name.Contains("(13149, -8503)"));
+            var sizes = new[] { (1, 2), (2, 2), (3, 2), (1, 3) };
+            var plain = sizes.Select(size => new BuildingInfo { PrefabName = $"{size.Item1}x{size.Item2}", LotWidth = size.Item1, LotDepth = size.Item2 }).ToList();
+            var corners = new List<BuildingInfo>
+            {
+                new BuildingInfo { PrefabName = "corner Left", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Left },
+                new BuildingInfo { PrefabName = "corner Right", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Right },
+                new BuildingInfo { PrefabName = "Corner02L_2x3", LotWidth = 2, LotDepth = 3, Corner = CornerKind.Front | CornerKind.Left },
+                new BuildingInfo { PrefabName = "Corner02R_2x3", LotWidth = 2, LotDepth = 3, Corner = CornerKind.Front | CornerKind.Right },
+            };
+
+            foreach (int seed in Enumerable.Range(1, 12))
+            {
+                var run = BuildingCollections.Simulator.Simulation.Simulate(scenario, 2f, seed, plain, corners);
+
+                Assert.True(run.Result.Lots.Count(l => l.Paired) == 2, $"seed {seed}: the 104° corner is not paired");
+                Assert.DoesNotContain(run.Result.Log, l => l.Contains(FrontCoverage.BetweenOwn));
+            }
         }
 
         [Fact]

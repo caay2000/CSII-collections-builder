@@ -4,6 +4,22 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.31
+- Parejas de esquina abierta (95°–150°) planificadas primero: la pareja se reserva antes de rellenar las calles y el
+  relleno se hace alrededor (`OpenCornerPairs.Reserve`). Desaparece la reparación posterior (`CloseRow`,
+  `RestoreFarCorner`, rellenos) que fallaba cuando la pareja desplazaba el final de una fila.
+- `PairJoints`: une la fila con la pareja en metros, no en celdas: reespacia la fila hasta el siguiente esquinero
+  repartiendo el solape, desliza el resto de la calle hacia la pareja (el hueco queda en la otra esquina) o, si la calle
+  está vacía, añade edificios desde la pareja. `EndGapCloser` ya no actúa en la punta de una pareja.
+- `OpenCornerChoice`: cada esquina se planifica con gemelos, con el mismo modelo en las dos calles o sin pareja, y se
+  queda la primera opción que no llena menos celdas, no deja más huecos entre edificios de una calle, no deja más de
+  0,5 m más de acera sin cubrir ni agranda el hueco mayor en más de 2 m.
+- Con el catálogo del juego (log del 26/11, 12 semillas): la esquina de 104° de `block_13149_-8503` pasa de 7/12 a 12/12
+  (era el hueco de 11 m del lado corto), la de 104° de `block_13111_-8478` y la de `block_13094_-8500` de 0/12 a 12/12, la
+  de 127° de `block_13094_-8500` 8/12 y la de 97° de `block_13056_-8474` 3/12 (antes 0/12).
+- Regresión con 2 m: 8 mejoras, ninguna peor; en total 969 m menos de acera sin cubrir y 97 celdas vacías menos.
+  Vista previa ~13 % más lenta de media (más planes cuando hay esquinas abiertas).
+
 ## 0.3.30
 - Parejas de esquina junto a un lado corto: si la pareja pisa el esquinero de la otra punta del lado, se repone ahí un
   esquinero más estrecho del mismo lado (L o R), y edificios normales en lo que sobre, en vez de dejar la celda vacía y

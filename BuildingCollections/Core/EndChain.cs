@@ -24,7 +24,12 @@ namespace BuildingCollections.Core
 
         public static EndChain Build(PlanBlock block, IReadOnlyList<PlannedLot> lots, IReadOnlyList<PlanBlock> blocks, int dir)
         {
-            var mine = lots.Where(p => p.Owner == block).OrderBy(p => p.MinX).ToList();
+            var mine = lots.Where(p => p.Owner == block && !p.Paired).OrderBy(p => p.MinX).ToList();
+            if (EndsInAPair(block, lots, mine, dir))
+            {
+                return null;
+            }
+
             var chain = new List<PlannedLot>();
             bool reachedStripEnd = true;
             for (int i = dir > 0 ? mine.Count - 1 : 0; i >= 0 && i < mine.Count; i -= dir)
@@ -58,6 +63,9 @@ namespace BuildingCollections.Core
 
             return new EndChain(chain, own, cornerOnly);
         }
+
+        static bool EndsInAPair(PlanBlock block, IReadOnlyList<PlannedLot> lots, List<PlannedLot> mine, int dir) =>
+            mine.Count > 0 && lots.Any(p => p.Owner == block && p.Paired && (dir > 0 ? p.MaxX >= mine[mine.Count - 1].MaxX : p.MinX <= mine[0].MinX));
 
         static bool Adjacent(PlannedLot p, PlannedLot last, int dir) => dir > 0 ? p.MaxX == last.MinX : p.MinX == last.MaxX;
 

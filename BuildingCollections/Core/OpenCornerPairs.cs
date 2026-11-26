@@ -4,6 +4,13 @@ using System.Linq;
 
 namespace BuildingCollections.Core
 {
+    public enum PairKind
+    {
+        Twins,
+        SameModel,
+        None,
+    }
+
     public sealed class OpenCornerPairs
     {
         public const double MinAngle = 95;
@@ -13,63 +20,52 @@ namespace BuildingCollections.Core
         const double SharedCorner = 0.5;
         const double MinStraight = 16;
         const double InsideInset = 0.1;
-        const double MinGain = 1;
-        const double SideOnTolerance = 0.05;
         const double CrossTolerance = 0.5;
-        const double JointMargin = 0.01;
-        const double ClosedGap = 0.5;
-        const int MaxFillers = 3;
-        const int MaxMovedNeighbours = 3;
-        const double ScopeMargin = 16;
 
-        readonly List<PlannedLot> lots;
         readonly IReadOnlyList<PlanBlock> blocks;
         readonly IReadOnlyList<Quad> existing;
         readonly IReadOnlyList<Pt> outline;
         readonly IReadOnlyList<BuildingInfo> catalog;
         readonly IReadOnlyList<CornerTwin> twins;
-        readonly IReadOnlyList<BuildingInfo> cornerModels;
-        readonly IReadOnlyList<Pt> frontCells;
         readonly float overlap;
         readonly IList<string> log;
         readonly Random random;
-        readonly HashSet<PlannedLot> paired = new HashSet<PlannedLot>();
-        List<PlannedLot> scope;
-        List<Quad> nearby;
-        List<Pt> cells;
+        readonly List<PlannedLot> reserved = new List<PlannedLot>();
+        readonly IReadOnlyList<PairKind> wanted;
+        readonly List<PairKind> used = new List<PairKind>();
 
-        OpenCornerPairs(List<PlannedLot> lots, IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
-            IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<Pt> frontCells, float overlap, int seed, IList<string> log)
+        OpenCornerPairs(IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
+            IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<PairKind> wanted, float overlap, int seed, IList<string> log)
         {
-            this.lots = lots;
+            this.wanted = wanted;
             twins = CornerTwins.Find(corners);
-            cornerModels = corners;
             this.blocks = blocks.Where(b => b.Strip != null).ToList();
             this.existing = existing;
             this.outline = outline;
             this.catalog = catalog;
-            this.frontCells = frontCells;
             this.overlap = overlap;
             this.log = log;
             random = new Random(seed ^ 0x51ed270b);
         }
 
-        public static int Apply(List<PlannedLot> lots, IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
-            IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<Pt> frontCells, float overlap, int seed, IList<string> log) =>
-            new OpenCornerPairs(lots, blocks, existing, outline, catalog, corners, frontCells, overlap, seed, log).Run();
+        public static (List<PlannedLot> Lots, List<PairKind> Kinds) Reserve(IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
+            IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<PairKind> wanted, float overlap, int seed, IList<string> log) =>
+            new OpenCornerPairs(blocks, existing, outline, catalog, corners, wanted, overlap, seed, log).Run();
 
-        int Run()
+        (List<PlannedLot>, List<PairKind>) Run()
         {
-            int placed = 0;
             foreach (var (first, second, angle) in Corners())
             {
-                if (TryPair(first, second, angle))
+                var kind = used.Count < wanted.Count ? wanted[used.Count] : PairKind.Twins;
+                if (kind == PairKind.None)
                 {
-                    placed++;
+                    log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): left to the regular corner buildings, the street is better covered without a pair.");
                 }
+
+                used.Add(kind == PairKind.None ? PairKind.None : TryPair(first, second, angle, kind));
             }
 
-            return placed;
+            return (reserved, used);
         }
 
         IEnumerable<(PlanBlock First, PlanBlock Second, double Angle)> Corners()
@@ -99,60 +95,28 @@ namespace BuildingCollections.Core
 
         static bool IsStraightEnough(LotStrip strip) => strip.ChunkLength >= MinStraight;
 
-        bool TryPair(PlanBlock first, PlanBlock second, double angle)
+        PairKind TryPair(PlanBlock first, PlanBlock second, double angle, PairKind kind)
         {
             if (!TryCorner(first, second, out var corner))
             {
-                return false;
+                return PairKind.None;
             }
 
-            Focus(first, second);
-            var strips = new[] { first.Strip, second.Strip };
-            double before = Uncovered(strips, scope);
-            var gapsBefore = Gaps(scope, first, second);
-            int filledBefore = FrontCoverage.CountFilled(scope, cells);
-            var best = Shapes(first)
-                .Select(shape => Candidate(shape, first, second, corner, strips, gapsBefore, filledBefore))
-                .Where(c => c != null && (c.A.FrontAlong != 0 ? c.Uncovered <= before + SideOnTolerance : c.Uncovered <= before - MinGain || c.Filled > filledBefore))
-                .OrderBy(c => Math.Round(c.Uncovered, 1))
-                .ThenByDescending(c => c.A.Width)
-                .ThenByDescending(c => c.A.Depth)
-                .FirstOrDefault();
-            if (best == null)
+            var pair = Shapes(first, kind)
+                .Select(shape => Candidate(shape, first, second, corner))
+                .FirstOrDefault(p => p.A != null);
+            string sides = $"sides {first.Strip.SideIndex}/{second.Strip.SideIndex}";
+            if (pair.A == null)
             {
-                log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): no model fits on both streets without crossing its copy and covers more, kept as planned.");
-                return false;
+                log.Add($"  open corner {angle:F0}° ({sides}): no model fits on both streets without crossing its copy, left to the regular corner buildings.");
+                return PairKind.None;
             }
 
-            lots.RemoveAll(best.Displaced.Contains);
-            lots.Add(best.A);
-            lots.Add(best.B);
-            lots.AddRange(best.Fillers);
-            paired.Add(best.A);
-            paired.Add(best.B);
-            string models = best.A.FrontAlong == 0 ? $"{best.A.Building}" : $"{best.A.Building} and {best.B.Building} side-on";
-            log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): {models} on both streets, {before:F1} -> {best.Uncovered:F1} m uncovered, {filledBefore} -> {best.Filled} street cells filled, {SharedShare(best.A, best.B) * 100:F0}% of each lot shared.");
-            return true;
-        }
-
-        void Focus(PlanBlock first, PlanBlock second)
-        {
-            var a = Bounds.Of(first);
-            var b = Bounds.Of(second);
-            var area = new Bounds(Math.Min(a.MinX, b.MinX), Math.Min(a.MinY, b.MinY), Math.Max(a.MaxX, b.MaxX), Math.Max(a.MaxY, b.MaxY)).Grow(ScopeMargin);
-            scope = lots.Where(l => area.Overlaps(l.Footprint(overlap))).ToList();
-            nearby = existing.Where(area.Overlaps).ToList();
-            cells = frontCells.Where(area.Contains).ToList();
-        }
-
-        sealed class Pair
-        {
-            public PlannedLot A;
-            public PlannedLot B;
-            public List<PlannedLot> Displaced;
-            public List<PlannedLot> Fillers;
-            public double Uncovered;
-            public int Filled;
+            reserved.Add(pair.A);
+            reserved.Add(pair.B);
+            string models = pair.A.FrontAlong == 0 ? $"{pair.A.Building}" : $"{pair.A.Building} and {pair.B.Building} side-on";
+            log.Add($"  open corner {angle:F0}° ({sides}): {models} on both streets, {SharedShare(pair.A, pair.B) * 100:F0}% of each lot shared, reserved before the fill.");
+            return pair.A.FrontAlong == 0 ? PairKind.SameModel : PairKind.Twins;
         }
 
         sealed class Shape
@@ -166,260 +130,71 @@ namespace BuildingCollections.Core
             public int Deep => SideOn ? First.LotWidth : First.LotDepth;
         }
 
-        List<Shape> Shapes(PlanBlock first)
+        IEnumerable<Shape> Shapes(PlanBlock first, PairKind kind)
         {
-            var straight = catalog
-                .GroupBy(model => (model.LotWidth, model.LotDepth, model.Group))
-                .OrderBy(shape => shape.Key)
-                .Select(PickModel)
-                .Select(model => new Shape { First = model, Second = model });
             var firstSide = SideFacingStreet(Pt.Dot(first.Frame.AxisX, first.Strip.T) > 0 ? 1 : -1);
-            var sideOn = twins
+            var sideOn = Shuffled(twins
                 .Where(twin => twin.Left.LotWidth < twin.Left.LotDepth)
                 .GroupBy(twin => (twin.Left.LotWidth, twin.Left.LotDepth, twin.Left.Group))
                 .OrderBy(shape => shape.Key)
                 .Select(shape => shape.ToList())
                 .Select(shape => shape[random.Next(shape.Count)])
-                .Select(twin => new Shape { First = twin.For(firstSide), Second = twin.For(Opposite(firstSide)), SideOn = true });
-            return straight.Concat(sideOn).ToList();
+                .Select(twin => new Shape { First = twin.For(firstSide), Second = twin.For(Opposite(firstSide)), SideOn = true }));
+            var straight = Shuffled(catalog
+                .GroupBy(model => (model.LotWidth, model.LotDepth, model.Group))
+                .OrderBy(shape => shape.Key)
+                .Select(shape => shape.ToList())
+                .Select(shape => shape[random.Next(shape.Count)])
+                .Select(model => new Shape { First = model, Second = model }));
+            return kind == PairKind.Twins ? sideOn.Concat(straight) : straight;
         }
+
+        List<Shape> Shuffled(IEnumerable<Shape> shapes) => shapes.Select(s => (s, key: random.Next())).OrderBy(x => x.key).Select(x => x.s).ToList();
 
         public static CornerKind SideFacingStreet(int frontAlong) => frontAlong > 0 ? CornerKind.Left : CornerKind.Right;
 
         static CornerKind Opposite(CornerKind side) => side == CornerKind.Left ? CornerKind.Right : CornerKind.Left;
 
-        Pair Candidate(Shape shape, PlanBlock first, PlanBlock second, Pt corner, LotStrip[] strips, (int Own, int Any) gapsBefore, int filledBefore)
+        (PlannedLot A, PlannedLot B) Candidate(Shape shape, PlanBlock first, PlanBlock second, Pt corner)
         {
-            var model = shape.First;
             if (shape.Along * CellFrame.Size > first.Strip.ChunkLength || shape.Along * CellFrame.Size > second.Strip.ChunkLength
                 || shape.Deep > first.Grid.Depth || shape.Deep > second.Grid.Depth)
             {
-                return null;
+                return default;
             }
 
             var a = LotAt(first, shape.First, corner, first.Strip.T * -1, shape.SideOn);
             var b = LotAt(second, shape.Second, corner, second.Strip.T, shape.SideOn);
-            if (!Fits(a, corner) || !Fits(b, corner) || BackLeavesCopy(a, b, corner) || BackLeavesCopy(b, a, corner))
+            if (!Fits(a, corner) || !Fits(b, corner) || BackLeavesCopy(a, b, corner) || BackLeavesCopy(b, a, corner) || HitsReserved(a) || HitsReserved(b)
+                || TakesAnotherFront(a, first, second) || TakesAnotherFront(b, first, second))
             {
-                return null;
+                return default;
             }
 
-            var displaced = scope.Where(l => Blocks(a, l) || Blocks(b, l)).ToList();
-            if (displaced.Any(l => paired.Contains(l) || l.Building.Group != model.Group || (l.Owner != first && l.Owner != second)))
-            {
-                return null;
-            }
-
-            var trial = scope.Where(l => !displaced.Contains(l)).Append(a).Append(b).ToList();
-            var fillers = new List<PlannedLot>();
-            foreach (var (lot, block, inward) in new[] { (a, first, -1), (b, second, 1) })
-            {
-                var (moved, placed) = CloseRow(lot, block, inward, trial);
-                if (moved.Count == 0 && placed.Count == 0)
-                {
-                    placed = RestoreFarCorner(lot, block, inward, displaced, trial);
-                }
-
-                trial.RemoveAll(moved.Contains);
-                trial.AddRange(placed);
-                displaced.AddRange(moved);
-                fillers.AddRange(placed);
-            }
-
-            int filled = FrontCoverage.CountFilled(trial, cells);
-            var gaps = Gaps(trial, first, second);
-            if (gaps.Own > gapsBefore.Own || gaps.Any > gapsBefore.Any || filled < filledBefore)
-            {
-                return null;
-            }
-
-            return new Pair { A = a, B = b, Displaced = displaced, Fillers = fillers, Uncovered = Uncovered(strips, trial), Filled = filled };
+            return (a, b);
         }
 
-        BuildingInfo PickModel(IEnumerable<BuildingInfo> shape)
+        bool TakesAnotherFront(PlannedLot lot, PlanBlock first, PlanBlock second)
         {
-            var models = shape.ToList();
-            return models[random.Next(models.Count)];
+            var footprint = lot.Footprint(0);
+            return blocks
+                .Where(b => b != first && b != second && Bounds.Of(b).Overlaps(footprint))
+                .Any(b => Enumerable.Range(0, b.Grid.Width)
+                    .Where(x => b.Grid.Free[x, 0])
+                    .Any(x => Quad.Touch(footprint, b.Frame.Cell(b.AreaX + x, b.AreaY, overlap))));
         }
 
-        (List<PlannedLot> Moved, List<PlannedLot> Fillers) CloseRow(PlannedLot lot, PlanBlock block, int inward, List<PlannedLot> planned)
-        {
-            var strip = block.Strip;
-            var (from, to) = Span(lot, strip);
-            double inner = inward > 0 ? to : from;
-            var neighbours = planned
-                .Where(l => l != lot && l.Owner == block)
-                .Select(l => (lot: l, span: Span(l, strip)))
-                .Select(n => (n.lot, gap: inward > 0 ? n.span.From - inner : inner - n.span.To))
-                .Where(n => n.gap > -overlap)
-                .OrderBy(n => n.gap)
-                .ToList();
-            var moved = new List<PlannedLot>();
-            for (int i = 0; i < neighbours.Count; i++)
-            {
-                if (neighbours[i].gap <= ClosedGap)
-                {
-                    return (moved, new List<PlannedLot>());
-                }
+        bool HitsReserved(PlannedLot lot) => reserved.Any(other => Quad.Touch(other.Footprint(0), lot.Footprint(overlap)));
 
-                var kept = planned.Where(l => !moved.Contains(l)).ToList();
-                var fillers = Fillers(lot, block, inner, inward, neighbours[i].gap, kept);
-                if (fillers.Count > 0)
-                {
-                    return (moved, fillers);
-                }
-
-                var next = neighbours[i].lot;
-                if (moved.Count == MaxMovedNeighbours || next.Corner || paired.Contains(next) || next.Building.Group != lot.Building.Group)
-                {
-                    break;
-                }
-
-                moved.Add(next);
-            }
-
-            return (new List<PlannedLot>(), new List<PlannedLot>());
-        }
-
-        List<PlannedLot> RestoreFarCorner(PlannedLot lot, PlanBlock block, int inward, List<PlannedLot> displaced, List<PlannedLot> planned)
-        {
-            var strip = block.Strip;
-            var (from, to) = Span(lot, strip);
-            double inner = inward > 0 ? to : from;
-            bool Beyond(PlannedLot other)
-            {
-                var span = Span(other, strip);
-                return inward > 0 ? span.To > inner : span.From < inner;
-            }
-
-            if (planned.Any(l => l != lot && l.Owner == block && Beyond(l)))
-            {
-                return new List<PlannedLot>();
-            }
-
-            var far = displaced
-                .Where(l => l.Corner && l.Owner == block && Beyond(l))
-                .OrderBy(l => inward > 0 ? -Span(l, strip).To : Span(l, strip).From)
-                .FirstOrDefault();
-            if (far == null)
-            {
-                return new List<PlannedLot>();
-            }
-
-            var farSpan = Span(far, strip);
-            double edge = inward > 0 ? farSpan.To : farSpan.From;
-            double gap = Math.Abs(edge - inner);
-            var start = strip.ChunkStart + strip.T * edge;
-            var options = cornerModels
-                .Where(m => m.Corner == far.Building.Corner && m.Group == lot.Building.Group && m.LotDepth <= block.Grid.Depth && m.LotWidth * CellFrame.Size <= gap + overlap)
-                .GroupBy(m => (m.LotWidth, m.LotDepth))
-                .OrderByDescending(shape => shape.Key)
-                .Select(PickModel);
-            foreach (var model in options)
-            {
-                var corner = LotAt(block, model, start, strip.T * -inward);
-                if (!Fits(corner) || planned.Any(o => Quad.Touch(o.Footprint(0), corner.Footprint(overlap))))
-                {
-                    continue;
-                }
-
-                double remaining = gap - model.LotWidth * CellFrame.Size;
-                if (remaining <= ClosedGap)
-                {
-                    return new List<PlannedLot> { corner };
-                }
-
-                var fillers = Fillers(lot, block, inner, inward, remaining, planned.Append(corner).ToList());
-                if (fillers.Count > 0)
-                {
-                    return fillers.Prepend(corner).ToList();
-                }
-            }
-
-            return new List<PlannedLot>();
-        }
-
-        List<PlannedLot> Fillers(PlannedLot lot, PlanBlock block, double inner, int inward, double gap, List<PlannedLot> planned)
-        {
-            var options = catalog
-                .Where(m => m.LotDepth <= block.Grid.Depth && m.Group == lot.Building.Group)
-                .GroupBy(m => (m.LotWidth, m.LotDepth))
-                .OrderBy(shape => shape.Key)
-                .Select(PickModel)
-                .OrderByDescending(m => m.LotDepth)
-                .ToList();
-            foreach (var (widths, excess) in WidthRows(options.Select(m => m.LotWidth).Distinct().ToList(), gap))
-            {
-                var placed = Row(widths, options, block, inner, inward, Math.Max(0, excess) / (widths.Count + 1), planned);
-                if (placed != null)
-                {
-                    return placed;
-                }
-            }
-
-            return new List<PlannedLot>();
-        }
-
-        IEnumerable<(List<int> Widths, double Excess)> WidthRows(List<int> widths, double gap)
-        {
-            IEnumerable<List<int>> rows = widths.Select(w => new List<int> { w }).ToList();
-            var all = rows.ToList();
-            for (int length = 2; length <= MaxFillers; length++)
-            {
-                rows = rows.SelectMany(row => widths.Select(w => row.Append(w).ToList())).ToList();
-                all.AddRange(rows);
-            }
-
-            return all
-                .Select(row => (row, excess: row.Sum() * CellFrame.Size - gap))
-                .Where(o => o.excess >= -ClosedGap && o.excess <= (overlap - JointMargin) * (o.row.Count + 1))
-                .OrderBy(o => o.row.Count)
-                .ThenBy(o => Math.Abs(o.excess));
-        }
-
-        List<PlannedLot> Row(List<int> widths, List<BuildingInfo> options, PlanBlock block, double inner, int inward, double joint, List<PlannedLot> planned)
-        {
-            var strip = block.Strip;
-            var direction = strip.T * inward;
-            var placed = new List<PlannedLot>();
-            double cursor = inner - inward * joint;
-            foreach (int width in widths)
-            {
-                var start = strip.ChunkStart + strip.T * cursor;
-                var lot = options
-                    .Where(m => m.LotWidth == width)
-                    .Select(m => LotAt(block, m, start, direction))
-                    .FirstOrDefault(l => Fits(l) && !planned.Any(o => Quad.Touch(o.Footprint(0), l.Footprint(overlap))));
-                if (lot == null)
-                {
-                    return null;
-                }
-
-                lot.Corner = false;
-                placed.Add(lot);
-                cursor += inward * (width * CellFrame.Size - joint);
-            }
-
-            return placed;
-        }
-
-        static (double From, double To) Span(PlannedLot lot, LotStrip strip)
-        {
-            var along = lot.Footprint(0).P.Select(p => Pt.Dot(p - strip.ChunkStart, strip.T)).ToList();
-            return (along.Min(), along.Max());
-        }
-
-        bool Blocks(PlannedLot pair, PlannedLot other) => Quad.Touch(other.Footprint(0), pair.Footprint(overlap));
-
-        bool Fits(PlannedLot lot, Pt? corner = null)
+        bool Fits(PlannedLot lot, Pt corner)
         {
             var strict = lot.Footprint(FootprintMask.StrictOverlap);
-            if (nearby.Any(q => Quad.Touch(q, strict)))
+            if (existing.Any(q => Quad.Touch(q, strict)))
             {
                 return false;
             }
 
-            return lot.Footprint(InsideInset).P.All(p => Polygon.Contains(outline, p) || (corner.HasValue && Distance(p, corner.Value) <= SharedCorner && NearOutline(p)));
+            return lot.Footprint(InsideInset).P.All(p => Polygon.Contains(outline, p) || (Distance(p, corner) <= SharedCorner && NearOutline(p)));
         }
 
         bool NearOutline(Pt point)
@@ -443,7 +218,7 @@ namespace BuildingCollections.Core
             return Distance(p, a + d * t);
         }
 
-        static PlannedLot LotAt(PlanBlock block, BuildingInfo model, Pt corner, Pt inward, bool sideOn = false)
+        static PlannedLot LotAt(PlanBlock block, BuildingInfo model, Pt corner, Pt inward, bool sideOn)
         {
             var frame = block.Frame;
             double edge = Pt.Dot(corner - (frame.Origin - frame.AxisX * (CellFrame.Size / 2)), frame.AxisX);
@@ -461,6 +236,7 @@ namespace BuildingCollections.Core
                 MaxX = minX + along,
                 MaxY = block.AreaY + deep,
                 Corner = true,
+                Paired = true,
                 FrontAlong = sideOn ? (growsForward ? -1 : 1) : 0,
                 Shift = (float)(edge - anchor * CellFrame.Size),
             };
@@ -483,15 +259,6 @@ namespace BuildingCollections.Core
         }
 
         static Pt FrontPoint(CellFrame frame, int row) => frame.Origin + frame.AxisY * (CellFrame.Size * (row - 0.5));
-
-        static double Uncovered(IEnumerable<LotStrip> strips, IEnumerable<PlannedLot> planned) =>
-            SidewalkGaps.Find(strips, planned).Sum(g => g.Length);
-
-        (int Own, int Any) Gaps(List<PlannedLot> planned, PlanBlock first, PlanBlock second)
-        {
-            var pair = new[] { first, second };
-            return (FrontCoverage.GapsBetweenOwn(planned, nearby, pair), FrontCoverage.GapsBetweenBuildings(planned, nearby, pair));
-        }
 
         static bool BackLeavesCopy(PlannedLot lot, PlannedLot copy, Pt corner)
         {
