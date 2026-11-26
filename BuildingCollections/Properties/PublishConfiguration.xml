@@ -59,11 +59,14 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/simulator.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-collections-builder.1949529/" />
-	<ModVersion Value="0.3.29" />
+	<ModVersion Value="0.3.30" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.30
+- Corners next to a short street are paired on every reshuffle, not only on some.
+
 0.3.29
 - Corners where a straight street meets a curve are now paired too.
 

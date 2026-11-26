@@ -4,6 +4,13 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.30
+- Parejas de esquina junto a un lado corto: si la pareja pisa el esquinero de la otra punta del lado, se repone ahí un
+  esquinero más estrecho del mismo lado (L o R), y edificios normales en lo que sobre, en vez de dejar la celda vacía y
+  rechazar la pareja. En Oak Lane/Sheffield (`block_13111_-8478`, 127°) la pareja sale en todas las semillas (antes solo
+  cuando el esquinero de la otra punta era un `1x2`).
+- Simulador: manzana `block_13111_-8478` del log del 26/11.
+
 ## 0.3.29
 - Parejas de esquina abierta también donde una calle recta se une con una curva: el primer tramo de la curva cuenta como
   calle si mide al menos 16 m (antes se pedían 48 m junto a una curva y esa esquina nunca se evaluaba). En

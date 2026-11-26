@@ -125,6 +125,28 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void A_pair_on_a_short_side_puts_back_a_narrower_corner_building_at_its_other_end()
+        {
+            var scenario = BuildingCollections.Simulator.GameBlocks.All().Single(s => s.Name.Contains("(13111, -8478)"));
+            var sizes = new[] { (1, 2), (2, 2), (3, 2) };
+            var plain = sizes.Select(size => new BuildingInfo { PrefabName = $"{size.Item1}x{size.Item2}", LotWidth = size.Item1, LotDepth = size.Item2 }).ToList();
+            var corners = new List<BuildingInfo>
+            {
+                new BuildingInfo { PrefabName = "wide corner Left", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Left },
+                new BuildingInfo { PrefabName = "wide corner Right", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Right },
+                new BuildingInfo { PrefabName = "narrow corner Left", LotWidth = 1, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Left },
+                new BuildingInfo { PrefabName = "narrow corner Right", LotWidth = 1, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Right },
+            };
+
+            foreach (int seed in Enumerable.Range(1, 12))
+            {
+                var run = BuildingCollections.Simulator.Simulation.Simulate(scenario, 2f, seed, plain, corners);
+
+                Assert.Contains(run.Result.Log, l => l.Contains("open corner 127°") && l.Contains(" on both streets, "));
+            }
+        }
+
+        [Fact]
         public void Without_overlap_no_corner_is_paired()
         {
             var result = Plan(Block(120), FootprintMask.StrictOverlap, out _);

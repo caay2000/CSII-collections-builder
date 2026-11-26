@@ -22,6 +22,7 @@ namespace BuildingCollections.Simulator
             ["block_13056_-8474"] = "block (13056, -8474), 97° and 127° corners",
             ["block_13094_-8500"] = "Oak Lane (13094, -8500), 127° and 104° corners paired only on some shuffles",
             ["block_13149_-8503"] = "block (13149, -8503), 104° corner paired only on some shuffles",
+            ["block_13111_-8478"] = "Oak Lane and Sheffield (13111, -8478), 127° corner next to a short side with a corner building at its other end",
             ["block_13068_-8455"] = "Crest and Evergreen (13068, -8455), 97° and 127° corners, same-model pair crossing at 97°",
             ["block_17334_-10268"] = "narrow triangle (17334, -10268), 8 existing in the game",
             ["block_17569_-10291"] = "block (17569, -10291)",
