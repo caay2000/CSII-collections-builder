@@ -120,7 +120,7 @@ namespace BuildingCollections.Tests
             {
                 var run = BuildingCollections.Simulator.Simulation.Simulate(scenario, 2f, seed, plain, corners);
 
-                Assert.Contains(run.Result.Log, l => l.Contains("(sides 4/0)") && l.Contains(" on both streets, "));
+                Assert.Contains(run.Result.Log, l => l.Contains("open corner 102°") && l.Contains(" on both streets, "));
             }
         }
 
