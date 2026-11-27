@@ -4,6 +4,10 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.36
+- Altura máxima: al subirla desde «All» empieza en la altura mínima (antes saltaba a 5 m y arrastraba también la
+  mínima a 5 m). `HeightFilter` recibe la otra cota como `floor`.
+
 ## 0.3.35
 - Esquinas abiertas (más de 100°): dos edificios aunque se pierda una celda de calle. `OpenCornerChoice` acepta el par
   si llena como mucho una celda menos, no añade huecos entre edificios de una calle (o baja el total) y el hueco más
