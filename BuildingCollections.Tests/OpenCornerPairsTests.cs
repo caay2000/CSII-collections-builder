@@ -174,6 +174,32 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
+        public void A_short_side_between_two_open_corners_gets_a_narrow_pair_at_each_end_without_a_gap_between_them()
+        {
+            var scenario = BuildingCollections.Simulator.GameBlocks.All().Single(s => s.Name.Contains("(13056, -8474)"));
+            var sizes = new[] { (1, 2), (2, 2), (3, 2), (2, 3) };
+            var plain = sizes.Select(size => new BuildingInfo { PrefabName = $"{size.Item1}x{size.Item2}", LotWidth = size.Item1, LotDepth = size.Item2 }).ToList();
+            var corners = new List<BuildingInfo>
+            {
+                new BuildingInfo { PrefabName = "corner Left", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Left },
+                new BuildingInfo { PrefabName = "corner Right", LotWidth = 2, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Right },
+                new BuildingInfo { PrefabName = "narrow corner Left", LotWidth = 1, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Left },
+                new BuildingInfo { PrefabName = "narrow corner Right", LotWidth = 1, LotDepth = 2, Corner = CornerKind.Front | CornerKind.Right },
+            };
+
+            foreach (int seed in Enumerable.Range(1, 12))
+            {
+                var run = BuildingCollections.Simulator.Simulation.Simulate(scenario, 2f, seed, plain, corners);
+
+                Assert.True(run.Result.Lots.Count(l => l.Paired) == 4, $"seed {seed}: the 97° and 127° corners are not both paired");
+                Assert.Contains(run.Result.Log, l => l.Contains("open corner 97°") && l.Contains("(narrow pair)"));
+                Assert.Contains(run.Result.Log, l => l.Contains("open corner 127°") && l.Contains("(narrow pair)"));
+                Assert.Contains(run.Result.Log, l => l.Contains("away from its corner to meet the pair"));
+                Assert.DoesNotContain(run.Result.Log, l => l.Contains(FrontCoverage.BetweenOwn));
+            }
+        }
+
+        [Fact]
         public void Without_overlap_no_corner_is_paired()
         {
             var result = Plan(Block(120), FootprintMask.StrictOverlap, out _);
@@ -238,7 +264,7 @@ namespace BuildingCollections.Tests
                 }).ToList();
                 var result = PreviewPlanner.Plan(new PreviewRequest
                 {
-                    Blocks = blocks, Existing = new List<Quad>(), Outline = VirtualLots.Outline(sides), Plain = Catalog, Corners = corners, Overlap = 2f, Seed = 3,
+                    Blocks = blocks, Existing = new List<Quad>(), Outline = VirtualLots.Outline(sides), Plain = Catalog.Where(b => b.LotWidth > 2).ToList(), Corners = corners, Overlap = 2f, Seed = 3,
                 });
 
                 foreach (var lot in result.Lots.Where(l => l.FrontAlong != 0))

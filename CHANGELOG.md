@@ -4,6 +4,21 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.32
+- Pareja estrecha en las esquinas abiertas (`PairKind.Narrow`): el mismo edificio central de 1 o 2 celdas de ancho en
+  las dos calles, con el frente hasta el vértice. Es la primera opción, antes de los gemelos y del mismo modelo ancho.
+  Los de 2 de ancho valen en todo el rango (95°–150°). Los de 1 de ancho, solo desde 120° y si la esquina trasera que
+  sobresale de la copia queda al menos 6 m detrás de la fachada de la otra calle (a 97° formaban una X).
+- `OpenCornerChoice`: las esquinas se deciden de una en una, con las siguientes sin pareja, y cada esquina prueba los
+  tres tipos y se queda con el estrecho salvo que otro sea mejor. Un hueco nuevo entre edificios de una calle se
+  acepta solo si baja el total de huecos entre edificios. Si alguna esquina queda sin pareja, se prueban también
+  parejas estrechas en todas a la vez, y se aceptan si no añaden huecos ni pierden celdas (margen de 3 m sin cubrir).
+- En un lado corto entre dos esquinas abiertas, la pareja de la esquina de menos de 110° se desliza hasta 3 m para
+  juntarse con la otra: el hueco pasa a la esquina, tapado por el lateral de su compañera, que va casi pegado a la calle.
+- `block_13056_-8474` y Crest y Evergreen (97° y 127°, lado corto de 26,4 m): las dos esquinas con pareja en 12/12
+  semillas con el catálogo del juego (antes 3/12 solo la de 97°), 23/23 celdas y sin hueco entre edificios.
+  Regresión (1–24 y 49+) sin cambios. La fase de esquinas abiertas pasa de 18 a 30 ms de media.
+
 ## 0.3.31
 - Parejas de esquina abierta (95°–150°) planificadas primero: la pareja se reserva antes de rellenar las calles y el
   relleno se hace alrededor (`OpenCornerPairs.Reserve`). Desaparece la reparación posterior (`CloseRow`,
