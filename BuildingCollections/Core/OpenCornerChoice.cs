@@ -11,6 +11,7 @@ namespace BuildingCollections.Core
         const double LargestGapTolerance = 2;
         const double JointUncoveredTolerance = 3;
         const double SquareCornerGain = 3;
+        const int OpenCornerCellsGiven = 1;
         static readonly PairKind[] Order = { PairKind.Narrow, PairKind.Twins, PairKind.SameModel };
 
         public static PreviewResult Plan(PreviewRequest request, Func<IReadOnlyList<PairKind>, PreviewResult> run)
@@ -61,11 +62,11 @@ namespace BuildingCollections.Core
                     }
                 }
 
-                var passing = options.Where(o => square[i] ? o.Score.ClearlyBetterThan(bar) : o.Score.NotWorseThan(bar)).ToList();
+                var passing = options.Where(o => square[i] ? o.Score.ClearlyBetterThan(bar) : o.Score.WorthAnOpenCorner(bar)).ToList();
                 var chosen = passing.FirstOrDefault(o => passing.All(other => o.Score.NotWorseThan(other.Score)));
                 if (chosen.Result == null)
                 {
-                    chosen = passing.OrderBy(o => o.Score.Uncovered).FirstOrDefault();
+                    chosen = passing.OrderByDescending(o => o.Score.Filled).ThenBy(o => o.Score.Uncovered).FirstOrDefault();
                 }
 
                 string tried = string.Concat(options.Where(o => chosen.Result == null || o.Kind != chosen.Kind).Select(o => $"; {Describe(o.Kind)} {o.Score}"));
@@ -136,8 +137,13 @@ namespace BuildingCollections.Core
 
             public double Uncovered => uncovered;
 
+            public int Filled => filled;
+
             public bool NotWorseThan(Score other) =>
                 filled >= other.filled && (ownGaps <= other.ownGaps || allGaps < other.allGaps) && uncovered <= other.uncovered + UncoveredTolerance && largest <= other.largest + LargestGapTolerance;
+
+            public bool WorthAnOpenCorner(Score other) =>
+                filled >= other.filled - OpenCornerCellsGiven && (ownGaps <= other.ownGaps || allGaps < other.allGaps) && largest <= other.largest + LargestGapTolerance;
 
             public bool ClearlyBetterThan(Score other) =>
                 NotWorseThan(other) && (filled > other.filled || uncovered <= other.uncovered - SquareCornerGain);

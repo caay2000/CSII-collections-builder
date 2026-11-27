@@ -59,11 +59,14 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/simulator.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-collections-builder.1949529/" />
-	<ModVersion Value="0.3.34" />
+	<ModVersion Value="0.3.35" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.35
+- Corners wider than 100° get two buildings, one on each street, instead of a single corner building.
+
 0.3.34
 - Corners close to 90° get a corner building again; the two central buildings are kept only for wider corners or when they cover more of the street.
 

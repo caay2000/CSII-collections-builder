@@ -12,6 +12,8 @@ namespace BuildingCollections.Core
         const int MaxExtraLots = 1;
         const int MaxNewLots = 3;
         const double BackToBackCos = -0.5;
+        const double MaxPairSlide = 6;
+        const double SlideStep = 0.25;
 
         readonly List<PlannedLot> lots;
         readonly IReadOnlyList<Quad> existing;
@@ -77,7 +79,11 @@ namespace BuildingCollections.Core
             string side = $"  open corner pair {pair.Building.PrefabName} (side {row.Strip.SideIndex})";
             if (row.Rest.Count == 0)
             {
-                log.Add($"{side}: empty street beside it, {Extend(row)} buildings added from the pair inwards.");
+                int added = Extend(row);
+                double? slid = added == 0 ? SlideToNeighbour(row) : null;
+                log.Add(slid == null
+                    ? $"{side}: empty street beside it, {added} buildings added from the pair inwards."
+                    : $"{side}: no room for another building, slid {slid:F1} m away from its corner to meet the building beside it.");
                 return;
             }
 
@@ -89,6 +95,7 @@ namespace BuildingCollections.Core
 
             string how = row.Anchor != null && Respace(row) ? "closed by spreading the row up to the next corner"
                 : !row.EndsInPair && FarEndIsACorner(row) && Slide(row, gap) ? "closed by sliding the rest of the street towards it"
+                : gap <= MaxPairSlide && SlidePair(row, gap) ? "closed by sliding the pair away from its corner"
                 : "left open";
             log.Add($"{side}: {gap:F1} m to the next building {how}.");
         }
@@ -139,6 +146,49 @@ namespace BuildingCollections.Core
                 row.Rest[i].MaxX = moved[i].MaxX;
             }
 
+            return true;
+        }
+
+        double? SlideToNeighbour(Row row)
+        {
+            var others = lots.Where(l => l != row.Pair).ToList();
+            var start = row.Pair.Footprint(overlap);
+            var neighbours = others.Where(l => !l.Paired && !Quad.Touch(l.Footprint(0), start)).ToList();
+            for (double move = SlideStep; move <= MaxPairSlide; move += SlideStep)
+            {
+                var moved = Moved(row.Pair, row, move);
+                var loose = moved.Footprint(overlap);
+                if (!neighbours.Any(l => Quad.Touch(l.Footprint(0), loose)))
+                {
+                    continue;
+                }
+
+                if (!Fits(moved, others, row.Pair) && !Fits(Moved(row.Pair, row, move - SlideStep), others, row.Pair))
+                {
+                    return null;
+                }
+
+                var chosen = Fits(moved, others, row.Pair) ? moved : Moved(row.Pair, row, move - SlideStep);
+                row.Pair.Shift = chosen.Shift;
+                row.Pair.MinX = chosen.MinX;
+                row.Pair.MaxX = chosen.MaxX;
+                return Fits(moved, others, row.Pair) ? move : move - SlideStep;
+            }
+
+            return null;
+        }
+
+        bool SlidePair(Row row, double gap)
+        {
+            var moved = Moved(row.Pair, row, gap);
+            if (!Fits(moved, lots.Where(l => l != row.Pair).ToList(), row.Pair))
+            {
+                return false;
+            }
+
+            row.Pair.Shift = moved.Shift;
+            row.Pair.MinX = moved.MinX;
+            row.Pair.MaxX = moved.MaxX;
             return true;
         }
 
