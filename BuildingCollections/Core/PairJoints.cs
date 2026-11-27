@@ -163,16 +163,17 @@ namespace BuildingCollections.Core
                     continue;
                 }
 
-                if (!Fits(moved, others, row.Pair) && !Fits(Moved(row.Pair, row, move - SlideStep), others, row.Pair))
+                double reached = Fits(moved, others, row.Pair) ? move : move - SlideStep;
+                if (reached < SlideStep || (reached < move && !Fits(Moved(row.Pair, row, reached), others, row.Pair)))
                 {
                     return null;
                 }
 
-                var chosen = Fits(moved, others, row.Pair) ? moved : Moved(row.Pair, row, move - SlideStep);
+                var chosen = Moved(row.Pair, row, reached);
                 row.Pair.Shift = chosen.Shift;
                 row.Pair.MinX = chosen.MinX;
                 row.Pair.MaxX = chosen.MaxX;
-                return Fits(moved, others, row.Pair) ? move : move - SlideStep;
+                return reached;
             }
 
             return null;
