@@ -76,16 +76,17 @@ export function heightRange(min: number, max: number, changed: "min" | "max") {
     return { min, max };
 }
 
-export const HeightFilter = (p: { label: string; bound: "min" | "max"; value: number; onChange: (value: number) => void }) => {
+export const HeightFilter = (p: { label: string; bound: "min" | "max"; value: number; floor?: number; onChange: (value: number) => void }) => {
     const steps = HEIGHT_STEPS[p.bound];
     const at = steps.reduce((best, step, i) => step <= p.value ? i : best, 0);
+    const up = p.value === 0 && p.floor ? p.floor : steps[Math.min(steps.length - 1, at + 1)];
     return (
         <div className={styles.filter}>
             <span className={styles.filterLabel}>{p.label}</span>
             <button className={`${styles.stepOp} ${styles.stepOpHidden}`} disabled />
             <Stepper value={heightLabel(p.value)}
                 onDown={() => p.onChange(steps[p.value > steps[at] ? at : Math.max(0, at - 1)])}
-                onUp={() => p.onChange(steps[Math.min(steps.length - 1, at + 1)])} />
+                onUp={() => p.onChange(up)} />
         </div>
     );
 };

@@ -124,7 +124,7 @@ export const BuilderTab = () => {
                     <StepFilter label="Lot Depth" op={b.depthOp} value={b.depthValue} onChange={(o, v) => set({ depthOp: o, depthValue: v })} />
                     <StepFilter label="Building Level" op={b.levelOp} value={b.levelValue} onChange={(o, v) => set({ levelOp: o, levelValue: v })} />
                     <HeightFilter label="Min Height" bound="min" value={b.minHeight} onChange={(v) => { const r = heightRange(v, b.maxHeight, "min"); set({ minHeight: r.min, maxHeight: r.max }); }} />
-                    <HeightFilter label="Max Height" bound="max" value={b.maxHeight} onChange={(v) => { const r = heightRange(b.minHeight, v, "max"); set({ minHeight: r.min, maxHeight: r.max }); }} />
+                    <HeightFilter label="Max Height" bound="max" floor={b.minHeight} value={b.maxHeight} onChange={(v) => { const r = heightRange(b.minHeight, v, "max"); set({ minHeight: r.min, maxHeight: r.max }); }} />
                     <div className={styles.filter}>
                         <span className={styles.filterLabel}>Density</span>
                         <Stepper value={`${density}%`}
