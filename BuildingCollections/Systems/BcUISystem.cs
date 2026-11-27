@@ -50,7 +50,6 @@ namespace BuildingCollections.Systems
         int defaultFrames;
         const int ExitFrames = 30;
         const int ReactivateFrames = 3;
-        const int MaxHeightFilter = 200;
 
         sealed class BuilderDto
         {
@@ -562,8 +561,8 @@ namespace BuildingCollections.Systems
             s.WidthOp = ToOp(f.widthOp); s.WidthValue = Clamp(f.widthValue, 0, 5);
             s.DepthOp = ToOp(f.depthOp); s.DepthValue = Clamp(f.depthValue, 0, 5);
             s.LevelOp = ToOp(f.levelOp); s.LevelValue = Clamp(f.levelValue, 0, 5);
-            s.MinHeight = Clamp(f.minHeight, 0, MaxHeightFilter);
-            s.MaxHeight = Clamp(f.maxHeight, 0, MaxHeightFilter);
+            s.MinHeight = Clamp(f.minHeight, 0, BuildingFilter.TopHeight);
+            s.MaxHeight = Clamp(f.maxHeight, 0, BuildingFilter.NoMaxHeight);
             if (s.MaxHeight > 0 && s.MinHeight > s.MaxHeight)
             {
                 (s.MinHeight, s.MaxHeight) = (s.MaxHeight, s.MinHeight);

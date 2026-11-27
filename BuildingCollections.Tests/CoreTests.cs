@@ -34,6 +34,11 @@ namespace BuildingCollections.Tests
         [InlineData(10, 20, 20, true)]
         [InlineData(10, 20, 21, false)]
         [InlineData(10, 0, 200, true)]
+        [InlineData(0, 201, 350, true)]
+        [InlineData(0, 201, 0, true)]
+        [InlineData(10, 201, 350, true)]
+        [InlineData(10, 201, 5, false)]
+        [InlineData(0, 200, 201, false)]
         public void Filters_by_height_range(int min, int max, int height, bool expected) =>
             Assert.Equal(expected, new BuildingFilter { MinHeight = min, MaxHeight = max }.Matches(new BuildingInfo { Height = height }));
 

@@ -4,6 +4,10 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.33
+- Filtro Max Height: sin límite se muestra «All», como Min Height (antes «+200 m»), y recorre All ↔ 5 … 200 m ↔
+  200+ m. «200+ m» se guarda como 201 (`BuildingFilter.NoMaxHeight`) y, igual que 0, no limita la altura.
+
 ## 0.3.32
 - Pareja estrecha en las esquinas abiertas (`PairKind.Narrow`): el mismo edificio central de 1 o 2 celdas de ancho en
   las dos calles, con el frente hasta el vértice. Es la primera opción, antes de los gemelos y del mismo modelo ancho.
