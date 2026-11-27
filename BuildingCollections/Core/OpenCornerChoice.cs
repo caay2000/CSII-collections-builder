@@ -40,10 +40,19 @@ namespace BuildingCollections.Core
 
                 var bar = Score.Of(without, request);
                 var options = new List<(PairKind Kind, PreviewResult Result, Score Score)>();
+                var runs = new Dictionary<PairKind, PreviewResult>();
                 foreach (var kind in Order)
                 {
-                    var result = run(With(wanted, i, kind));
-                    plans++;
+                    if (!runs.TryGetValue(kind, out var result))
+                    {
+                        result = run(With(wanted, i, kind));
+                        plans++;
+                        if (!runs.ContainsKey(result.OpenCornerPairs[i]))
+                        {
+                            runs[result.OpenCornerPairs[i]] = result;
+                        }
+                    }
+
                     if (result.OpenCornerPairs[i] == kind)
                     {
                         options.Add((kind, result, Score.Of(result, request)));
