@@ -59,11 +59,14 @@ Find It is optional (it is only used for adding buildings and for tags). Early v
 	<Screenshot Value="Properties/Screenshots/simulator.jpg" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-collections-builder.1949529/" />
-	<ModVersion Value="0.3.31" />
+	<ModVersion Value="0.3.32" />
 	<GameVersion Value="1.*" />
 	<Dependency Id="75826" />
 	<Dependency Id="74604" />
 	<ChangeLog>
+0.3.32
+- Open corners at both ends of a short street get a narrow building of the same model on each street, joined without a gap.
+
 0.3.31
 - Open corners are now planned first: their pair is chosen before filling the streets, so far more corners get one.
 

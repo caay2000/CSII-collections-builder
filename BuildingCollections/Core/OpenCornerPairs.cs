@@ -6,6 +6,7 @@ namespace BuildingCollections.Core
 {
     public enum PairKind
     {
+        Narrow,
         Twins,
         SameModel,
         None,
@@ -21,6 +22,11 @@ namespace BuildingCollections.Core
         const double MinStraight = 16;
         const double InsideInset = 0.1;
         const double CrossTolerance = 0.5;
+        const int NarrowWidth = 2;
+        const double SingleCellMinAngle = 120;
+        const double HiddenBackDepth = 6;
+        const double SlideMaxAngle = 110;
+        const double MaxSlide = 3;
 
         readonly IReadOnlyList<PlanBlock> blocks;
         readonly IReadOnlyList<Quad> existing;
@@ -32,6 +38,7 @@ namespace BuildingCollections.Core
         readonly int seed;
         Random random;
         readonly List<PlannedLot> reserved = new List<PlannedLot>();
+        readonly List<(PlannedLot A, PlannedLot B, double Angle)> pairs = new List<(PlannedLot, PlannedLot, double)>();
         readonly IReadOnlyList<PairKind> wanted;
         readonly List<PairKind> used = new List<PairKind>();
 
@@ -57,7 +64,7 @@ namespace BuildingCollections.Core
         {
             foreach (var (first, second, angle) in Corners())
             {
-                var kind = used.Count < wanted.Count ? wanted[used.Count] : PairKind.Twins;
+                var kind = used.Count < wanted.Count ? wanted[used.Count] : PairKind.Narrow;
                 random = new Random(seed ^ 0x51ed270b ^ (used.Count * 7919));
                 if (kind == PairKind.None)
                 {
@@ -67,7 +74,43 @@ namespace BuildingCollections.Core
                 used.Add(kind == PairKind.None ? PairKind.None : TryPair(first, second, angle, kind));
             }
 
+            SlideTowardsNeighbourPairs();
             return (reserved, used);
+        }
+
+        void SlideTowardsNeighbourPairs()
+        {
+            foreach (var pair in pairs.Where(p => p.Angle < SlideMaxAngle))
+            {
+                foreach (var lot in new[] { pair.A, pair.B })
+                {
+                    var next = pairs
+                        .Where(other => other != pair)
+                        .SelectMany(other => new[] { other.A, other.B })
+                        .Where(other => other.Owner == lot.Owner)
+                        .Select(other => (other, gap: Gap(lot, other)))
+                        .Where(n => Math.Abs(n.gap) > 1e-3 && Math.Abs(n.gap) <= MaxSlide)
+                        .OrderBy(n => Math.Abs(n.gap))
+                        .FirstOrDefault();
+                    if (next.other == null)
+                    {
+                        continue;
+                    }
+
+                    lot.Shift += (float)next.gap;
+                    log.Add($"  open corner {pair.Angle:F0}° pair {lot.Building} (side {lot.Owner.Strip.SideIndex}): slid {Math.Abs(next.gap):F1} m away from its corner to meet the pair at the other end of the street.");
+                }
+            }
+        }
+
+        static double Gap(PlannedLot lot, PlannedLot other)
+        {
+            double size = CellFrame.Size;
+            double start = lot.MinX * size + lot.Shift;
+            double end = lot.MaxX * size + lot.Shift;
+            double otherStart = other.MinX * size + other.Shift;
+            double otherEnd = other.MaxX * size + other.Shift;
+            return otherStart >= end ? otherStart - end : otherEnd <= start ? otherEnd - start : 0;
         }
 
         IEnumerable<(PlanBlock First, PlanBlock Second, double Angle)> Corners()
@@ -105,20 +148,22 @@ namespace BuildingCollections.Core
             }
 
             var pair = Shapes(first, kind)
-                .Select(shape => Candidate(shape, first, second, corner))
-                .FirstOrDefault(p => p.A != null);
+                .Select(shape => (Lots: Candidate(shape, first, second, corner, angle), shape.Kind))
+                .FirstOrDefault(p => p.Lots.A != null);
             string sides = $"sides {first.Strip.SideIndex}/{second.Strip.SideIndex}";
-            if (pair.A == null)
+            var (a, b) = pair.Lots;
+            if (a == null)
             {
                 log.Add($"  open corner {angle:F0}° ({sides}): no model fits on both streets without crossing its copy, left to the regular corner buildings.");
                 return PairKind.None;
             }
 
-            reserved.Add(pair.A);
-            reserved.Add(pair.B);
-            string models = pair.A.FrontAlong == 0 ? $"{pair.A.Building}" : $"{pair.A.Building} and {pair.B.Building} side-on";
-            log.Add($"  open corner {angle:F0}° ({sides}): {models} on both streets, {SharedShare(pair.A, pair.B) * 100:F0}% of each lot shared, reserved before the fill.");
-            return pair.A.FrontAlong == 0 ? PairKind.SameModel : PairKind.Twins;
+            reserved.Add(a);
+            reserved.Add(b);
+            pairs.Add((a, b, angle));
+            string models = a.FrontAlong == 0 ? $"{a.Building}" : $"{a.Building} and {b.Building} side-on";
+            log.Add($"  open corner {angle:F0}° ({sides}): {models} on both streets, {SharedShare(a, b) * 100:F0}% of each lot shared, reserved before the fill{(pair.Kind == PairKind.Narrow ? " (narrow pair)" : string.Empty)}.");
+            return pair.Kind;
         }
 
         sealed class Shape
@@ -126,6 +171,7 @@ namespace BuildingCollections.Core
             public BuildingInfo First;
             public BuildingInfo Second;
             public bool SideOn;
+            public PairKind Kind;
 
             public int Along => SideOn ? First.LotDepth : First.LotWidth;
 
@@ -141,14 +187,26 @@ namespace BuildingCollections.Core
                 .OrderBy(shape => shape.Key)
                 .Select(shape => shape.ToList())
                 .Select(shape => shape[random.Next(shape.Count)])
-                .Select(twin => new Shape { First = twin.For(firstSide), Second = twin.For(Opposite(firstSide)), SideOn = true }));
+                .Select(twin => new Shape { First = twin.For(firstSide), Second = twin.For(Opposite(firstSide)), SideOn = true, Kind = PairKind.Twins }));
             var straight = Shuffled(catalog
                 .GroupBy(model => (model.LotWidth, model.LotDepth, model.Group))
                 .OrderBy(shape => shape.Key)
                 .Select(shape => shape.ToList())
                 .Select(shape => shape[random.Next(shape.Count)])
-                .Select(model => new Shape { First = model, Second = model }));
-            return kind == PairKind.Twins ? sideOn.Concat(straight) : straight;
+                .Select(model => new Shape { First = model, Second = model, Kind = PairKind.SameModel }));
+            var narrow = straight
+                .Where(shape => shape.First.LotWidth <= NarrowWidth)
+                .OrderByDescending(shape => shape.First.LotWidth)
+                .Select(shape => new Shape { First = shape.First, Second = shape.Second, Kind = PairKind.Narrow });
+            switch (kind)
+            {
+                case PairKind.Narrow:
+                    return narrow.Concat(sideOn).Concat(straight);
+                case PairKind.Twins:
+                    return sideOn.Concat(straight);
+                default:
+                    return straight;
+            }
         }
 
         List<Shape> Shuffled(IEnumerable<Shape> shapes) => shapes.Select(s => (s, key: random.Next())).OrderBy(x => x.key).Select(x => x.s).ToList();
@@ -157,7 +215,7 @@ namespace BuildingCollections.Core
 
         static CornerKind Opposite(CornerKind side) => side == CornerKind.Left ? CornerKind.Right : CornerKind.Left;
 
-        (PlannedLot A, PlannedLot B) Candidate(Shape shape, PlanBlock first, PlanBlock second, Pt corner)
+        (PlannedLot A, PlannedLot B) Candidate(Shape shape, PlanBlock first, PlanBlock second, Pt corner, double angle)
         {
             if (shape.Along * CellFrame.Size > first.Strip.ChunkLength || shape.Along * CellFrame.Size > second.Strip.ChunkLength
                 || shape.Deep > first.Grid.Depth || shape.Deep > second.Grid.Depth)
@@ -167,7 +225,9 @@ namespace BuildingCollections.Core
 
             var a = LotAt(first, shape.First, corner, first.Strip.T * -1, shape.SideOn);
             var b = LotAt(second, shape.Second, corner, second.Strip.T, shape.SideOn);
-            if (!Fits(a, corner) || !Fits(b, corner) || BackLeavesCopy(a, b, corner) || BackLeavesCopy(b, a, corner) || HitsReserved(a) || HitsReserved(b)
+            double hiddenDepth = shape.Kind == PairKind.Narrow && shape.First.LotWidth == 1 ? (angle >= SingleCellMinAngle ? HiddenBackDepth : double.NaN) : double.PositiveInfinity;
+            if (double.IsNaN(hiddenDepth)
+                || !Fits(a, corner) || !Fits(b, corner) || BackLeavesCopy(a, b, corner, hiddenDepth) || BackLeavesCopy(b, a, corner, hiddenDepth) || HitsReserved(a) || HitsReserved(b)
                 || TakesAnotherFront(a, first, second) || TakesAnotherFront(b, first, second))
             {
                 return default;
@@ -262,13 +322,19 @@ namespace BuildingCollections.Core
 
         static Pt FrontPoint(CellFrame frame, int row) => frame.Origin + frame.AxisY * (CellFrame.Size * (row - 0.5));
 
-        static bool BackLeavesCopy(PlannedLot lot, PlannedLot copy, Pt corner)
+        static bool BackLeavesCopy(PlannedLot lot, PlannedLot copy, Pt corner, double hiddenDepth)
         {
             var p = lot.Footprint(0).P;
             int front = Enumerable.Range(0, 4).OrderBy(i => Distance(p[i], corner)).First();
             var along = lot.Owner.Frame.AxisX;
             var back = new[] { p[(front + 1) % 4], p[(front + 3) % 4] }.OrderBy(v => Math.Abs(Pt.Dot(v - p[front], along))).First();
-            return !Polygon.Contains(copy.Footprint(-CrossTolerance).P, back);
+            if (Polygon.Contains(copy.Footprint(-CrossTolerance).P, back))
+            {
+                return false;
+            }
+
+            var frame = copy.Owner.Frame;
+            return Pt.Dot(back - FrontPoint(frame, copy.Owner.AreaY), frame.AxisY) < hiddenDepth;
         }
 
         static double SharedShare(PlannedLot a, PlannedLot b)
