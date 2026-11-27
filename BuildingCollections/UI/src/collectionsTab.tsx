@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./panel.module.scss";
 import { actions, BuildingDto, useBuildings, useCollections, useFindIt, usePlopping, useSelected, useStatus } from "./bindings";
-import { HeightFilter, heightRange, icon, TOP_HEIGHT, IconButton, InlineInput, StepFilter } from "./widgets";
+import { HeightFilter, heightRange, icon, IconButton, InlineInput, StepFilter, TOP_HEIGHT } from "./widgets";
 import { Scrollable, ScrollController } from "cs2/ui";
 
 export function prettyName(n: string): string {
