@@ -15,6 +15,7 @@ namespace BuildingCollections.Core
     public sealed class OpenCornerPairs
     {
         public const double MinAngle = 95;
+        public const double SquareMaxAngle = 90 + SideStripBuilder.MaxSquareDeviationDeg;
         public const double MaxAngle = 150;
         const double MaxCornerGap = 16;
         const double MaxCurbOverhang = 3;
@@ -41,6 +42,7 @@ namespace BuildingCollections.Core
         readonly List<(PlannedLot A, PlannedLot B, double Angle, Pt Corner)> pairs = new List<(PlannedLot, PlannedLot, double, Pt)>();
         readonly IReadOnlyList<PairKind> wanted;
         readonly List<PairKind> used = new List<PairKind>();
+        readonly List<double> angles = new List<double>();
 
         OpenCornerPairs(IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
             IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<PairKind> wanted, float overlap, int seed, IList<string> log)
@@ -56,11 +58,11 @@ namespace BuildingCollections.Core
             this.seed = seed;
         }
 
-        public static (List<PlannedLot> Lots, List<PairKind> Kinds) Reserve(IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
+        public static (List<PlannedLot> Lots, List<PairKind> Kinds, List<double> Angles) Reserve(IReadOnlyList<PlanBlock> blocks, IReadOnlyList<Quad> existing, IReadOnlyList<Pt> outline,
             IReadOnlyList<BuildingInfo> catalog, IReadOnlyList<BuildingInfo> corners, IReadOnlyList<PairKind> wanted, float overlap, int seed, IList<string> log) =>
             new OpenCornerPairs(blocks, existing, outline, catalog, corners, wanted, overlap, seed, log).Run();
 
-        (List<PlannedLot>, List<PairKind>) Run()
+        (List<PlannedLot>, List<PairKind>, List<double>) Run()
         {
             foreach (var (first, second, angle) in Corners())
             {
@@ -71,11 +73,12 @@ namespace BuildingCollections.Core
                     log.Add($"  open corner {angle:F0}° (sides {first.Strip.SideIndex}/{second.Strip.SideIndex}): left to the regular corner buildings, the street is better covered without a pair.");
                 }
 
+                angles.Add(angle);
                 used.Add(kind == PairKind.None ? PairKind.None : TryPair(first, second, angle, kind));
             }
 
             SlideTowardsNeighbourPairs();
-            return (reserved, used);
+            return (reserved, used, angles);
         }
 
         void SlideTowardsNeighbourPairs()

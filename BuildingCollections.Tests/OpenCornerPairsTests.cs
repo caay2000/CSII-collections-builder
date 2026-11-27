@@ -174,7 +174,7 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
-        public void A_short_side_between_two_open_corners_gets_a_narrow_pair_at_each_end_without_a_gap_between_them()
+        public void A_near_square_corner_keeps_its_corner_building_when_a_pair_covers_no_more_of_the_street()
         {
             var scenario = BuildingCollections.Simulator.GameBlocks.All().Single(s => s.Name.Contains("(13056, -8474)"));
             var sizes = new[] { (1, 2), (2, 2), (3, 2), (2, 3) };
@@ -191,10 +191,9 @@ namespace BuildingCollections.Tests
             {
                 var run = BuildingCollections.Simulator.Simulation.Simulate(scenario, 2f, seed, plain, corners);
 
-                Assert.True(run.Result.Lots.Count(l => l.Paired) == 4, $"seed {seed}: the 97° and 127° corners are not both paired");
-                Assert.Contains(run.Result.Log, l => l.Contains("open corner 97°") && l.Contains("(narrow pair)"));
-                Assert.Contains(run.Result.Log, l => l.Contains("open corner 127°") && l.Contains("(narrow pair)"));
-                Assert.Contains(run.Result.Log, l => l.Contains("away from its corner to meet the pair"));
+                Assert.DoesNotContain(run.Result.Log, l => l.Contains("open corner 97°") && l.Contains("on both streets"));
+                Assert.Contains(run.Result.Log, l => l.Contains("close to square"));
+                Assert.Equal(run.Result.FrontCells.Count, run.Result.FrontFilled);
                 Assert.DoesNotContain(run.Result.Log, l => l.Contains(FrontCoverage.BetweenOwn));
             }
         }

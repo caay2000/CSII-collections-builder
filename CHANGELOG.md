@@ -4,6 +4,13 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.34
+- Esquinas casi rectas (hasta 100°, `OpenCornerPairs.SquareMaxAngle`, el mismo margen de 10° con el que
+  `SideStripBuilder` encaja un edificio de esquina): vuelven a llevar edificio de esquina. La pareja de edificios
+  centrales solo se queda si llena más celdas o deja al menos 3 m menos de acera sin cubrir, y no entra en la prueba
+  de parejas estrechas en todas las esquinas a la vez. A 97° (Crest Lane y similares) ganaban la pareja por empate.
+- Seis manzanas nuevas del juego en el simulador y en la regresión.
+
 ## 0.3.33
 - Filtro Max Height: sin límite se muestra «All», como Min Height (antes «+200 m»), y recorre All ↔ 5 … 200 m ↔
   200+ m. «200+ m» se guarda como 201 (`BuildingFilter.NoMaxHeight`) y, igual que 0, no limita la altura.

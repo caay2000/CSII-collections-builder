@@ -92,5 +92,6 @@ namespace BuildingCollections.Core
         public List<string> Log = new List<string>();
         public List<string> Timings = new List<string>();
         public List<PairKind> OpenCornerPairs = new List<PairKind>();
+        public List<double> OpenCornerAngles = new List<double>();
     }
 }

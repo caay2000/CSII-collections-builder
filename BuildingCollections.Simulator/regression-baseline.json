@@ -490,8 +490,8 @@
       "Scenario": "parallelogram 80\u00B0 / 100\u00B0",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 0,
-      "MaxGap": 0,
+      "GapMeters": 10.3,
+      "MaxGap": 1.8,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -838,6 +838,42 @@
       "EmptyCells": 0
     },
     {
+      "Scenario": "block_13018_-8425",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 156,
+      "MaxGap": 6.5,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 24
+    },
+    {
+      "Scenario": "block_13018_-8425",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
+      "Scenario": "block_13029_-8426",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 156,
+      "MaxGap": 6.5,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 24
+    },
+    {
+      "Scenario": "block_13029_-8426",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
       "Scenario": "block (13056, -8474), 97\u00B0 and 127\u00B0 corners",
       "Overlap": 0.05,
       "MissedCorners": 0,
@@ -856,6 +892,24 @@
       "EmptyCells": 0
     },
     {
+      "Scenario": "block_13057_-8426",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 597.6,
+      "MaxGap": 12.6,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 72
+    },
+    {
+      "Scenario": "block_13057_-8426",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
       "Scenario": "Crest and Evergreen (13068, -8455), 97\u00B0 and 127\u00B0 corners, same-model pair crossing at 97\u00B0",
       "Overlap": 0.05,
       "MissedCorners": 0,
@@ -866,6 +920,60 @@
     },
     {
       "Scenario": "Crest and Evergreen (13068, -8455), 97\u00B0 and 127\u00B0 corners, same-model pair crossing at 97\u00B0",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
+      "Scenario": "block_13082_-8450",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 597.6,
+      "MaxGap": 12.6,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 72
+    },
+    {
+      "Scenario": "block_13082_-8450",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 0,
+      "MaxGap": 0,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 0
+    },
+    {
+      "Scenario": "block_13088_-8496",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 513.4,
+      "MaxGap": 8.6,
+      "GapsBetweenBuildings": 36,
+      "EmptyCells": 84
+    },
+    {
+      "Scenario": "block_13088_-8496",
+      "Overlap": 2,
+      "MissedCorners": 0,
+      "GapMeters": 5.6,
+      "MaxGap": 5.6,
+      "GapsBetweenBuildings": 0,
+      "EmptyCells": 1
+    },
+    {
+      "Scenario": "block_13094_-8486",
+      "Overlap": 0.05,
+      "MissedCorners": 0,
+      "GapMeters": 637.4,
+      "MaxGap": 8.5,
+      "GapsBetweenBuildings": 11,
+      "EmptyCells": 96
+    },
+    {
+      "Scenario": "block_13094_-8486",
       "Overlap": 2,
       "MissedCorners": 0,
       "GapMeters": 0,
@@ -958,7 +1066,7 @@
       "Scenario": "block (13149, -8503), 104\u00B0 corner paired only on some shuffles",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 32.8,
+      "GapMeters": 29.3,
       "MaxGap": 2.1,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -1102,10 +1210,10 @@
       "Scenario": "angled block (14009, -8322), 113\u00B0, 111\u00B0 and 134\u00B0 corners, 80 existing",
       "Overlap": 2,
       "MissedCorners": 48,
-      "GapMeters": 6092.8,
+      "GapMeters": 6092.7,
       "MaxGap": 111.3,
       "GapsBetweenBuildings": 0,
-      "EmptyCells": 196
+      "EmptyCells": 195
     },
     {
       "Scenario": "angled block (14164, -8507), 108\u00B0, 102\u00B0 and 159\u00B0 corners, 29 existing",
@@ -1156,7 +1264,7 @@
       "Scenario": "angled block (14531, -8575), 145\u00B0 and 23\u00B0 corners",
       "Overlap": 2,
       "MissedCorners": 24,
-      "GapMeters": 948,
+      "GapMeters": 861.6,
       "MaxGap": 20,
       "GapsBetweenBuildings": 24,
       "EmptyCells": 120
@@ -1174,7 +1282,7 @@
       "Scenario": "angled block (14642, -8647), 76\u00B0 and 112\u00B0 corners, 8 existing",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 241.5,
+      "GapMeters": 217.8,
       "MaxGap": 7.9,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
@@ -1534,8 +1642,8 @@
       "Scenario": "block_18912_-11131",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 45.6,
-      "MaxGap": 1.9,
+      "GapMeters": 0,
+      "MaxGap": 0,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0
     },
@@ -1645,7 +1753,7 @@
       "GapMeters": 0,
       "MaxGap": 0,
       "GapsBetweenBuildings": 6,
-      "EmptyCells": 8
+      "EmptyCells": 7
     },
     {
       "Scenario": "block_19014_-11260",
@@ -1804,7 +1912,7 @@
       "Scenario": "block_19138_-11226",
       "Overlap": 2,
       "MissedCorners": 0,
-      "GapMeters": 22.4,
+      "GapMeters": 19.2,
       "MaxGap": 2.4,
       "GapsBetweenBuildings": 0,
       "EmptyCells": 0

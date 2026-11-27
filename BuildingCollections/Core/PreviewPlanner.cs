@@ -446,8 +446,9 @@ namespace BuildingCollections.Core
             }
 
             var catalog = firstPlain.Where(b => AccessMapping.FitsFront(b.Corner)).ToList();
-            var (pairs, kinds) = OpenCornerPairs.Reserve(grids.Select(g => g.block).ToList(), existing, request.Outline, catalog, firstCorners, pairKinds, request.Overlap, request.Seed, result.Log);
+            var (pairs, kinds, angles) = OpenCornerPairs.Reserve(grids.Select(g => g.block).ToList(), existing, request.Outline, catalog, firstCorners, pairKinds, request.Overlap, request.Seed, result.Log);
             result.OpenCornerPairs = kinds;
+            result.OpenCornerAngles = angles;
             var quads = pairs.Select(l => l.Footprint(0)).ToList();
             foreach (var (block, grid) in grids)
             {
