@@ -174,7 +174,7 @@ namespace BuildingCollections.Tests
         }
 
         [Fact]
-        public void A_near_square_corner_keeps_its_corner_building_when_a_pair_covers_no_more_of_the_street()
+        public void On_a_short_side_the_97_degree_corner_gets_one_corner_building_and_the_127_degree_corner_two_buildings()
         {
             var scenario = BuildingCollections.Simulator.GameBlocks.All().Single(s => s.Name.Contains("(13056, -8474)"));
             var sizes = new[] { (1, 2), (2, 2), (3, 2), (2, 3) };
@@ -193,7 +193,8 @@ namespace BuildingCollections.Tests
 
                 Assert.DoesNotContain(run.Result.Log, l => l.Contains("open corner 97°") && l.Contains("on both streets"));
                 Assert.Contains(run.Result.Log, l => l.Contains("close to square"));
-                Assert.Equal(run.Result.FrontCells.Count, run.Result.FrontFilled);
+                Assert.Contains(run.Result.Log, l => l.Contains("open corner 127°") && l.Contains("on both streets"));
+                Assert.True(run.Result.FrontFilled >= run.Result.FrontCells.Count - 1, $"seed {seed}: {run.Result.FrontFilled} of {run.Result.FrontCells.Count} street cells filled");
                 Assert.DoesNotContain(run.Result.Log, l => l.Contains(FrontCoverage.BetweenOwn));
             }
         }

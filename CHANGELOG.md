@@ -4,6 +4,17 @@ Versionado semántico (`MAJOR.MINOR.PATCH`). Mientras esté en `0.x`, las funcio
 La versión se define en `<Version>` de `BuildingCollections/BuildingCollections.csproj` y debe coincidir con `ModVersion`
 en `BuildingCollections/Properties/PublishConfiguration.xml`.
 
+## 0.3.35
+- Esquinas abiertas (más de 100°): dos edificios aunque se pierda una celda de calle. `OpenCornerChoice` acepta el par
+  si llena como mucho una celda menos, no añade huecos entre edificios de una calle (o baja el total) y el hueco más
+  grande crece 2 m como mucho. Las de 90°–100° siguen con un solo edificio de esquina (0.3.34).
+- Si ninguna opción gana a las demás en todo, se elige la que llena más celdas y luego la de menos acera sin cubrir
+  (antes solo la de menos acera sin cubrir).
+- `PairJoints`: un edificio del par sin más edificios de su calle al lado (lado corto) se desliza hasta 6 m alejándose
+  de su esquina hasta tocar al edificio vecino; el hueco queda en la esquina, tapado por la copia de la otra calle.
+- Coste en la regresión: las manzanas tipo Crest Lane (97° y 127° en un lado corto) pierden una celda (1,8 m) y en
+  algunas esquinas de 125°–138° queda un hueco de 2–5 m junto a la esquina.
+
 ## 0.3.34
 - Esquinas casi rectas (hasta 100°, `OpenCornerPairs.SquareMaxAngle`, el mismo margen de 10° con el que
   `SideStripBuilder` encaja un edificio de esquina): vuelven a llevar edificio de esquina. La pareja de edificios
