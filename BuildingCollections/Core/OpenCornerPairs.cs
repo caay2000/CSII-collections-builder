@@ -38,7 +38,7 @@ namespace BuildingCollections.Core
         readonly int seed;
         Random random;
         readonly List<PlannedLot> reserved = new List<PlannedLot>();
-        readonly List<(PlannedLot A, PlannedLot B, double Angle)> pairs = new List<(PlannedLot, PlannedLot, double)>();
+        readonly List<(PlannedLot A, PlannedLot B, double Angle, Pt Corner)> pairs = new List<(PlannedLot, PlannedLot, double, Pt)>();
         readonly IReadOnlyList<PairKind> wanted;
         readonly List<PairKind> used = new List<PairKind>();
 
@@ -82,26 +82,37 @@ namespace BuildingCollections.Core
         {
             foreach (var pair in pairs.Where(p => p.Angle < SlideMaxAngle))
             {
-                foreach (var lot in new[] { pair.A, pair.B })
+                var slide = new[] { (lot: pair.A, copy: pair.B), (lot: pair.B, copy: pair.A) }
+                    .SelectMany(side => pairs
+                        .Where(other => other.A != pair.A)
+                        .SelectMany(other => new[] { other.A, other.B }.Select(target => (target, partner: target == other.A ? other.B : other.A)))
+                        .Where(t => t.target.Owner == side.lot.Owner)
+                        .Select(t => (side.lot, side.copy, t.target, t.partner, gap: Gap(side.lot, t.target))))
+                    .Where(n => Math.Abs(n.gap) > 1e-3 && Math.Abs(n.gap) <= MaxSlide && AwayFromCorner(n.lot, n.gap, pair.Corner))
+                    .OrderBy(n => Math.Abs(n.gap))
+                    .FirstOrDefault();
+                if (slide.lot == null)
                 {
-                    var next = pairs
-                        .Where(other => other != pair)
-                        .SelectMany(other => new[] { other.A, other.B })
-                        .Where(other => other.Owner == lot.Owner)
-                        .Select(other => (other, gap: Gap(lot, other)))
-                        .Where(n => Math.Abs(n.gap) > 1e-3 && Math.Abs(n.gap) <= MaxSlide)
-                        .OrderBy(n => Math.Abs(n.gap))
-                        .FirstOrDefault();
-                    if (next.other == null)
-                    {
-                        continue;
-                    }
-
-                    lot.Shift += (float)next.gap;
-                    log.Add($"  open corner {pair.Angle:F0}° pair {lot.Building} (side {lot.Owner.Strip.SideIndex}): slid {Math.Abs(next.gap):F1} m away from its corner to meet the pair at the other end of the street.");
+                    continue;
                 }
+
+                slide.lot.Shift += (float)slide.gap;
+                if (!StillFits(slide.lot, new[] { slide.copy, slide.target, slide.partner }, pair.Corner))
+                {
+                    slide.lot.Shift -= (float)slide.gap;
+                    continue;
+                }
+
+                log.Add($"  open corner {pair.Angle:F0}° pair {slide.lot.Building} (side {slide.lot.Owner.Strip.SideIndex}): slid {Math.Abs(slide.gap):F1} m away from its corner to meet the pair at the other end of the street.");
             }
         }
+
+        static bool AwayFromCorner(PlannedLot lot, double gap, Pt corner) => Pt.Dot(lot.Owner.Frame.AxisX * gap, lot.Center - corner) > 0;
+
+        bool StillFits(PlannedLot lot, PlannedLot[] joined, Pt corner) =>
+            Fits(lot, corner)
+            && !reserved.Where(other => other != lot && !joined.Contains(other)).Any(other => Quad.Touch(other.Footprint(0), lot.Footprint(overlap)))
+            && !BackLeavesCopy(lot, joined[0], corner, null) && !BackLeavesCopy(joined[0], lot, corner, null);
 
         static double Gap(PlannedLot lot, PlannedLot other)
         {
@@ -160,7 +171,7 @@ namespace BuildingCollections.Core
 
             reserved.Add(a);
             reserved.Add(b);
-            pairs.Add((a, b, angle));
+            pairs.Add((a, b, angle, corner));
             string models = a.FrontAlong == 0 ? $"{a.Building}" : $"{a.Building} and {b.Building} side-on";
             log.Add($"  open corner {angle:F0}° ({sides}): {models} on both streets, {SharedShare(a, b) * 100:F0}% of each lot shared, reserved before the fill{(pair.Kind == PairKind.Narrow ? " (narrow pair)" : string.Empty)}.");
             return pair.Kind;
@@ -225,9 +236,14 @@ namespace BuildingCollections.Core
 
             var a = LotAt(first, shape.First, corner, first.Strip.T * -1, shape.SideOn);
             var b = LotAt(second, shape.Second, corner, second.Strip.T, shape.SideOn);
-            double hiddenDepth = shape.Kind == PairKind.Narrow && shape.First.LotWidth == 1 ? (angle >= SingleCellMinAngle ? HiddenBackDepth : double.NaN) : double.PositiveInfinity;
-            if (double.IsNaN(hiddenDepth)
-                || !Fits(a, corner) || !Fits(b, corner) || BackLeavesCopy(a, b, corner, hiddenDepth) || BackLeavesCopy(b, a, corner, hiddenDepth) || HitsReserved(a) || HitsReserved(b)
+            bool singleCell = shape.Kind == PairKind.Narrow && shape.First.LotWidth == 1;
+            if (singleCell && angle < SingleCellMinAngle)
+            {
+                return default;
+            }
+
+            double? hiddenDepth = singleCell ? HiddenBackDepth : (double?)null;
+            if (!Fits(a, corner) || !Fits(b, corner) || BackLeavesCopy(a, b, corner, hiddenDepth) || BackLeavesCopy(b, a, corner, hiddenDepth) || HitsReserved(a) || HitsReserved(b)
                 || TakesAnotherFront(a, first, second) || TakesAnotherFront(b, first, second))
             {
                 return default;
@@ -322,7 +338,7 @@ namespace BuildingCollections.Core
 
         static Pt FrontPoint(CellFrame frame, int row) => frame.Origin + frame.AxisY * (CellFrame.Size * (row - 0.5));
 
-        static bool BackLeavesCopy(PlannedLot lot, PlannedLot copy, Pt corner, double hiddenDepth)
+        static bool BackLeavesCopy(PlannedLot lot, PlannedLot copy, Pt corner, double? hiddenDepth)
         {
             var p = lot.Footprint(0).P;
             int front = Enumerable.Range(0, 4).OrderBy(i => Distance(p[i], corner)).First();
@@ -334,7 +350,7 @@ namespace BuildingCollections.Core
             }
 
             var frame = copy.Owner.Frame;
-            return Pt.Dot(back - FrontPoint(frame, copy.Owner.AreaY), frame.AxisY) < hiddenDepth;
+            return hiddenDepth == null || Pt.Dot(back - FrontPoint(frame, copy.Owner.AreaY), frame.AxisY) < hiddenDepth;
         }
 
         static double SharedShare(PlannedLot a, PlannedLot b)
