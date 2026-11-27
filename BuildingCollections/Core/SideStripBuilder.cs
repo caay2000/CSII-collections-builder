@@ -66,7 +66,7 @@ namespace BuildingCollections.Core
         }
 
         const double CornerDepth = 2 * CellFrame.Size;
-        const double MaxSquareDeviationDeg = 10;
+        public const double MaxSquareDeviationDeg = 10;
 
         double? StartWedge => side.StartCorner && prevDir.HasValue ? Wedge(prevDir.Value, basePoints[1] - basePoints[0]) : null;
 

@@ -10,6 +10,7 @@ namespace BuildingCollections.Core
         const double UncoveredTolerance = 0.5;
         const double LargestGapTolerance = 2;
         const double JointUncoveredTolerance = 3;
+        const double SquareCornerGain = 3;
         static readonly PairKind[] Order = { PairKind.Narrow, PairKind.Twins, PairKind.SameModel };
 
         public static PreviewResult Plan(PreviewRequest request, Func<IReadOnlyList<PairKind>, PreviewResult> run)
@@ -27,6 +28,7 @@ namespace BuildingCollections.Core
             }
 
             var placeable = best.OpenCornerPairs.Select(k => k != PairKind.None).ToList();
+            var square = best.OpenCornerAngles.Select(a => a <= OpenCornerPairs.SquareMaxAngle).ToList();
             var wanted = placeable.Select(_ => PairKind.None).ToList();
             var without = run(wanted);
             int plans = 2;
@@ -59,7 +61,7 @@ namespace BuildingCollections.Core
                     }
                 }
 
-                var passing = options.Where(o => o.Score.NotWorseThan(bar)).ToList();
+                var passing = options.Where(o => square[i] ? o.Score.ClearlyBetterThan(bar) : o.Score.NotWorseThan(bar)).ToList();
                 var chosen = passing.FirstOrDefault(o => passing.All(other => o.Score.NotWorseThan(other.Score)));
                 if (chosen.Result == null)
                 {
@@ -69,7 +71,9 @@ namespace BuildingCollections.Core
                 string tried = string.Concat(options.Where(o => chosen.Result == null || o.Kind != chosen.Kind).Select(o => $"; {Describe(o.Kind)} {o.Score}"));
                 if (chosen.Result == null)
                 {
-                    notes.Add($"  open corner {i + 1}: pair dropped (without it {bar}{tried}).");
+                    notes.Add(square[i]
+                        ? $"  open corner {i + 1}: pair dropped, the corner is close to square and a corner building covers it as well (without a pair {bar}{tried})."
+                        : $"  open corner {i + 1}: pair dropped (without it {bar}{tried}).");
                     continue;
                 }
 
@@ -79,8 +83,9 @@ namespace BuildingCollections.Core
             }
 
             best = without;
-            var allNarrow = placeable.Select(p => p ? PairKind.Narrow : PairKind.None).ToList();
-            if (placeable.Count(p => p) > 1 && placeable.Where((p, i) => p && wanted[i] == PairKind.None).Any())
+            var open = placeable.Select((p, i) => p && !square[i]).ToList();
+            var allNarrow = open.Select((p, i) => p ? PairKind.Narrow : wanted[i]).ToList();
+            if (open.Count(p => p) > 1 && open.Where((p, i) => p && wanted[i] == PairKind.None).Any())
             {
                 var joint = run(allNarrow);
                 plans++;
@@ -133,6 +138,9 @@ namespace BuildingCollections.Core
 
             public bool NotWorseThan(Score other) =>
                 filled >= other.filled && (ownGaps <= other.ownGaps || allGaps < other.allGaps) && uncovered <= other.uncovered + UncoveredTolerance && largest <= other.largest + LargestGapTolerance;
+
+            public bool ClearlyBetterThan(Score other) =>
+                NotWorseThan(other) && (filled > other.filled || uncovered <= other.uncovered - SquareCornerGain);
 
             public bool NoNewGapsAndClose(Score other) =>
                 filled >= other.filled && ownGaps <= other.ownGaps && allGaps <= other.allGaps && uncovered <= other.uncovered + JointUncoveredTolerance && largest <= other.largest + LargestGapTolerance;
